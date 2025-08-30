@@ -37,6 +37,10 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
            "OR LOWER(i.category) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Inventory> searchActiveParts(@Param("search") String search);
     
+    List<Inventory> findByPartNameContainingIgnoreCaseOrPartCodeContainingIgnoreCase(String partName, String partCode);
+    
+    List<Inventory> findByCategoryIgnoreCase(String category);
+    
     // Find by category or brand
     List<Inventory> findByCategoryIgnoreCaseAndActiveTrue(String category);
     List<Inventory> findByBrandIgnoreCaseAndActiveTrue(String brand);

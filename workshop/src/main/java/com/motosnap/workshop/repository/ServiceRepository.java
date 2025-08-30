@@ -30,6 +30,14 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
            "OR LOWER(s.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Service> searchActiveServices(@Param("search") String search);
     
+    List<Service> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
+    
+    boolean existsByNameAndCategory(String name, String category);
+    
+    List<Service> findByCategoryIgnoreCase(String category);
+    
+    List<Service> findByBasePriceBetween(java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice);
+    
     // Get distinct categories
     @Query("SELECT DISTINCT s.category FROM Service s WHERE s.active = true ORDER BY s.category")
     List<String> findDistinctCategories();

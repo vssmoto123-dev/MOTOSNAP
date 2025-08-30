@@ -36,4 +36,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE (LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) AND u.active = true")
     List<User> searchActiveUsers(@Param("search") String search);
+    
+    List<User> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(String name, String email);
+    
+    long countByRole(Role role);
 }
