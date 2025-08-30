@@ -1,0 +1,326 @@
+MOTOSNAP: LOCAL MOTORCYCLE PARTS AT YOUR FINGERTIPS
+1.0
+
+INTRODUCTION
+
+The motorcycle industry plays a crucial role in daily transportation for
+millions of people, particularly in densely populated urban and semi-urban
+areas. Motorcycles are widely preferred due to their affordability, fuel efficiency,
+ease of maintenance, and convenience in navigating congested roads. Despite
+their benefits, motorcycles require regular maintenance and timely replacement
+of spare parts to ensure optimal performance, extend lifespan, and enhance
+rider safety.
+However, many motor shops still rely on manual processes, which can
+lead to significant inefficiencies in inventory management, service scheduling,
+tracking of maintenance history, and customer record keeping. These manual
+systems are prone to human error, miscommunication, and delays, ultimately
+affecting service quality and customer satisfaction.
+To address these challenges, this project, titled MOTOSNAP: LOCAL
+MOTORCYCLE PARTS AT YOUR FINGERTIPS, proposes the development
+of a comprehensive computerized system for managing spare parts inventory
+and motorbike servicing. The system aims to streamline operations, improve
+data accuracy, provide real-time access to service and inventory information,
+and enhance overall customer experience through more efficient and reliable
+service delivery.
+
+3
+
+2.0
+
+PROBLEM STATEMENT
+
+3.0
+
+Manual records – Many shops still use paper books or basic
+spreadsheets, which are hard to manage, update, and share.
+Spare parts tracking issues – Stock is not updated in real-time, causing
+frequent shortages or overstocking that leads to wasted cost.
+Inefficient customer management – Without a proper system, shops
+struggle to handle bookings and customer queues, leading to longer
+waiting times.
+
+OBJECTIVES
+
+To provide real-time tracking of stock levels and service appointments,
+ensuring accurate and up-to-date information for better decision-making
+and resource allocation.
+To reduce manual errors and improve overall operational efficiency by
+automating routine tasks and streamlining workflows. To develop a
+comprehensive computerized system for managing spare parts inventory
+and service records, enabling easy access, improved traceability, and more
+effective maintenance planning.
+To develop a customer management module that allows motorcycle shops
+to efficiently handle bookings and manage customer queues, thereby
+reducing waiting times and improving overall service experience.
+
+4
+
+4.0
+
+SCOPE
+User Scope
+1. Administrator / Shop Owner
+Inventory Management: Add/edit/delete spare parts, monitor stock
+levels, receive low-stock alerts.
+User Management: Create or disable mechanic/service staff accounts.
+Service Oversight: View ongoing and completed service jobs,
+assign/reassign mechanics.
+Report Access: View and export reports (sales, inventory, service
+performance).
+Notifications: Send messages to customers and staff (e.g.,
+promotions, reminders).
+Settings: Customize system preferences (e.g., service categories,
+notification types).
+
+2. Mechanic / Service Staff
+
+Job Schedule Management: View assigned service jobs and daily
+schedule.
+Job Updates: Update job statuses (e.g., "In Progress", "Completed").
+Service History Entry: Add notes, spare parts used, and customer
+feedback for each job.
+Parts Request: Request parts from inventory for use in service jobs.
+Customer Report: Generate and view detailed reports on customer
+service history, including completed jobs, parts used, and overall
+maintenance records.
+
+3. Customer
+
+Service Booking: Book new appointments (if enabled).
+View History: See past services, invoices, and parts used.
+Notifications: Receive SMS/email reminders for appointments, service
+completions, or promotional offers.
+Profile Management: Update personal info, vehicle details, and
+preferences.
+
+5. System Scope
+1. Website
+•Front-End: The front-end uses HTML5, CSS3, and JavaScript with
+frameworks like React.js or Vue.js to ensure a responsive design for both
+mobile and desktop. The customer portal includes login, booking,
+service history viewing, and notifications. The admin/staff portal offers
+secure login and dashboards for job tracking, inventory, and reports.
+
+•Back-End: The back-end can be built using Node.js, Python (Django or
+Flask), PHP, or Java (Spring Boot), with a RESTful API for modular,
+scalable development. Role-based access control (RBAC) using JWT or
+session tokens secures authentication. SMS and email API integration
+provides real-time notifications and alerts.
+
+2. Key Functional Modules
+Inventory Management
+
+oAdd/edit/delete parts
+
+oSet stock thresholds for low inventory alerts
+
+oTrack part usage per job
+
+Service Management
+
+oMechanic assignment
+
+oJob progress tracking
+
+oService history storage
+
+Customer Management
+
+oProfile and vehicle record
+
+oBooking and appointment handling
+
+oNotifications and feedback
+
+oCustomer Visit Records: Track and record the frequency of
+customer visits to the shop for better service insights and loyalty
+management.
+
+6•Reporting Module
+
+oSales reports (by day/week/month)
+
+oMost-used parts
+
+oMechanic performance
+
+oExportable (PDF/CSV)
+
+5.0
+
+PROJECT SIGNIFICANCE
+The implementation of MOTOSNAP: Local Motorcycle Parts at Your
+Fingertips will be a transformative step for the business. By integrating
+inventory and service management onto a single, streamlined platform,
+MOTOSNAP will significantly enhance operational efficiency, reducing service
+delays and optimizing daily workflow. The system guarantees greater accuracy
+in tracking spare parts and recording service histories, eliminating costly errors
+and information gaps. For customers, this translates into a superior experience
+with faster service, timely updates, and clear communication—truly putting
+control at their fingertips. Financially, MOTOSNAP will reduce overheads by
+minimizing manual record-keeping and preventing stock mismanagement.
+Most importantly, it provides a robust foundation for future growth, paving the
+way for enhancements like online booking and e-commerce to expand our
+market reach.
+
+6.0
+
+LITERATURE REVIEW
+Previous studies on inventory and service management systems have shown
+that computerized solutions significantly improve efficiency, reduce errors, and
+enhance customer satisfaction. Research indicates that digital systems can
+automate up to 60% of manual record-keeping tasks in automotive workshops.
+Studies on small business digital transformation emphasize the importance of
+real-time data access for decision-making. This project builds on these findings
+by integrating both spare parts inventory and service operations into a single,
+user-friendly system tailored for motor shops.
+
+Existing System : ESR Motor
+https://www.esrmotor.com.my/
+
+Criteria
+
+My System
+
+Primary Focus
+
+Integrated management of
+spare parts, services, and
+customers
+
+E-commerce platform for highperformance motorcycle parts
+and accessories, plus
+performance upgrade services
+
+Real-time tracking of stock
+levels, alerts for low
+supplies
+
+Displays product listings and
+prices, but no real-time
+inventory or automated lowstock notifications indicated
+
+Job scheduling, mechanic
+assignment, and service
+history
+
+Focuses on parts sales and
+upgrades; no visible functionality
+for managing service
+appointments or history records
+
+Records include contact
+details, preferences, and
+history
+
+Basic e-commerce features
+such as account creation and
+shopping cart; no customer
+profiles tied to service or
+maintenance behaviours
+
+Reports on sales, service
+performance, and parts
+usage
+
+Lacks back-end reporting tools
+geared toward business
+analytics or operational insights
+
+Intended for administrators,
+mechanics, and customers
+
+Primarily for end-user customers
+shopping online; no
+differentiated user roles or
+internal administrative functions
+
+Inventory
+Management
+
+Service
+Management
+
+Customer
+Management
+
+Reporting
+Capabilities
+
+User Roles
+
+9
+
+7.0
+
+METHODOLOGY
+
+1)
+
+Plan – Identify project requirements by gathering information from motor
+shop owners, mechanics, and customers. Define the scope, objectives,
+and timeline of the system development.
+
+2)
+
+Design – Create system architecture, database structures, and user
+interface mockups. Ensure the design meets both functional and userfriendly requirements.
+
+3)
+
+Develop – Implement the system features using appropriate
+programming languages and frameworks. Integrate modules such as
+inventory management, service scheduling, and customer management.
+
+4)
+
+Test – Conduct functional testing, system testing, and user acceptance
+testing to ensure the system works as intended. Identify and fix any bugs
+or performance issues.
+
+5)
+
+Deploy – Install the completed system in the motor shop environment
+and configure it for actual usage. Provide basic training to users for
+smooth adoption.
+
+6)
+
+Review – Collect feedback from users and evaluate system
+performance. Identify areas for improvement and make necessary
+updates to enhance system efficiency.
+
+7)
+
+Launch – Officially roll out the final version of the system for full
+operation. Continue monitoring and updating as needed to ensure longterm reliability.
+
+10. CONCLUSION
+
+Local motor workshops have many problems, like bad inventory control and
+poor customer communication. The new system, called MOTOSNAP: LOCAL
+MOTORCYCLE PARTS AT YOUR FINGERTIPS, is made to fix these problems.
+MOTOSNAP is an all-in-one digital platform, so it is more than just a simple tool. It
+acts like the main control center for the workshop. It is a special solution made to
+change old paper methods with a smooth, correct, and connected system. This
+change is very important for the workshop to stay open and grow. It also helps shop
+owners manage their parts, services, and customers very easily and correctly. This
+puts the main parts of their business at their fingertips.
+Using MOTOSNAP gives many benefits right away and helps every part of the
+workshop's operations. For the business, the inventory tool will greatly lower the
+chances of having too many or too few parts. And it makes sure parts are there when
+they are needed. The service tracking part will make the workshop work better. It
+allows for better planning and clear updates on job progress, so this makes the shop
+more productive and helps customers trust it. Also, the customer management part
+helps shops build stronger relationships with customers through service history,
+automatic reminders, and personal messages. This complete way of doing things
+makes the shop more accurate and profitable, and it makes the customer's experience
+better, which builds loyalty.
+MOTOSNAP: LOCAL MOTORCYCLE PARTS AT YOUR FINGERTIPS is
+more than just a fix for today's problems; it is a smart choice for the future. The system
+is a base that can grow, so it will let motor shops use new technology later on. For
+example, they can add online selling, use data to guess future sales, and create a
+mobile app for customers. By using this new digital system, local workshops can work
+better and get a strong advantage over other shops in a digital world. MOTOSNAP will
+help them serve their community better, so they can stay needed, make money, and
+be prepared for what comes next.

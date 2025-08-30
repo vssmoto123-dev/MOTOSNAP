@@ -1,0 +1,23 @@
+# Primary ambiguities - ** answered
+
+Target Market Size – **small workshops only
+
+Payment/E-commerce Support – **first release
+
+Customer Booking – **staff can manually create appointments, and customer can make appointments online
+
+Notifications – **email notification only
+
+Tech Stack Choice – **Spring Boot + nextJs
+
+Database Technology – **SQL
+
+Hosting & Deployment – **heroku / render.com / whichever is economically feasible
+
+Role Granularity – **roles limited to Admin/Mechanic/Customer
+
+Mechanic Parts Requests – Will requests auto-deduct stock or need approval from Admin? ** will auto deduct
+
+Stock Adjustment – How are damaged/returned/expired parts handled? **this project will assume there will be no damaged/returned/expired parts
+
+Service Pricing – ** System will provide predefined standard categories of services (e.g., Oil Change, Tire Replacement, Brake Service). Each workshop can set and update their own prices for these categories.

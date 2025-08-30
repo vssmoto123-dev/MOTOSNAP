@@ -1,0 +1,51 @@
+# Development Environment Configuration
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/motosnap_dev
+    username: root
+    password: 
+    hikari:
+      maximum-pool-size: 5  # Smaller pool for development
+      minimum-idle: 2
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Recreate schema on restart for development
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+# JWT Configuration - Less secure for development
+jwt:
+  secret: "development-secret-key-32-characters-long-for-local-testing-only"
+  expiration:
+    access: 3600000    # 1 hour for easier development
+    refresh: 604800000 # 7 days
+
+# Security - Relaxed for development
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false  # Allow HTTP in development
+
+# Logging - More verbose for development
+logging:
+  level:
+    com.motosnap.workshop: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Development specific settings
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

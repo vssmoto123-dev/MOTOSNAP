@@ -1,0 +1,27 @@
+# Secondary Ambiguities
+
+Reports Export:
+**they only download manually
+
+Authentication Flow:
+Password reset, account recovery – do customers log in with email only? Or phone number too?
+** they can choose to login via email only
+
+Customer Access Level:
+**Customers can log in to view service history, download invoices (PDF), and print receipts. No edit/delete rights.
+
+Barcode/QR Support:
+**Inventory entry is only manual typing
+
+Warranty/Guarantee Tracking
+N/A @ not implemented
+
+Multi-language Support:
+**English only
+
+Offline Mode:
+Hosted on cloud (Heroku/Render) → What if internet is down? Will shops still be able to use it locally, or must operations pause?
+** operations paused
+
+Training & Support:
+N/A

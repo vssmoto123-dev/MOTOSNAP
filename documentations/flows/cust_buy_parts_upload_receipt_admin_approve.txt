@@ -1,0 +1,34 @@
+        [Customer Website / Frontend]
+                   |
+                   v
+        +--------------------------+
+        |   E-Commerce Module      |
+        |  (Browse & Buy Parts)    |
+        +--------------------------+
+                   |
+                   v
+        +--------------------------+
+        |   Receipt Upload Module  |
+        |  (Attach payment proof)  |
+        +--------------------------+
+                   |
+                   v
+        +--------------------------+
+        |   Admin Approval Panel   |
+        | (Approve / Reject Order) |
+        +--------------------------+
+                   |
+                   v
+        +--------------------------+
+        |  Order Management System |
+        | (Manages purchased parts)|
+        +--------------------------+
+                   |
+          -------------------
+          |                 |
+          v                 v
+ [Inventory System]   [Appointment Scheduler]
+   (Stock update)       (Optional Booking)
+                             |
+                             v
+                 [Attach purchased parts]

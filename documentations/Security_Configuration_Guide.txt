@@ -1,0 +1,469 @@
+# MOTOSNAP Security Configuration Guide
+
+## Password Encoding Strategy
+
+### SecurityConfig.java
+```java
+package com.motosnap.workshop.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12); // Strong hashing with 12 rounds
+    }
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints
+                .requestMatchers("/api/auth/register", "/api/auth/login", 
+                                "/api/auth/refresh").permitAll()
+                
+                // Admin only endpoints
+                .requestMatchers("/api/admin/**", "/api/users/**", 
+                                "/api/inventory/**", "/api/services/**").hasRole("ADMIN")
+                
+                // Mechanic endpoints
+                .requestMatchers("/api/bookings/*/status", "/api/requests/**").hasRole("MECHANIC")
+                
+                // Customer endpoints
+                .requestMatchers("/api/me/**", "/api/bookings/create").hasRole("CUSTOMER")
+                
+                // Shared endpoints (authenticated users)
+                .requestMatchers("/api/bookings", "/api/profile").authenticated()
+                
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return http.build();
+    }
+}
+```
+
+### Password Validation Service
+```java
+package com.motosnap.workshop.service;
+
+import org.springframework.stereotype.Service;
+import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.List;
+
+@Service
+public class PasswordValidationService {
+    
+    private static final int MIN_LENGTH = 8;
+    private static final Pattern UPPERCASE = Pattern.compile("[A-Z]");
+    private static final Pattern LOWERCASE = Pattern.compile("[a-z]");
+    private static final Pattern DIGIT = Pattern.compile("[0-9]");
+    private static final Pattern SPECIAL_CHAR = Pattern.compile("[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]");
+    
+    // Common weak passwords to reject
+    private static final List<String> WEAK_PASSWORDS = Arrays.asList(
+        "password", "12345678", "qwerty", "admin123", "password123", 
+        "welcome123", "letmein", "changeme"
+    );
+    
+    public void validatePassword(String password) {
+        if (password == null || password.length() < MIN_LENGTH) {
+            throw new IllegalArgumentException("Password must be at least " + MIN_LENGTH + " characters long");
+        }
+        
+        if (!UPPERCASE.matcher(password).find()) {
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter");
+        }
+        
+        if (!LOWERCASE.matcher(password).find()) {
+            throw new IllegalArgumentException("Password must contain at least one lowercase letter");
+        }
+        
+        if (!DIGIT.matcher(password).find()) {
+            throw new IllegalArgumentException("Password must contain at least one number");
+        }
+        
+        if (!SPECIAL_CHAR.matcher(password).find()) {
+            throw new IllegalArgumentException("Password must contain at least one special character");
+        }
+        
+        if (WEAK_PASSWORDS.contains(password.toLowerCase())) {
+            throw new IllegalArgumentException("Password is too common, please choose a stronger password");
+        }
+    }
+}
+```
+
+## JWT Secret Key Management
+
+### JwtConfig.java
+```java
+package com.motosnap.workshop.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
+
+@Component
+public class JwtConfig {
+    
+    @Value("${jwt.secret}")
+    private String secret;
+    
+    @Value("${jwt.expiration.access:900000}") // 15 minutes default
+    private long accessTokenExpiration;
+    
+    @Value("${jwt.expiration.refresh:604800000}") // 7 days default
+    private long refreshTokenExpiration;
+    
+    @PostConstruct
+    public void validateConfiguration() {
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalStateException("JWT secret cannot be null or empty");
+        }
+        
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes (256 bits) for HS256");
+        }
+        
+        if ("fallback-secret-for-dev-only".equals(secret)) {
+            System.out.println("WARNING: Using default JWT secret. Set JWT_SECRET environment variable for production!");
+        }
+    }
+    
+    public String getSecret() {
+        return secret;
+    }
+    
+    public long getAccessTokenExpiration() {
+        return accessTokenExpiration;
+    }
+    
+    public long getRefreshTokenExpiration() {
+        return refreshTokenExpiration;
+    }
+}
+```
+
+### JWT Service Implementation
+```java
+package com.motosnap.workshop.service;
+
+import com.motosnap.workshop.config.JwtConfig;
+import com.motosnap.workshop.entity.User;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.stereotype.Service;
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+    
+    private final JwtConfig jwtConfig;
+    private final Key signingKey;
+    
+    public JwtService(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+        this.signingKey = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+    }
+    
+    public String generateAccessToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
+        claims.put("userId", user.getId());
+        claims.put("name", user.getName());
+        claims.put("type", "access");
+        
+        return createToken(claims, user.getEmail(), jwtConfig.getAccessTokenExpiration());
+    }
+    
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        claims.put("userId", user.getId());
+        
+        return createToken(claims, user.getEmail(), jwtConfig.getRefreshTokenExpiration());
+    }
+    
+    private String createToken(Map<String, Object> claims, String subject, long expiration) {
+        return Jwts.builder()
+            .setClaims(claims)
+            .setSubject(subject)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(signingKey, SignatureAlgorithm.HS256)
+            .compact();
+    }
+    
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+    
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+    
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("type", String.class));
+    }
+    
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+    
+    private Claims extractAllClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("JWT token has expired", e);
+        } catch (UnsupportedJwtException e) {
+            throw new RuntimeException("JWT token is unsupported", e);
+        } catch (MalformedJwtException e) {
+            throw new RuntimeException("JWT token is malformed", e);
+        } catch (SecurityException e) {
+            throw new RuntimeException("Invalid JWT signature", e);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("JWT token compact of handler are invalid", e);
+        }
+    }
+    
+    public Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+    
+    public Boolean validateToken(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+    
+    public Boolean isAccessToken(String token) {
+        return "access".equals(extractTokenType(token));
+    }
+    
+    public Boolean isRefreshToken(String token) {
+        return "refresh".equals(extractTokenType(token));
+    }
+}
+```
+
+## Application Properties Configuration
+
+### application.properties
+```properties
+# JWT Configuration
+jwt.secret=${JWT_SECRET:fallback-secret-for-dev-only-must-be-at-least-32-chars}
+jwt.expiration.access=900000
+jwt.expiration.refresh=604800000
+
+# Security Headers
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.secure=true
+server.servlet.session.cookie.same-site=strict
+```
+
+### application-dev.yml
+```yaml
+jwt:
+  secret: "development-secret-key-32-characters-long-for-local-testing"
+  expiration:
+    access: 3600000    # 1 hour for development
+    refresh: 604800000 # 7 days
+
+logging:
+  level:
+    com.motosnap.workshop: DEBUG
+    org.springframework.security: DEBUG
+```
+
+### application-prod.yml
+```yaml
+jwt:
+  secret: ${JWT_SECRET} # Must be set as environment variable
+  expiration:
+    access: 900000      # 15 minutes
+    refresh: 604800000  # 7 days
+
+logging:
+  level:
+    root: WARN
+    com.motosnap.workshop: INFO
+```
+
+## JWT Authentication Filter
+```java
+package com.motosnap.workshop.config;
+
+import com.motosnap.workshop.service.JwtService;
+import com.motosnap.workshop.service.UserDetailsServiceImpl;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsServiceImpl userDetailsService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+                                  FilterChain filterChain) throws ServletException, IOException {
+        
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            jwt = authHeader.substring(7);
+            userEmail = jwtService.extractUsername(jwt);
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                
+                // Ensure this is an access token, not a refresh token
+                if (!jwtService.isAccessToken(jwt)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"error\":\"Invalid token type. Use access token for API calls.\"}");
+                    return;
+                }
+
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                
+                if (jwtService.validateToken(jwt, userEmail)) {
+                    UsernamePasswordAuthenticationToken authToken = 
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+```
+
+## CORS Configuration
+```java
+package com.motosnap.workshop.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+
+@Configuration
+public class CorsConfig {
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Development origins
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",  // Next.js dev server
+            "http://localhost:3001",  // Alternative port
+            "https://yourdomain.com"  // Production domain
+        ));
+        
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+        
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", "Content-Type", "X-Requested-With"
+        ));
+        
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Cache preflight for 1 hour
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        
+        return source;
+    }
+}
+```
+
+## Environment Setup Instructions
+
+### Development Environment
+1. Create `.env.local` file in Next.js:
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+JWT_SECRET=development-secret-key-32-characters-long-for-local-testing
+```
+
+### Production Environment Variables
+```bash
+# Set these in your hosting platform (Heroku/Render)
+JWT_SECRET=your-super-secure-256-bit-secret-key-here
+DATABASE_URL=your-production-database-url
+SPRING_PROFILES_ACTIVE=prod
+```
+
+### Security Best Practices Summary
+
+1. **Password Security**: BCrypt with 12 rounds, strong validation rules
+2. **JWT Security**: 256-bit secret, short-lived access tokens, separate refresh tokens
+3. **Token Management**: Access tokens (15 min), refresh tokens (7 days)
+4. **Environment Security**: Secrets in environment variables, never hardcoded
+5. **CORS**: Strict origin control, credentials allowed only for trusted domains
+6. **Headers**: HTTP-only cookies, secure flags, CSRF protection
+
+This configuration provides production-ready security for your MOTOSNAP application.

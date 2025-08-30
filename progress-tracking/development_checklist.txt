@@ -1,0 +1,104 @@
+MOTOSNAP Development Checklist
+
+---
+
+### Milestone 1: The Foundation (Data Models & Security)
+
+[x] **Database:** Configure `application.properties` for MySQL connection.
+
+**JPA Entities:**
+[x] Create `User` entity.
+[x] Create `Vehicle` entity.
+[x] Create `Inventory` entity (for parts).
+[x] Create `Service` entity.
+[ ] Create `Cart` entity.
+[ ] Create `CartItem` entity.
+[x] Create `Order` entity.
+[x] Create `Receipt` entity.
+
+**JPA Repositories:**
+[x] Create `UserRepository`.
+[x] Create `VehicleRepository`.
+[x] Create `InventoryRepository`.
+[x] Create `ServiceRepository`.
+[ ] Create `CartRepository`.
+[ ] Create `CartItemRepository`.
+[x] Create `OrderRepository`.
+[x] Create `ReceiptRepository`.
+
+**Authentication & Security:**
+[x] **Spring Security:** Complete the initial configuration.
+[x] **User Details:** Implement the `UserDetailsService` interface.
+[x] **Registration:** Create the `POST /api/auth/register` endpoint.
+[x] **Login:** Create the `POST /api/auth/login` endpoint.
+[x] **JWT:** Ensure the login endpoint generates and returns a valid JWT.
+[x] **Authorization:** Configure method-level security.
+
+---
+
+### Milestone 2: Core Admin & System Management
+
+*(This milestone remains focused on managing core system data)*
+
+**Inventory Management API (`InventoryController`):**
+[ ] Create the `InventoryController` class, secured for ADMIN role.
+[ ] `POST /api/inventory` - Create a new part.
+[ ] `GET /api/inventory` - Get a list of all parts.
+[ ] `GET /api/inventory/{id}` - Get a single part by its ID.
+[ ] `PUT /api/inventory/{id}` - Update an existing part.
+[ ] `DELETE /api/inventory/{id}` - Delete a part.
+
+**Service Management API (`ServiceController`):**
+[ ] Create the `ServiceController` class, secured for ADMIN role.
+[ ] `POST /api/services` - Create a new service type.
+[ ] `GET /api/services` - Get a list of all services.
+[ ] `PUT /api/services/{id}` - Update an existing service.
+[ ] `DELETE /api/services/{id}` - Delete a service.
+
+**User Management API (`UserController`):**
+[ ] Create the `UserController` class, secured for ADMIN role.
+[ ] `GET /api/users` - Get a list of all users (using a DTO).
+[ ] `PUT /api/users/{id}/role` - Update a specific user's role.
+
+---
+
+### Milestone 3: Customer & Mechanic Features
+
+**Public Parts & Profile API:**
+[ ] `GET /api/parts` - Allow public/customers to browse all available parts.
+[ ] `GET /api/me` - Allow an authenticated customer to view their own profile.
+[ ] `POST /api/me/vehicles` - Allow a customer to add a vehicle to their profile.
+
+**Shopping Cart API:**
+[ ] `GET /api/cart` - Get the contents of the currently logged-in user's cart.
+[ ] `POST /api/cart/items` - Add an item (or update its quantity) in the cart.
+[ ] `DELETE /api/cart/items/{itemId}` - Remove an item from the cart.
+
+**Customer Purchase API:**
+[ ] `POST /api/orders` - Convert the user's cart into a formal `Order`.
+[ ] `POST /api/orders/{orderId}/receipt` - Upload a payment receipt for the order.
+
+**Service Booking & Parts Request:**
+[ ] `POST /api/bookings` - Allow a customer to book a new service appointment.
+[ ] `GET /api/bookings` - Allow ADMINs or MECHANICs to view all appointments.
+[ ] `POST /api/bookings/{bookingId}/request-part` - Allow a mechanic to request a part for a job.
+[ ] **Inventory Logic:** Ensure the parts request automatically deducts the quantity from the inventory.
+
+---
+
+### Milestone 4: The Service Workflow & Notifications
+
+**Admin Order Management:**
+[ ] `GET /api/admin/orders` - Allow an admin to view all pending purchase orders.
+[ ] `PUT /api/admin/orders/{orderId}/status` - Allow an admin to approve or reject an order.
+
+**Job Status & History:**
+[ ] `PUT /api/bookings/{bookingId}/status` - Allow a mechanic to update a booking’s status.
+[ ] **Service History:** Create a `ServiceHistory` entity and repository.
+[ ] **Automation:** Automatically create a `ServiceHistory` record when a booking is marked 'COMPLETED'.
+
+**Email Notifications:**
+[ ] **Configuration:** Configure `JavaMailSender`.
+[ ] **New Booking:** Send a confirmation email to the customer after a successful booking.
+[ ] **Order Confirmation:** Send an email when a customer's order is approved.
+[ ] **Service Completion:** Send a notification email when a service is marked 'COMPLETED'.

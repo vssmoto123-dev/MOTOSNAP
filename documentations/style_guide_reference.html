@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoElite - Premium Motorcycle Parts & Service</title>
+    <style>
+        :root {
+            --primary-black: #0a0a0b;
+            --secondary-black: #1a1a1b;
+            --tertiary-black: #2a2a2b;
+            --accent-red: #c41e3a;
+            --pure-white: #ffffff;
+            --light-gray: #e5e5e5;
+            --medium-gray: #9ca3af;
+            --dark-gray: #4b5563;
+            --platinum: #e5e7eb;
+            --gold: #fbbf24;
+            
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.6);
+            
+            --radius-small: 4px;
+            --radius-medium: 8px;
+            --radius-large: 12px;
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background: var(--primary-black);
+            color: var(--pure-white);
+            line-height: 1.5;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        h1 { font-size: 3.5rem; font-weight: 700; }
+        h2 { font-size: 2.5rem; }
+        h3 { font-size: 1.875rem; }
+        h4 { font-size: 1.5rem; }
+        h5 { font-size: 1.25rem; }
+        h6 { font-size: 1.125rem; }
+
+        .text-large { font-size: 1.125rem; }
+        .text-small { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+
+        .text-gray { color: var(--medium-gray); }
+        .text-light-gray { color: var(--light-gray); }
+        .text-accent { color: var(--accent-red); }
+
+        /* Header */
+        .header {
+            background: rgba(26, 26, 27, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--pure-white);
+            text-decoration: none;
+            letter-spacing: -0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: var(--medium-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--pure-white);
+        }
+
+        .nav-links a.active {
+            color: var(--pure-white);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-red);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-input {
+            background: var(--secondary-black);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--pure-white);
+            padding: 10px 16px;
+            border-radius: var(--radius-medium);
+            width: 280px;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--dark-gray);
+        }
+
+        .cart-btn {
+            background: none;
+            border: none;
+            color: var(--pure-white);
+            font-size: 20px;
+            cursor: pointer;
+            position: relative;
+            padding: 8px;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--accent-red);
+            color: var(--pure-white);
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-medium);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-red);
+            color: var(--pure-white);
+        }
+
+        .btn-primary:hover {
+            background: #a61e2a;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--medium-gray);
+            border: none;
+        }
+
+        .btn-ghost:hover {
+            color: var(--pure-white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-black) 0%, var(--secondary-black) 100%);
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(196, 30, 58, 0.03) 0%, transparent 70%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--pure-white) 0%, var(--light-gray) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--medium-gray);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        /* Section */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-title {
+            margin-bottom: 16px;
+        }
+
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--medium-gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .product-card {
+            background: var(--secondary-black);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-large);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 240px;
+            background: var(--tertiary-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--dark-gray);
+            position: relative;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: var(--accent-red);
+            color: var(--pure-white);
+            padding: 4px 12px;
+            border-radius: var(--radius-small);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .product-info {
+            padding: 24px;
+        }
+
+        .product-brand {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .product-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--pure-white);
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .current-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--pure-white);
+        }
+
+        .original-price {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            text-decoration: line-through;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stars {
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        .rating-text {
+            font-size: 14px;
+            color: var(--medium-gray);
+        }
+
+        /* Categories */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .category-card {
+            background: var(--secondary-black);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-large);
+            padding: 32px 24px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .category-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--pure-white);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--pure-white);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            background: var(--secondary-black);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--pure-white);
+            padding: 12px 16px;
+            border-radius: var(--radius-medium);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--dark-gray);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-red);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--secondary-black);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-large);
+            overflow: hidden;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .table th {
+            background: var(--tertiary-black);
+            font-weight: 600;
+            color: var(--pure-white);
+            font-size: 14px;
+        }
+
+        .table td {
+            color: var(--medium-gray);
+        }
+
+        .table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px 20px;
+            border-radius: var(--radius-medium);
+            margin-bottom: 24px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--secondary-black);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 64px 0 32px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--pure-white);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--medium-gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--pure-white);
+        }
+
+        .footer-bottom {
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            color: var(--dark-gray);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-links {
+                gap: 24px;
+            }
+            
+            .search-input {
+                width: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero {
+                padding: 80px 0 60px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section {
+                padding: 60px 0;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 24px;
+            }
+            
+            .search-input {
+                width: 180px;
+            }
+            
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">MOTOELITE</a>
+                
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="#" class="active">Home</a></li>
+                        <li><a href="#">Parts</a></li>
+                        <li><a href="#">Service</a></li>
+                        <li><a href="#">Performance</a></li>
+                        <li><a href="#">Racing</a></li>
+                        <li><a href="#">Support</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <input type="text" class="search-input" placeholder="Search premium parts...">
+                    <button class="cart-btn">
+                        🛒
+                        <span class="cart-count">2</span>
+                    </button>
+                    <a href="#" class="btn btn-ghost">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Engineering Excellence</h1>
+                <p>Premium motorcycle parts and professional services for the most demanding riders. Performance, precision, perfection.</p>
+                <div class="hero-actions">
+                    <a href="#" class="btn btn-primary">Explore Premium Parts</a>
+                    <a href="#" class="btn btn-secondary">Professional Service</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Categories Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Premium Categories</h2>
+                <p class="section-description">Engineered for performance, crafted for excellence. Discover our curated collection of premium motorcycle components.</p>
+            </div>
+            
+            <div class="category-grid">
+                <div class="category-card">
+                    <span class="category-icon">⚡</span>
+                    <div class="category-name">Performance Engine</div>
+                </div>
+                <div class="category-card">
+                    <span class="category-icon">🛑</span>
+                    <div class="category-name">Racing Brakes</div>
+                </div>
+                <div class="category-card">
+                    <span class="category-icon">💨</span>
+                    <div class="category-name">Exhaust Systems</div>
+                </div>
+                <div class="category-card">
+                    <span class="category-icon">⚙️</span>
+                    <div class="category-name">Transmission</div>
+                </div>
+                <div class="category-card">
+                    <span class="category-icon">🏁</span>
+                    <div class="category-name">Aerodynamics</div>
+                </div>
+                <div class="category-card">
+                    <span class="category-icon">🔧</span>
+                    <div class="category-name">Professional Service</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Featured Products</h2>
+                <p class="section-description">Meticulously selected components that define the pinnacle of motorcycle engineering.</p>
+            </div>
+            
+            <div class="product-grid">
+                <div class="product-card">
+                    <div class="product-image">
+                        <div class="product-badge">PREMIUM</div>
+                        AKRAPOVIC RACING EXHAUST
+                    </div>
+                    <div class="product-info">
+                        <div class="product-brand">AKRAPOVIC</div>
+                        <div class="product-name">Evolution Racing Exhaust System</div>
+                        <div class="product-description">Full titanium construction with carbon fiber end cap. Optimized for track performance and weight reduction.</div>
+                        <div class="product-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating-text">4.9 (124 reviews)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="current-price">$1,299.00</span>
+                            <span class="original-price">$1,499.00</span>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">Add to Cart</button>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="product-image">
+                        <div class="product-badge">RACING</div>
+                        BREMBO RACING BRAKES
+                    </div>
+                    <div class="product-info">
+                        <div class="product-brand">BREMBO</div>
+                        <div class="product-name">GP4-RX Racing Brake Calipers</div>
+                        <div class="product-description">Radial mounting calipers with titanium pistons. MotoGP derived technology for ultimate stopping power.</div>
+                        <div class="product-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating-text">4.8 (89 reviews)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="current-price">$2,199.00</span>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">Add to Cart</button>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="product-image">
+                        ÖHLINS RACING SUSPENSION
+                    </div>
+                    <div class="product-info">
+                        <div class="product-brand">ÖHLINS</div>
+                        <div class="product-name">TTX GP Racing Shock</div>
+                        <div class="product-description">World championship proven technology. Full adjustability with titanium spring and remote reservoir.</div>
+                        <div class="product-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating-text">4.9 (156 reviews)</span>
+                        </div>
+                        <div class="product-price">
+                            <span class="current-price">$3,499.00</span>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Style Guide Components -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Typography System</h2>
+                <p class="section-description">Clean, professional typography hierarchy for optimal readability and brand consistency.</p>
+            </div>
+            
+            <div style="background: var(--secondary-black); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-large); padding: 40px;">
+                <h1 style="margin-bottom: 16px;">Heading 1 - Hero Title</h1>
+                <h2 style="margin-bottom: 16px;">Heading 2 - Section Title</h2>
+                <h3 style="margin-bottom: 16px;">Heading 3 - Subsection Title</h3>
+                <h4 style="margin-bottom: 16px;">Heading 4 - Component Title</h4>
+                <h5 style="margin-bottom: 16px;">Heading 5 - Small Title</h5>
+                <h6 style="margin-bottom: 16px;">Heading 6 - Micro Title</h6>
+                <p style="margin-bottom: 16px;">Regular paragraph text with optimal contrast and readability for extended reading sessions.</p>
+                <p class="text-large" style="margin-bottom: 16px;">Large text for emphasis and important information.</p>
+                <p class="text-small" style="margin-bottom: 16px;">Small text for supplementary information and captions.</p>
+                <p><span class="text-accent">Accent colored text</span> for highlights and <span class="text-gray">muted text</span> for secondary information.</p>
+            </div>
+        </section>
+
+        <!-- Button Examples -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Button System</h2>
+                <p class="section-description">Consistent button hierarchy with premium feel and accessibility.</p>
+            </div>
+            
+            <div style="background: var(--secondary-black); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-large); padding: 40px;">
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;">
+                    <button class="btn btn-primary">Primary Action</button>
+                    <button class="btn btn-secondary">Secondary Action</button>
+                    <button class="btn btn-ghost">Ghost Button</button>
+                    <button class="btn" style="background: var(--tertiary-black); color: var(--dark-gray);" disabled>Disabled</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form Examples -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Form Components</h2>
+                <p class="section-description">Professional form elements with consistent styling and enhanced user experience.</p>
+            </div>
+            
+            <div style="background: var(--secondary-black); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-large); padding: 40px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-input" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-input" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Motorcycle Model</label>
+                            <select class="form-select">
+                                <option>Select your motorcycle</option>
+                                <option>Ducati Panigale V4</option>
+                                <option>BMW S1000RR</option>
+                                <option>Yamaha YZF-R1</option>
+                                <option>Honda CBR1000RR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Services Required</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" class="checkbox">
+                                    <span>Performance Tuning</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" class="checkbox">
+                                    <span>Race Preparation</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" class="checkbox">
+                                    <span>Custom Installation</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea class="form-textarea" rows="4" placeholder="Tell us about your performance goals..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Table Example -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Data Tables</h2>
+                <p class="section-description">Clean, readable tables for inventory and order management.</p>
+            </div>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color: var(--pure-white); font-weight: 500;">Evolution Racing Exhaust</td>
+                            <td>Akrapovic</td>
+                            <td>Exhaust Systems</td>
+                            <td>12</td>
+                            <td style="color: var(--pure-white);">$1,299.00</td>
+                            <td><span style="color: #10b981;">In Stock</span></td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--pure-white); font-weight: 500;">GP4-RX Racing Calipers</td>
+                            <td>Brembo</td>
+                            <td>Brake System</td>
+                            <td>3</td>
+                            <td style="color: var(--pure-white);">$2,199.00</td>
+                            <td><span style="color: #f59e0b;">Low Stock</span></td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--pure-white); font-weight: 500;">TTX GP Racing Shock</td>
+                            <td>Öhlins</td>
+                            <td>Suspension</td>
+                            <td>0</td>
+                            <td style="color: var(--pure-white);">$3,499.00</td>
+                            <td><span style="color: #ef4444;">Pre-order</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Alerts -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Alert System</h2>
+                <p class="section-description">Clear, professional notifications for various system states.</p>
+            </div>
+            
+            <div style="background: var(--secondary-black); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-large); padding: 40px;">
+                <div class="alert alert-success">
+                    <strong>Order Confirmed</strong> - Your premium parts order #PE-2024-001 has been successfully placed and is being prepared.
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Limited Stock</strong> - Only 3 units remaining for this high-demand racing component.
+                </div>
+                <div class="alert alert-error">
+                    <strong>Payment Failed</strong> - Unable to process your payment. Please verify your card details and try again.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Premium Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Concierge Support</a></li>
+                        <li><a href="#">Expert Installation</a></li>
+                        <li><a href="#">Performance Consulting</a></li>
+                        <li><a href="#">Racing Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Products</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Engine Components</a></li>
+                        <li><a href="#">Brake Systems</a></li>
+                        <li><a href="#">Suspension</a></li>
+                        <li><a href="#">Exhaust Systems</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About MotoElite</a></li>
+                        <li><a href="#">Racing Heritage</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press Center</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">YouTube</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                        <li><a href="#">Racing Events</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © 2024 MotoElite. Engineering excellence since 1998. All rights reserved.
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

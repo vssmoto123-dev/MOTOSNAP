@@ -1,0 +1,74 @@
+System_Architecture_Draft
+
+1. High-Level Architecture (Macro View)
+We’re looking at Spring Boot (backend) + Next.js (frontend) with a SQL database.
+
+Flow:
+Customer → Next.js → Spring Boot → SQL → [Receipt/Approval flow]
+
+Frontend (Next.js)
+Handles UI (booking forms, dashboards, stock views, invoices).
+CSR + SSR (hybrid): SSR for SEO (workshop website), CSR for dashboard.
+Auth logic: JWT tokens stored in HTTP-only cookies.
+
+Backend (Spring Boot)
+REST API (stateless).
+Handles authentication, business logic (booking rules, stock auto-deduct, invoice generation).
+Email notifications via a service (e.g., SendGrid).
+
+Database (Postgres/MySQL)
+Holds users, roles, appointments, service pricing, inventory, invoices.
+
+Hosting
+Either monolithic deployment (backend + DB + frontend build files) or separated (frontend hosted as static, backend API on Heroku/Render).
+Economically, start monolithic → scale later.
+
+
+
+2. Internal Layers (Micro View of Backend)
+
+Spring Boot service structure:
+
+Controller Layer
+REST endpoints (/auth, /bookings, /inventory, /pricing).
+
+Service Layer
+Business logic (apply discounts, calculate service price, auto-deduct stock).
+
+Repository Layer
+JPA/Hibernate mapping to SQL.
+
+Security Layer
+JWT filter, role-based access (Admin/Mechanic/Customer).
+
+3. Key Modules
+
+Auth Module: Email/Phone login, JWT token, password reset.
+Booking Module: Staff creates bookings, customers self-book online.
+Receipt Module: Upload receipt (customer), Approve/reject (admin), Links to orders and inventory.
+Inventory Module: Auto-deduct stock on mechanic request, manual adjustments by Admin only.
+Pricing Module: Option 2 = price lists linked to service types & vehicle category.
+Notification Module: Email confirmations (SendGrid/SMTP).
+Reporting Module: Manual download (CSV/PDF).
+
+
+4. Data Model (SQL Tables – First Draft)
+
+users → id, name, email, phone, password, role
+orders → id, user_id, status (pending, approved, rejected, complete)
+order_items → id, order_id, part_id, qty, price
+receipts → id, order_id, file_url, status, uploaded_at, approved_by
+vehicles → id, user_id, plate_no, model, year
+services → id, name, category, base_price
+pricing_rules → id, service_id, vehicle_category, price
+bookings → id, user_id, vehicle_id, service_id, datetime, status
+inventory → id, part_name, qty, unit_price
+requests → id, mechanic_id, part_id, qty, booking_id (auto-deducts from inventory)
+invoices → id, booking_id, total, pdf_url
+
+
+5. Deployment Options
+
+(Simpler, cheaper at start)
+Spring Boot serves frontend build (Next.js npm run build → out/ into resources/static).
+One deployment on Heroku/Render.

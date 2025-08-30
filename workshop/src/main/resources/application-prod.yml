@@ -1,0 +1,71 @@
+# Production Environment Configuration
+spring:
+  datasource:
+    # Production database URL from environment (e.g., Heroku DATABASE_URL)
+    url: ${DATABASE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      data-source-properties:
+        useSSL: true
+        requireSSL: true
+        verifyServerCertificate: true
+        serverTimezone: UTC
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create/update in production
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 50  # Larger batch size for production
+
+# JWT Configuration - Secure for production
+jwt:
+  secret: ${JWT_SECRET}  # Must be set as environment variable
+  expiration:
+    access: 900000      # 15 minutes
+    refresh: 604800000  # 7 days
+
+# Security - Strict for production
+server:
+  port: ${PORT:8080}  # Heroku uses PORT environment variable
+  servlet:
+    session:
+      cookie:
+        secure: true   # HTTPS only
+        http-only: true
+        same-site: strict
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+# Logging - Minimal for production
+logging:
+  level:
+    root: WARN
+    com.motosnap.workshop: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+
+# Production monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
