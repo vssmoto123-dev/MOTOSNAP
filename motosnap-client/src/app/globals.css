@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  /* MOTOSNAP Color System */
+  --primary-black: #0a0a0b;
+  --secondary-black: #1a1a1b;
+  --tertiary-black: #2a2a2b;
+  --accent-red: #c41e3a;
+  --pure-white: #ffffff;
+  --light-gray: #e5e5e5;
+  --medium-gray: #9ca3af;
+  --dark-gray: #4b5563;
+  --platinum: #e5e7eb;
+  --gold: #fbbf24;
+  
+  /* System Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.6);
+  
+  /* Radius */
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  
+  /* Transitions */
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@theme {
+  --color-primary: var(--accent-red);
+  --color-secondary: var(--secondary-black);
+  --color-background: var(--primary-black);
+  --color-surface: var(--secondary-black);
+  --color-muted: var(--tertiary-black);
+  
+  --color-text: var(--pure-white);
+  --color-text-muted: var(--medium-gray);
+  --color-text-accent: var(--accent-red);
+  
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-focus: var(--accent-red);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--primary-black);
+  color: var(--pure-white);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tertiary-black);
+  border-radius: var(--radius-small);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--medium-gray);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-red);
+  outline-offset: 2px;
+}

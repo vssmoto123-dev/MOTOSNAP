@@ -5,9 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "carts")
@@ -25,7 +27,8 @@ public class Cart {
     private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CartItem> cartItems;
+    @JsonManagedReference("cart-cartItems")
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -45,15 +48,19 @@ public class Cart {
     }
 
     public double getTotalAmount() {
-        return cartItems == null ? 0.0 : 
-            cartItems.stream()
+        if (cartItems == null || cartItems.isEmpty()) {
+            return 0.0;
+        }
+        return cartItems.stream()
                 .mapToDouble(CartItem::getSubtotal)
                 .sum();
     }
 
     public int getTotalItems() {
-        return cartItems == null ? 0 :
-            cartItems.stream()
+        if (cartItems == null || cartItems.isEmpty()) {
+            return 0;
+        }
+        return cartItems.stream()
                 .mapToInt(CartItem::getQuantity)
                 .sum();
     }

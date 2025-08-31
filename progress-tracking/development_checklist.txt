@@ -11,8 +11,8 @@ MOTOSNAP Development Checklist
 [x] Create `Vehicle` entity.
 [x] Create `Inventory` entity (for parts).
 [x] Create `Service` entity.
-[ ] Create `Cart` entity.
-[ ] Create `CartItem` entity.
+[x] Create `Cart` entity.
+[x] Create `CartItem` entity.
 [x] Create `Order` entity.
 [x] Create `Receipt` entity.
 
@@ -21,8 +21,8 @@ MOTOSNAP Development Checklist
 [x] Create `VehicleRepository`.
 [x] Create `InventoryRepository`.
 [x] Create `ServiceRepository`.
-[ ] Create `CartRepository`.
-[ ] Create `CartItemRepository`.
+[x] Create `CartRepository`.
+[x] Create `CartItemRepository`.
 [x] Create `OrderRepository`.
 [x] Create `ReceiptRepository`.
 
@@ -41,24 +41,24 @@ MOTOSNAP Development Checklist
 *(This milestone remains focused on managing core system data)*
 
 **Inventory Management API (`InventoryController`):**
-[ ] Create the `InventoryController` class, secured for ADMIN role.
-[ ] `POST /api/inventory` - Create a new part.
-[ ] `GET /api/inventory` - Get a list of all parts.
-[ ] `GET /api/inventory/{id}` - Get a single part by its ID.
-[ ] `PUT /api/inventory/{id}` - Update an existing part.
-[ ] `DELETE /api/inventory/{id}` - Delete a part.
+[x] Create the `InventoryController` class, secured for ADMIN role.
+[x] `POST /api/inventory` - Create a new part.
+[x] `GET /api/inventory` - Get a list of all parts.
+[x] `GET /api/inventory/{id}` - Get a single part by its ID.
+[x] `PUT /api/inventory/{id}` - Update an existing part.
+[x] `DELETE /api/inventory/{id}` - Delete a part.
 
 **Service Management API (`ServiceController`):**
-[ ] Create the `ServiceController` class, secured for ADMIN role.
-[ ] `POST /api/services` - Create a new service type.
-[ ] `GET /api/services` - Get a list of all services.
-[ ] `PUT /api/services/{id}` - Update an existing service.
-[ ] `DELETE /api/services/{id}` - Delete a service.
+[x] Create the `ServiceController` class, secured for ADMIN role.
+[x] `POST /api/services` - Create a new service type.
+[x] `GET /api/services` - Get a list of all services.
+[x] `PUT /api/services/{id}` - Update an existing service.
+[x] `DELETE /api/services/{id}` - Delete a service.
 
 **User Management API (`UserController`):**
-[ ] Create the `UserController` class, secured for ADMIN role.
-[ ] `GET /api/users` - Get a list of all users (using a DTO).
-[ ] `PUT /api/users/{id}/role` - Update a specific user's role.
+[x] Create the `UserController` class, secured for ADMIN role.
+[x] `GET /api/users` - Get a list of all users (using a DTO).
+[x] `PUT /api/users/{id}/role` - Update a specific user's role.
 
 ---
 

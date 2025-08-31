@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -58,9 +59,11 @@ public class Inventory {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<OrderItem> orderItems = new ArrayList<>();
     
     @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Request> requests = new ArrayList<>();
     
     // Constructor for creating new parts
