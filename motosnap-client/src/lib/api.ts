@@ -283,6 +283,11 @@ class ApiClient {
     return this.request<InventoryItem[]>('/inventory?lowStock=true');
   }
 
+  // Public - Service Browsing
+  async getPublicServices(): Promise<Service[]> {
+    return this.request<Service[]>('/public/services');
+  }
+
   // Admin - Service Management
   async getServices(): Promise<Service[]> {
     return this.request<Service[]>('/services');

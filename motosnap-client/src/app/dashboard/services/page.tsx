@@ -59,69 +59,11 @@ export default function ServicesPage() {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      // For now, we'll create a temporary list of services since the API is admin-only
-      // TODO: Create customer-accessible service endpoints
-      const mockServices: Service[] = [
-        {
-          id: 1,
-          name: 'Basic Service',
-          category: 'Maintenance',
-          description: 'Complete basic maintenance including oil change, filter replacement, and basic inspection.',
-          basePrice: 150.00,
-          estimatedDurationMinutes: 120,
-          active: true
-        },
-        {
-          id: 2,
-          name: 'Full Service',
-          category: 'Maintenance',
-          description: 'Comprehensive service including all basic service items plus brake check, chain adjustment, and battery test.',
-          basePrice: 250.00,
-          estimatedDurationMinutes: 180,
-          active: true
-        },
-        {
-          id: 3,
-          name: 'Engine Tune-up',
-          category: 'Performance',
-          description: 'Complete engine tuning including carburetor cleaning, spark plug replacement, and timing adjustment.',
-          basePrice: 300.00,
-          estimatedDurationMinutes: 240,
-          active: true
-        },
-        {
-          id: 4,
-          name: 'Brake Service',
-          category: 'Safety',
-          description: 'Brake pad replacement, brake fluid change, and brake system inspection.',
-          basePrice: 180.00,
-          estimatedDurationMinutes: 90,
-          active: true
-        },
-        {
-          id: 5,
-          name: 'Chain and Sprocket',
-          category: 'Drivetrain',
-          description: 'Chain cleaning, lubrication, adjustment, and sprocket inspection.',
-          basePrice: 80.00,
-          estimatedDurationMinutes: 60,
-          active: true
-        },
-        {
-          id: 6,
-          name: 'Electrical Diagnosis',
-          category: 'Electrical',
-          description: 'Complete electrical system diagnosis and repair.',
-          basePrice: 120.00,
-          estimatedDurationMinutes: 120,
-          active: true
-        }
-      ];
-      
-      setServices(mockServices);
+      const fetchedServices = await apiClient.getPublicServices();
+      setServices(fetchedServices);
       
       // Extract unique categories
-      const uniqueCategories = [...new Set(mockServices.map(s => s.category))];
+      const uniqueCategories = [...new Set(fetchedServices.map(s => s.category))];
       setCategories(uniqueCategories);
       
       setError(null);

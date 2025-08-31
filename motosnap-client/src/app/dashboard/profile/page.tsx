@@ -108,23 +108,23 @@ export default function ProfilePage() {
       
       {/* Profile Information */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Personal Information</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-black">Personal Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-gray-600 text-sm font-medium">Name</label>
-            <p className="text-lg">{profile.name}</p>
+            <p className="text-lg text-black">{profile.name}</p>
           </div>
           <div>
             <label className="block text-gray-600 text-sm font-medium">Email</label>
-            <p className="text-lg">{profile.email}</p>
+            <p className="text-lg text-black">{profile.email}</p>
           </div>
           <div>
             <label className="block text-gray-600 text-sm font-medium">Phone</label>
-            <p className="text-lg">{profile.phone || 'Not provided'}</p>
+            <p className="text-lg text-black">{profile.phone || 'Not provided'}</p>
           </div>
           <div>
             <label className="block text-gray-600 text-sm font-medium">Role</label>
-            <p className="text-lg capitalize">{profile.role.toLowerCase()}</p>
+            <p className="text-lg capitalize text-black">{profile.role.toLowerCase()}</p>
           </div>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function ProfilePage() {
       {/* Vehicles Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">My Vehicles</h2>
+          <h2 className="text-2xl font-semibold text-black">My Vehicles</h2>
           <button
             onClick={() => setShowAddVehicle(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -170,10 +170,10 @@ export default function ProfilePage() {
         {showAddVehicle && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-xl font-semibold mb-4">Add New Vehicle</h3>
+              <h3 className="text-xl font-semibold mb-4 text-black">Add New Vehicle</h3>
               <form onSubmit={handleAddVehicle} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Plate Number *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Plate Number *</label>
                   <input
                     type="text"
                     required
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Brand *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Brand *</label>
                   <input
                     type="text"
                     required
@@ -193,7 +193,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Model *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Model *</label>
                   <input
                     type="text"
                     required
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Year *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Year *</label>
                   <input
                     type="number"
                     required
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Color</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Color</label>
                   <input
                     type="text"
                     value={vehicleForm.color}
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Engine Capacity</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Engine Capacity</label>
                   <input
                     type="text"
                     placeholder="e.g., 150cc, 1.6L"
