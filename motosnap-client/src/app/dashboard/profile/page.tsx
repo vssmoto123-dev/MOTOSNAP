@@ -179,7 +179,7 @@ export default function ProfilePage() {
                     required
                     value={vehicleForm.plateNo}
                     onChange={(e) => setVehicleForm({...vehicleForm, plateNo: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div>
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                     required
                     value={vehicleForm.brand}
                     onChange={(e) => setVehicleForm({...vehicleForm, brand: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                     required
                     value={vehicleForm.model}
                     onChange={(e) => setVehicleForm({...vehicleForm, model: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div>
@@ -211,7 +211,7 @@ export default function ProfilePage() {
                     max={new Date().getFullYear() + 1}
                     value={vehicleForm.year}
                     onChange={(e) => setVehicleForm({...vehicleForm, year: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                     type="text"
                     value={vehicleForm.color}
                     onChange={(e) => setVehicleForm({...vehicleForm, color: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                     placeholder="e.g., 150cc, 1.6L"
                     value={vehicleForm.engineCapacity}
                     onChange={(e) => setVehicleForm({...vehicleForm, engineCapacity: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
                 </div>
                 <div className="flex gap-3 pt-4">

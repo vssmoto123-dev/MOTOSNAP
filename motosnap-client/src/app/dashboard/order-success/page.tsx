@@ -269,10 +269,30 @@ export default function OrderSuccessPage() {
               </button>
             )}
 
-            {order.hasReceipt && (
+            {order.hasReceipt && order.status === 'PAYMENT_SUBMITTED' && (
+              <div className="bg-blue-50 p-4 rounded-lg mb-3">
+                <p className="text-blue-800 font-medium">Payment receipt uploaded</p>
+                <p className="text-blue-600 text-sm">Waiting for admin approval</p>
+              </div>
+            )}
+
+            {order.hasReceipt && order.status === 'APPROVED' && (
               <div className="bg-green-50 p-4 rounded-lg mb-3">
-                <p className="text-green-800 font-medium">Payment receipt uploaded</p>
-                <p className="text-green-600 text-sm">Waiting for admin approval</p>
+                <p className="text-green-800 font-medium">Payment approved</p>
+                <p className="text-green-600 text-sm">Your order has been approved and is being processed</p>
+              </div>
+            )}
+
+            {order.hasReceipt && order.status === 'REJECTED' && (
+              <div className="bg-red-50 p-4 rounded-lg mb-3">
+                <p className="text-red-800 font-medium">Payment rejected</p>
+                <p className="text-red-600 text-sm">Your payment receipt was rejected by admin. Please upload a new receipt.</p>
+                <button
+                  onClick={() => setShowReceiptUpload(true)}
+                  className="mt-3 w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+                >
+                  Upload New Receipt
+                </button>
               </div>
             )}
 
@@ -325,7 +345,7 @@ export default function OrderSuccessPage() {
                   placeholder="0.00"
                   value={receiptForm.receiptAmount}
                   onChange={(e) => setReceiptForm({...receiptForm, receiptAmount: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 />
               </div>
               <div>
@@ -335,7 +355,7 @@ export default function OrderSuccessPage() {
                   placeholder="Additional notes about the payment..."
                   value={receiptForm.notes}
                   onChange={(e) => setReceiptForm({...receiptForm, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 />
               </div>
               <div className="flex gap-3 pt-4">

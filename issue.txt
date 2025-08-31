@@ -1,0 +1,5 @@
+issue:
+
+logged in as customer -> view cart -> "cart is empty" -> click browse parts button -> add 2 items in cart -> click back to dashboard -> view shopping cart -> click proceed to checkout -> order placed successfully -> avoid clicking upload payment receipt, instead try click continue shopping -> click back to dashboard again -> current url ("http://localhost:3000/dashboard/order-success?orderId=4") with a ui error "Error: Order information not found. Please check your orders in your profile." -> click go to dashboard -> click shopping cart -> shopping cart is empty (understandable, but how customer wants to view orders with pending payments?)
+
+we can ignore "how customer wants to view orders with pending payments?" in this branch first. we're going to sort it out later.

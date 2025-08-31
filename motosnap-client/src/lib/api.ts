@@ -350,6 +350,32 @@ class ApiClient {
     return this.request<UserResponse[]>(`/users?search=${encodeURIComponent(searchTerm)}`);
   }
 
+  // Admin - Order Management
+  async getAllOrders(): Promise<any[]> {
+    return this.request<any[]>('/orders/admin/orders');
+  }
+
+  async approveOrder(orderId: number): Promise<any> {
+    return this.request<any>(`/orders/admin/orders/${orderId}/approve`, {
+      method: 'PUT',
+    });
+  }
+
+  async rejectOrder(orderId: number, reason?: string): Promise<any> {
+    const url = `/orders/admin/orders/${orderId}/reject${reason ? `?reason=${encodeURIComponent(reason)}` : ''}`;
+    return this.request<any>(url, {
+      method: 'PUT',
+    });
+  }
+
+  getReceiptUrl(orderId: number): string {
+    return `${this.baseURL}/orders/admin/orders/${orderId}/receipt`;
+  }
+
+  getReceiptAuthHeaders(): HeadersInit {
+    return this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {};
+  }
+
   // Customer - Parts browsing
   async getParts(): Promise<InventoryItem[]> {
     return this.request<InventoryItem[]>('/parts');
@@ -362,6 +388,10 @@ class ApiClient {
   // Customer - Profile Management
   async getUserProfile(): Promise<any> {
     return this.request<any>('/me');
+  }
+
+  async getUserVehicles(): Promise<any[]> {
+    return this.request<any[]>('/me/vehicles');
   }
 
   async addVehicle(data: any): Promise<any> {
@@ -401,6 +431,10 @@ class ApiClient {
     return this.request<any>('/orders', {
       method: 'POST',
     });
+  }
+
+  async getUserOrders(): Promise<any[]> {
+    return this.request<any[]>('/orders');
   }
 
   async getOrderById(orderId: number): Promise<any> {

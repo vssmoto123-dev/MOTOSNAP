@@ -95,6 +95,17 @@ public class OrderService {
         return convertToOrderResponse(order);
     }
 
+    public List<OrderResponse> getUserOrders(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
+        
+        return orders.stream()
+                .map(this::convertToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
     public OrderResponse getOrderById(String userEmail, Long orderId) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -120,26 +131,132 @@ public class OrderService {
             throw new RuntimeException("Unauthorized to upload receipt for this order");
         }
 
-        if (order.getStatus() != OrderStatus.PENDING) {
-            throw new RuntimeException("Receipt can only be uploaded for pending orders");
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.REJECTED) {
+            throw new RuntimeException("Receipt can only be uploaded for pending or rejected orders");
         }
 
         String fileName = fileStorageService.storeFile(file);
 
-        // Create receipt
-        Receipt receipt = new Receipt();
-        receipt.setOrder(order);
-        receipt.setFileUrl(fileName);
-        receipt.setAmount(BigDecimal.valueOf(receiptAmount));
-        receipt.setNotes(notes);
-        receipt.setStatus(ReceiptStatus.PENDING);
+        // Check if receipt already exists (for rejected orders)
+        Receipt receipt = receiptRepository.findByOrder(order).orElse(null);
+        
+        if (receipt != null) {
+            // Update existing receipt for rejected orders
+            receipt.setFileUrl(fileName);
+            receipt.setAmount(BigDecimal.valueOf(receiptAmount));
+            receipt.setNotes(notes);
+            receipt.setStatus(ReceiptStatus.PENDING);
+            receipt.setApprovedBy(null);
+            receipt.setApprovedAt(null);
+        } else {
+            // Create new receipt
+            receipt = new Receipt();
+            receipt.setOrder(order);
+            receipt.setFileUrl(fileName);
+            receipt.setAmount(BigDecimal.valueOf(receiptAmount));
+            receipt.setNotes(notes);
+            receipt.setStatus(ReceiptStatus.PENDING);
+        }
+        
         receiptRepository.save(receipt);
 
         // Update order status
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.PAYMENT_SUBMITTED);
         order = orderRepository.save(order);
+        
+        System.out.println("DEBUG: Order status changed from " + previousStatus + " to " + order.getStatus() + " for order " + order.getId());
 
         return convertToOrderResponse(order);
+    }
+
+    // Admin order management methods
+    public List<OrderResponse> getAllOrders() {
+        List<Order> orders = orderRepository.findAll()
+                .stream()
+                .sorted((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt())) // Latest first
+                .collect(Collectors.toList());
+        
+        return orders.stream()
+                .map(this::convertToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
+    public OrderResponse approveOrder(String adminEmail, Long orderId) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+
+        if (!admin.getRole().name().equals("ADMIN")) {
+            throw new RuntimeException("Only administrators can approve orders");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.PAYMENT_SUBMITTED) {
+            throw new RuntimeException("Only orders with submitted payments can be approved");
+        }
+
+        // Check if order has receipt
+        Receipt receipt = receiptRepository.findByOrder(order)
+                .orElseThrow(() -> new RuntimeException("No receipt found for this order"));
+
+        // Update order status
+        order.setStatus(OrderStatus.APPROVED);
+        order = orderRepository.save(order);
+
+        // Update receipt status
+        receipt.setStatus(ReceiptStatus.APPROVED);
+        receipt.setApprovedBy(admin);
+        receipt.setApprovedAt(java.time.LocalDateTime.now());
+        receiptRepository.save(receipt);
+
+        return convertToOrderResponse(order);
+    }
+
+    public OrderResponse rejectOrder(String adminEmail, Long orderId, String reason) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+
+        if (!admin.getRole().name().equals("ADMIN")) {
+            throw new RuntimeException("Only administrators can reject orders");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.PAYMENT_SUBMITTED) {
+            throw new RuntimeException("Only orders with submitted payments can be rejected");
+        }
+
+        // Check if order has receipt
+        Receipt receipt = receiptRepository.findByOrder(order)
+                .orElseThrow(() -> new RuntimeException("No receipt found for this order"));
+
+        // Update order status
+        order.setStatus(OrderStatus.REJECTED);
+        order = orderRepository.save(order);
+
+        // Update receipt status
+        receipt.setStatus(ReceiptStatus.REJECTED);
+        receipt.setApprovedBy(admin);
+        receipt.setApprovedAt(java.time.LocalDateTime.now());
+        if (reason != null && !reason.trim().isEmpty()) {
+            receipt.setAdminNotes(reason);
+        }
+        receiptRepository.save(receipt);
+
+        return convertToOrderResponse(order);
+    }
+
+    public String getReceiptFileName(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Receipt receipt = receiptRepository.findByOrder(order)
+                .orElse(null);
+
+        return receipt != null ? receipt.getFileUrl() : null;
     }
 
     private OrderResponse convertToOrderResponse(Order order) {

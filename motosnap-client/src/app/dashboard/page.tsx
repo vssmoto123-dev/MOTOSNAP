@@ -138,7 +138,15 @@ function DashboardContent() {
         {/* Quick Navigation - Available for all users */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-text mb-4">Quick Navigation</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {user?.role === 'CUSTOMER' && (
+              <Button
+                onClick={() => router.push('/dashboard/services')}
+                className="h-16 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Book Services
+              </Button>
+            )}
             <Button
               onClick={() => router.push('/dashboard/parts')}
               className="h-16 bg-blue-600 hover:bg-blue-700 text-white"
@@ -156,6 +164,12 @@ function DashboardContent() {
               className="h-16 bg-purple-600 hover:bg-purple-700 text-white"
             >
               My Profile
+            </Button>
+            <Button
+              onClick={() => router.push('/dashboard/orders')}
+              className="h-16 bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              My Orders
             </Button>
             {user?.role === 'ADMIN' && (
               <Button
