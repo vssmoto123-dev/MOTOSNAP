@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,12 @@ public class Receipt {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReceiptStatus status = ReceiptStatus.PENDING;
+    
+    @Column(precision = 10, scale = 2)
+    private BigDecimal amount;
+    
+    @Column(length = 1000)
+    private String notes;
     
     @Column(length = 255)
     private String adminNotes;
@@ -53,4 +60,5 @@ public class Receipt {
         this.order = order;
         this.status = ReceiptStatus.PENDING;
     }
+
 }

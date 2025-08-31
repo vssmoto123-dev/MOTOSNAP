@@ -403,11 +403,49 @@ class ApiClient {
     });
   }
 
-  async uploadReceipt(orderId: number, data: any): Promise<any> {
-    return this.request<any>(`/orders/${orderId}/receipt`, {
+  async uploadReceipt(orderId: number, file: File, receiptAmount: number, notes: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('receiptAmount', receiptAmount.toString());
+    formData.append('notes', notes);
+
+    const url = `${this.baseURL}/orders/${orderId}/receipt`;
+    const config: RequestInit = {
       method: 'POST',
-      body: JSON.stringify(data),
-    });
+      body: formData,
+      headers: {
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+      },
+    };
+
+    try {
+      console.log(`🔍 File Upload Request: POST ${url}`, {
+        file: file.name,
+        receiptAmount,
+        notes,
+      });
+      
+      const response = await fetch(url, config);
+      
+      console.log(`📡 File Upload Response: ${response.status} ${response.statusText}`, {
+        url,
+        status: response.status,
+      });
+
+      if (!response.ok) {
+        const errorResponse = await this.handleError(response);
+        console.error(`❌ File Upload Error ${response.status}:`, errorResponse);
+        throw errorResponse;
+      }
+
+      const responseData = await response.json();
+      console.log(`✅ File Upload Success:`, responseData);
+      return responseData;
+    } catch (error) {
+      console.error('💥 File Upload Error:', error);
+      throw error;
+    }
   }
 
   // Debug endpoints

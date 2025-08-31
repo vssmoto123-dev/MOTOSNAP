@@ -37,7 +37,7 @@ export default function OrderSuccessPage() {
   const [showReceiptUpload, setShowReceiptUpload] = useState(false);
   
   const [receiptForm, setReceiptForm] = useState({
-    receiptImagePath: '',
+    receiptFile: null as File | null,
     receiptAmount: '',
     notes: ''
   });
@@ -83,20 +83,19 @@ export default function OrderSuccessPage() {
   const handleReceiptUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!order) return;
+    if (!order || !receiptForm.receiptFile) return;
 
     try {
-      const receiptData = {
-        receiptImagePath: receiptForm.receiptImagePath,
-        receiptAmount: parseFloat(receiptForm.receiptAmount),
-        notes: receiptForm.notes
-      };
-
-      await apiClient.uploadReceipt(order.id, receiptData);
+      await apiClient.uploadReceipt(
+        order.id, 
+        receiptForm.receiptFile, 
+        parseFloat(receiptForm.receiptAmount), 
+        receiptForm.notes
+      );
       
       setShowReceiptUpload(false);
       setReceiptForm({
-        receiptImagePath: '',
+        receiptFile: null,
         receiptAmount: '',
         notes: ''
       });
@@ -291,15 +290,20 @@ export default function OrderSuccessPage() {
             <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Payment Receipt</h3>
             <form onSubmit={handleReceiptUpload} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">Receipt Image Path/URL *</label>
+                <label className="block text-sm font-medium mb-1 text-gray-900">Receipt Image File *</label>
                 <input
-                  type="text"
+                  type="file"
                   required
-                  placeholder="e.g., /uploads/receipt_001.jpg"
-                  value={receiptForm.receiptImagePath}
-                  onChange={(e) => setReceiptForm({...receiptForm, receiptImagePath: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setReceiptForm({...receiptForm, receiptFile: file});
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                 />
+                {receiptForm.receiptFile && (
+                  <p className="text-sm text-gray-600 mt-1">Selected: {receiptForm.receiptFile.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-900">Receipt Amount *</label>

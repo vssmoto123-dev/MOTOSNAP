@@ -3,12 +3,12 @@ package com.motosnap.workshop.service;
 import com.motosnap.workshop.dto.OrderResponse;
 import com.motosnap.workshop.dto.OrderItemResponse;
 import com.motosnap.workshop.dto.InventoryResponse;
-import com.motosnap.workshop.dto.ReceiptUploadRequest;
 import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,6 +39,9 @@ public class OrderService {
 
     @Autowired
     private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public OrderResponse createOrderFromCart(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
@@ -92,7 +95,7 @@ public class OrderService {
         return convertToOrderResponse(order);
     }
 
-    public OrderResponse uploadReceipt(String userEmail, Long orderId, ReceiptUploadRequest request) {
+    public OrderResponse uploadReceipt(String userEmail, Long orderId, MultipartFile file, double receiptAmount, String notes) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -107,10 +110,14 @@ public class OrderService {
             throw new RuntimeException("Receipt can only be uploaded for pending orders");
         }
 
+        String fileName = fileStorageService.storeFile(file);
+
         // Create receipt
         Receipt receipt = new Receipt();
         receipt.setOrder(order);
-        receipt.setFileUrl(request.getReceiptImagePath());
+        receipt.setFileUrl(fileName);
+        receipt.setAmount(BigDecimal.valueOf(receiptAmount));
+        receipt.setNotes(notes);
         receipt.setStatus(ReceiptStatus.PENDING);
         receiptRepository.save(receipt);
 
