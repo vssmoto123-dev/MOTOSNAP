@@ -32,7 +32,7 @@ export default function OrderSuccessPage() {
   const orderId = searchParams.get('orderId');
   
   const [order, setOrder] = useState<Order | null>(null);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceiptUpload, setShowReceiptUpload] = useState(false);
   
@@ -42,12 +42,16 @@ export default function OrderSuccessPage() {
     notes: ''
   });
 
-  // Get order data from local storage if available (set during checkout)
+  // Get order data from local storage or API
   useEffect(() => {
-    console.log('🔍 Order success page loading, orderId:', orderId);
-    
-    // Only try to load from localStorage if we don't already have order data
-    if (orderId && !order) {
+    const fetchOrderData = async () => {
+      if (!orderId || order) return;
+
+      console.log('🔍 Order success page loading, orderId:', orderId);
+      setLoading(true);
+      setError(null);
+      
+      // First, try to load from localStorage (fresh from checkout)
       console.log('🔍 Looking for order data in localStorage with key:', `order_${orderId}`);
       const orderData = localStorage.getItem(`order_${orderId}`);
       console.log('🔍 Found order data:', orderData ? 'Yes' : 'No');
@@ -58,26 +62,33 @@ export default function OrderSuccessPage() {
           const parsedOrder = JSON.parse(orderData);
           console.log('✅ Parsed order data:', parsedOrder);
           setOrder(parsedOrder);
-          setError(null); // Clear any previous errors
+          setError(null);
+          setLoading(false);
           // Clean up local storage after using
           localStorage.removeItem(`order_${orderId}`);
           console.log('🗑️ Cleaned up localStorage');
+          return;
         } catch (err) {
           console.error('❌ Failed to parse order data:', err);
-          setError('Failed to load order information');
         }
-      } else {
-        console.log('❌ No order data found in localStorage');
-        // Let's check what keys are available
-        console.log('🔍 Available localStorage keys:', Object.keys(localStorage));
-        setError('Order information not found. Please check your orders in your profile.');
       }
-    } else if (orderId && order) {
-      console.log('✅ Order data already loaded, skipping localStorage check');
-    } else if (!orderId) {
-      console.log('❌ No order ID provided in URL');
-      setError('No order ID provided');
-    }
+
+      // If localStorage data not available, fetch from API
+      console.log('🔍 No localStorage data, fetching from API');
+      try {
+        const fetchedOrder = await apiClient.getOrderById(parseInt(orderId));
+        console.log('✅ Fetched order from API:', fetchedOrder);
+        setOrder(fetchedOrder);
+        setError(null);
+      } catch (err: any) {
+        console.error('❌ Failed to fetch order from API:', err);
+        setError(err?.error || 'Order information not found. Please check your orders in your profile.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderData();
   }, [orderId, order]);
 
   const handleReceiptUpload = async (e: React.FormEvent) => {

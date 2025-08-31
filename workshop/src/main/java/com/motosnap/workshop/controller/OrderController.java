@@ -42,6 +42,27 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrder(@PathVariable Long orderId, Authentication authentication) {
+        try {
+            System.out.println("DEBUG: Getting order by ID: " + orderId + " for user: " + authentication.getName());
+            String email = authentication.getName();
+            OrderResponse order = orderService.getOrderById(email, orderId);
+            System.out.println("DEBUG: Order retrieved successfully, ID: " + order.getId());
+            return ResponseEntity.ok(order);
+        } catch (RuntimeException e) {
+            System.err.println("ERROR: Failed to get order - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage(), "details", e.getClass().getSimpleName()));
+        } catch (Exception e) {
+            System.err.println("ERROR: Unexpected error getting order - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/{orderId}/receipt")
     public ResponseEntity<?> uploadReceipt(
             @PathVariable Long orderId,

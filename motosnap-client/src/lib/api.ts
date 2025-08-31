@@ -403,6 +403,10 @@ class ApiClient {
     });
   }
 
+  async getOrderById(orderId: number): Promise<any> {
+    return this.request<any>(`/orders/${orderId}`);
+  }
+
   async uploadReceipt(orderId: number, file: File, receiptAmount: number, notes: string): Promise<any> {
     const formData = new FormData();
     formData.append('file', file);

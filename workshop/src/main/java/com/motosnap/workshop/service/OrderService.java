@@ -95,6 +95,20 @@ public class OrderService {
         return convertToOrderResponse(order);
     }
 
+    public OrderResponse getOrderById(String userEmail, Long orderId) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized to access this order");
+        }
+
+        return convertToOrderResponse(order);
+    }
+
     public OrderResponse uploadReceipt(String userEmail, Long orderId, MultipartFile file, double receiptAmount, String notes) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));

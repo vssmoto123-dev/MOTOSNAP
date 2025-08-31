@@ -90,7 +90,7 @@ export default function PartsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push('/dashboard')}
           className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
