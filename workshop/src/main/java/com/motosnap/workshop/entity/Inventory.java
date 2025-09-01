@@ -54,6 +54,9 @@ public class Inventory {
     @Column(nullable = false)
     private Boolean deleted = false;
     
+    @Column(length = 500)
+    private String imageUrl;
+    
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -82,6 +85,7 @@ public class Inventory {
         this.brand = brand;
         this.active = true;
         this.deleted = false;
+        this.imageUrl = null;
     }
     
     // Helper method to check if stock is low

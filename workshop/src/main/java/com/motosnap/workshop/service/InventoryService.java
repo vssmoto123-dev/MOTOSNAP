@@ -8,12 +8,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +30,12 @@ import java.util.Optional;
 public class InventoryService {
     
     private final InventoryRepository inventoryRepository;
+    
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
+    
+    @Value("${app.upload.max-file-size:5242880}")
+    private long maxFileSize; // 5MB default
     
     public List<Inventory> getAllInventoryItems() {
         return inventoryRepository.findAllNonDeleted();
@@ -63,6 +78,7 @@ public class InventoryService {
         inventory.setMinStockLevel(request.getMinStockLevel());
         inventory.setCategory(request.getCategory());
         inventory.setBrand(request.getBrand());
+        inventory.setImageUrl(request.getImageUrl());
         
         return inventoryRepository.save(inventory);
     }
@@ -85,6 +101,9 @@ public class InventoryService {
         inventory.setMinStockLevel(request.getMinStockLevel());
         inventory.setCategory(request.getCategory());
         inventory.setBrand(request.getBrand());
+        if (request.getImageUrl() != null) {
+            inventory.setImageUrl(request.getImageUrl());
+        }
         
         return inventoryRepository.save(inventory);
     }
@@ -195,5 +214,91 @@ public class InventoryService {
             .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
         
         return inventory.getQty() <= inventory.getMinStockLevel();
+    }
+    
+    public String uploadImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+        
+        // Check file size
+        if (file.getSize() > maxFileSize) {
+            throw new RuntimeException("File size exceeds maximum allowed size of " + (maxFileSize / 1024 / 1024) + "MB");
+        }
+        
+        // Check file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new RuntimeException("Only image files are allowed");
+        }
+        
+        // Allowed image types
+        if (!contentType.equals("image/jpeg") && 
+            !contentType.equals("image/jpg") && 
+            !contentType.equals("image/png") && 
+            !contentType.equals("image/gif") && 
+            !contentType.equals("image/webp")) {
+            throw new RuntimeException("Unsupported image format. Allowed: JPEG, PNG, GIF, WebP");
+        }
+        
+        try {
+            // Create upload directory if it doesn't exist
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            // Generate unique filename
+            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+            String fileExtension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String filename = UUID.randomUUID().toString() + fileExtension;
+            
+            // Save file
+            Path filePath = uploadPath.resolve(filename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Return the relative URL path
+            return "/uploads/" + filename;
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
+        }
+    }
+    
+    public String updateInventoryImage(Long id, MultipartFile file) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(id)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
+        
+        // Upload new image
+        String imageUrl = uploadImage(file);
+        
+        // Delete old image if it exists
+        if (inventory.getImageUrl() != null && !inventory.getImageUrl().isEmpty()) {
+            deleteImageFile(inventory.getImageUrl());
+        }
+        
+        // Update inventory with new image URL
+        inventory.setImageUrl(imageUrl);
+        inventoryRepository.save(inventory);
+        
+        return imageUrl;
+    }
+    
+    private void deleteImageFile(String imageUrl) {
+        try {
+            if (imageUrl.startsWith("/uploads/")) {
+                String filename = imageUrl.substring("/uploads/".length());
+                Path filePath = Paths.get(uploadDir).resolve(filename);
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+            }
+        } catch (IOException e) {
+            // Log error but don't throw exception to not interrupt the main operation
+            System.err.println("Failed to delete old image file: " + e.getMessage());
+        }
     }
 }

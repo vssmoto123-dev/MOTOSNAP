@@ -115,8 +115,20 @@ export default function PartsPage() {
       {/* Parts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredParts.map((part) => (
-          <div key={part.id} className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-2 text-black">{part.partName}</h3>
+          <div key={part.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Image Section */}
+            {part.imageUrl && (
+              <div className="h-48 w-full overflow-hidden">
+                <img 
+                  src={`http://localhost:8080${part.imageUrl}`} 
+                  alt={part.partName}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            )}
+            
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-2 text-black">{part.partName}</h3>
             <p className="text-gray-600 mb-2">Part #: {part.partCode}</p>
             {part.description && (
               <p className="text-gray-700 mb-4">{part.description}</p>
@@ -146,6 +158,7 @@ export default function PartsPage() {
             >
               {part.qty > 0 ? 'Add to Cart' : 'Out of Stock'}
             </button>
+            </div>
           </div>
         ))}
       </div>

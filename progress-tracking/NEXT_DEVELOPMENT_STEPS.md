@@ -1,5 +1,20 @@
 # MOTOSNAP Next Development Steps
 *Priority roadmap based on current implementation status*
+*Updated: September 1, 2025*
+
+## Recent Completion Summary (Latest Session)
+
+### ✅ **Fixed: Inventory Deletion Issue**
+- **Problem Solved**: Foreign key constraint errors when deleting inventory items
+- **Solution**: Implemented comprehensive soft delete functionality
+- **Impact**: Admins can now delete inventory items seamlessly while preserving data integrity
+
+### ✅ **Enhanced: Payment User Experience** 
+- **Feature Added**: Bank QR code integration in receipt upload modal
+- **Implementation**: Two-column responsive layout with DuitNow QR (EZCAB 0224)
+- **Impact**: Streamlined payment process with visual guidance for customers
+
+---
 
 ## Immediate Priority: Complete Milestone 3.2 (Service Booking)
 

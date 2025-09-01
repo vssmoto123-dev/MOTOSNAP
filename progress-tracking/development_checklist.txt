@@ -98,7 +98,7 @@ MOTOSNAP Development Checklist
 [ ] `PUT /api/admin/orders/{orderId}/status` - Allow an admin to approve or reject an order.
 
 **Job Status & History:**
-[ ] `PUT /api/bookings/{bookingId}/status` - Allow a mechanic to update a booking’s status.
+[ ] `PUT /api/bookings/{bookingId}/status` - Allow a mechanic to update a booking's status.
 [ ] **Service History:** Create a `ServiceHistory` entity and repository.
 [ ] **Automation:** Automatically create a `ServiceHistory` record when a booking is marked 'COMPLETED'.
 
@@ -107,3 +107,21 @@ MOTOSNAP Development Checklist
 [ ] **New Booking:** Send a confirmation email to the customer after a successful booking.
 [ ] **Order Confirmation:** Send an email when a customer's order is approved.
 [ ] **Service Completion:** Send a notification email when a service is marked 'COMPLETED'.
+
+---
+
+### Recent Enhancements Completed (Latest Session)
+
+**Inventory Management Fixes:**
+[x] **Soft Delete Implementation:** Fixed foreign key constraint issues by implementing soft delete
+[x] **Inventory Entity:** Added `deleted` boolean field with helper methods
+[x] **Repository Updates:** Updated all queries to filter out soft-deleted items
+[x] **Service Logic:** Removed dependency checks for seamless deletion
+[x] **Controller Enhancement:** Updated delete endpoint with proper soft delete handling
+
+**Frontend Payment Enhancement:**
+[x] **Receipt Upload Modal:** Enhanced modal with bank QR code integration
+[x] **Two-Column Layout:** Implemented responsive QR code + form layout
+[x] **DuitNow Integration:** Added QR code display with account EZCAB 0224
+[x] **Payment Instructions:** Added step-by-step payment guidance
+[x] **Mobile Optimization:** Responsive design for all screen sizes

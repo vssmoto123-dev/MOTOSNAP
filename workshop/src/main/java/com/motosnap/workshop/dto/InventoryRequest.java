@@ -38,4 +38,7 @@ public class InventoryRequest {
     
     @Size(max = 50, message = "Brand cannot exceed 50 characters")
     private String brand;
+    
+    @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+    private String imageUrl;
 }

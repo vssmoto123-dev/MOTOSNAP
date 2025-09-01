@@ -275,6 +275,87 @@ class ApiClient {
     });
   }
 
+  async uploadInventoryImage(file: File): Promise<{ imageUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${this.baseURL}/inventory/upload-image`;
+    const config: RequestInit = {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+      },
+    };
+
+    try {
+      console.log(`🔍 Image Upload Request: POST ${url}`, {
+        file: file.name,
+        size: file.size,
+        type: file.type,
+      });
+      
+      const response = await fetch(url, config);
+      
+      console.log(`📡 Image Upload Response: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorResponse = await this.handleError(response);
+        console.error(`❌ Image Upload Error ${response.status}:`, errorResponse);
+        throw errorResponse;
+      }
+
+      const responseData = await response.json();
+      console.log(`✅ Image Upload Success:`, responseData);
+      return responseData;
+    } catch (error) {
+      console.error('💥 Image Upload Error:', error);
+      throw error;
+    }
+  }
+
+  async updateInventoryImage(id: number, file: File): Promise<{ imageUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${this.baseURL}/inventory/${id}/image`;
+    const config: RequestInit = {
+      method: 'PUT',
+      body: formData,
+      headers: {
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+      },
+    };
+
+    try {
+      console.log(`🔍 Image Update Request: PUT ${url}`, {
+        inventoryId: id,
+        file: file.name,
+        size: file.size,
+        type: file.type,
+      });
+      
+      const response = await fetch(url, config);
+      
+      console.log(`📡 Image Update Response: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorResponse = await this.handleError(response);
+        console.error(`❌ Image Update Error ${response.status}:`, errorResponse);
+        throw errorResponse;
+      }
+
+      const responseData = await response.json();
+      console.log(`✅ Image Update Success:`, responseData);
+      return responseData;
+    } catch (error) {
+      console.error('💥 Image Update Error:', error);
+      throw error;
+    }
+  }
+
   async searchInventory(searchTerm: string): Promise<InventoryItem[]> {
     return this.request<InventoryItem[]>(`/inventory?search=${encodeURIComponent(searchTerm)}`);
   }

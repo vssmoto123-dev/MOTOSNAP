@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -96,6 +97,20 @@ public class InventoryController {
         }
     }
     
+    @PostMapping(value = "/upload-image", consumes = "multipart/form-data")
+    public ResponseEntity<?> uploadInventoryImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = inventoryService.uploadImage(file);
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to upload image"));
+        }
+    }
+    
     @PutMapping("/{id}")
     public ResponseEntity<?> updateInventoryItem(
             @PathVariable Long id, 
@@ -112,6 +127,25 @@ public class InventoryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to update inventory item"));
+        }
+    }
+    
+    @PutMapping(value = "/{id}/image", consumes = "multipart/form-data")
+    public ResponseEntity<?> updateInventoryImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = inventoryService.updateInventoryImage(id, file);
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update inventory image"));
         }
     }
     

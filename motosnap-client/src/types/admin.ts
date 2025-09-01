@@ -12,6 +12,7 @@ export interface InventoryItem {
   createdAt: string;
   updatedAt: string;
   lowStock: boolean;
+  imageUrl?: string;
 }
 
 export interface InventoryRequest {
@@ -23,6 +24,7 @@ export interface InventoryRequest {
   minStockLevel: number;
   category?: string;
   brand?: string;
+  imageUrl?: string;
 }
 
 export interface Service {
