@@ -316,10 +316,49 @@ export default function OrderSuccessPage() {
 
       {/* Receipt Upload Modal */}
       {showReceiptUpload && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">Upload Payment Receipt</h3>
-            <form onSubmit={handleReceiptUpload} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-6 text-gray-900 text-center">Upload Payment Receipt</h3>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+              {/* QR Code Section */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900 text-center">Payment QR Code</h4>
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <img 
+                      src="/images/duitnow-qr.png" 
+                      alt="DuitNow QR Code" 
+                      className="w-32 h-32 sm:w-48 sm:h-48 object-contain"
+                      onError={(e) => {
+                        // Fallback if image doesn't load
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZCNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkR1aXROb3cgUVIgQ29kZTwvdGV4dD4KPC9zdmc+';
+                      }}
+                    />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <p className="text-sm text-gray-600">DuitNow Account</p>
+                      <p className="font-mono font-semibold text-lg text-gray-900">EZCAB 0224</p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <p className="text-sm text-blue-600">Order Total</p>
+                      <p className="font-bold text-xl text-blue-900">${order.totalAmount.toFixed(2)}</p>
+                    </div>
+                    <div className="text-xs text-gray-500 max-w-xs">
+                      <p>1. Scan the QR code with your banking app</p>
+                      <p>2. Complete the payment</p>
+                      <p>3. Upload your receipt below</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Upload Form Section */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">Receipt Upload</h4>
+                <form onSubmit={handleReceiptUpload} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-900">Receipt Image File *</label>
                 <input
@@ -358,22 +397,24 @@ export default function OrderSuccessPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Upload Receipt
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowReceiptUpload(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Upload Receipt
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowReceiptUpload(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
