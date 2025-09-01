@@ -182,15 +182,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Debug Info - Shows current user role */}
-        <div className="mb-4 p-3 bg-yellow-100 rounded-lg">
-          <p className="text-sm">
-            <strong>Debug:</strong> Current user role: {user?.role} | 
-            User ID: {user?.id} | 
-            Email: {user?.email}
-          </p>
-        </div>
-
         {/* Available Features */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="md:col-span-2 lg:col-span-2">

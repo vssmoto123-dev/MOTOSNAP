@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +52,20 @@ public class User {
     
     // Relationships - mapped by related entities
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Vehicle> vehicles = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("user-orders")
     private List<Order> orders = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  
+    @JsonManagedReference("user-bookings")
     private List<Booking> bookings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedMechanic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("mechanic-bookings")
+    private List<Booking> assignedBookings = new ArrayList<>();
     
     // Constructor for creating new users (without relationships)
     public User(String email, String password, String name, String phone, Role role) {

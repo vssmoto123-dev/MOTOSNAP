@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,6 +26,12 @@ public class CustomerService {
     public Optional<UserProfileResponse> getUserProfile(String email) {
         return userRepository.findByEmail(email)
                 .map(this::convertToProfileResponse);
+    }
+
+    public List<Vehicle> getVehiclesByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getVehicles();
     }
 
     public Vehicle addVehicle(String userEmail, VehicleRequest vehicleRequest) {

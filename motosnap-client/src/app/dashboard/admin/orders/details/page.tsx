@@ -280,7 +280,7 @@ export default function AdminOrderDetailsPage() {
             </div>
 
             <div className="mt-6 pt-4 border-t">
-              <div className="flex justify-between items-center text-lg font-bold">
+              <div className="flex justify-between items-center text-lg font-bold text-black">
                 <span>Total Amount:</span>
                 <span>${order.totalAmount.toFixed(2)}</span>
               </div>

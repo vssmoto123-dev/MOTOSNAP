@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,18 +37,22 @@ public class Booking {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference("user-bookings")
     private User user; // Customer
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
+    @JsonBackReference
     private Vehicle vehicle;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
+    @JsonBackReference("service-bookings")
     private Service service;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_mechanic_id")
+    @JsonBackReference("mechanic-bookings")
     private User assignedMechanic; // User with MECHANIC role
     
     @CreationTimestamp
@@ -59,9 +66,11 @@ public class Booking {
     private LocalDateTime completedAt;
     
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("booking-requests")
     private List<Request> requests = new ArrayList<>();
     
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("booking-invoice")
     private Invoice invoice;
     
     // Constructor for creating new bookings

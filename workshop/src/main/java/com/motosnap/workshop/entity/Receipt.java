@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -39,6 +41,7 @@ public class Receipt {
     
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonBackReference("order-receipt")
     private Order order;
     
     @ManyToOne(fetch = FetchType.LAZY)

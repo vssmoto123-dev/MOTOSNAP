@@ -146,7 +146,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {profile.vehicles.map((vehicle) => (
               <div key={vehicle.id} className="border rounded-lg p-4">
-                <h3 className="font-semibold text-lg mb-2">
+                <h3 className="font-semibold text-lg mb-2 text-black">
                   {vehicle.brand} {vehicle.model}
                 </h3>
                 <div className="text-gray-600 space-y-1">

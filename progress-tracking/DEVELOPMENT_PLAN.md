@@ -6,9 +6,9 @@ This plan is broken down into logical milestones. Focus on completing one milest
 
 ---
 
-### **Milestone 1: The Foundation (Data Models & Security)**
+### **Milestone 1: The Foundation (Data Models & Security)** ✅ COMPLETED
 
-This is the most critical phase. The goal is to set up your database structure and secure your application before building any features.
+~~This is the most critical phase. The goal is to set up your database structure and secure your application before building any features.~~
 
 1. **Configure Database Connection:**
    
@@ -41,9 +41,9 @@ This is the most critical phase. The goal is to set up your database structure a
 
 ---
 
-### **Milestone 2: Core Admin & System Management**
+### **Milestone 2: Core Admin & System Management** ✅ COMPLETED
 
-Now, build the features that allow the administrator to manage the system's core data. All these endpoints should be secured and accessible only to users with the 'ADMIN' role.
+~~Now, build the features that allow the administrator to manage the system's core data. All these endpoints should be secured and accessible only to users with the 'ADMIN' role.~~
 
 1. **Inventory Management API:**
    
@@ -62,7 +62,10 @@ Now, build the features that allow the administrator to manage the system's core
 
 ---
 
-### **Milestone 3: Customer & Mechanic Features**
+### **Milestone 3: Customer & Mechanic Features** 🟡 PARTIALLY COMPLETED
+
+**Milestone 3.1: Customer E-Commerce Features** ✅ COMPLETED
+**Milestone 3.2: Service Booking & Workshop Operations** 🔴 PENDING
 
 With the core data managed by the admin, you can now build the features for your other users.
 
@@ -89,7 +92,7 @@ With the core data managed by the admin, you can now build the features for your
 
 ---
 
-### **Milestone 4: The Service Workflow & Notifications**
+### **Milestone 4: The Service Workflow & Notifications** 🔴 PENDING
 
 Connect all the pieces into a complete service workflow, from booking to completion.
 

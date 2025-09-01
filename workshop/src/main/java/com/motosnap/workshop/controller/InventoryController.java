@@ -119,7 +119,11 @@ public class InventoryController {
     public ResponseEntity<?> deleteInventoryItem(@PathVariable Long id) {
         try {
             inventoryService.deleteInventoryItem(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(Map.of(
+                "message", "Inventory item archived successfully",
+                "action", "soft_delete",
+                "note", "Item is archived but references in orders/carts remain intact"
+            ));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
@@ -129,6 +133,65 @@ public class InventoryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to delete inventory item"));
+        }
+    }
+    
+    @PostMapping("/{id}/soft-delete")
+    public ResponseEntity<?> softDeleteInventoryItem(@PathVariable Long id) {
+        try {
+            inventoryService.softDeleteInventoryItem(id);
+            return ResponseEntity.ok(Map.of(
+                "message", "Inventory item archived successfully",
+                "action", "soft_delete"
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<?> restoreInventoryItem(@PathVariable Long id) {
+        try {
+            inventoryService.restoreInventoryItem(id);
+            return ResponseEntity.ok(Map.of(
+                "message", "Inventory item restored successfully",
+                "action", "restore"
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/deleted")
+    public ResponseEntity<List<Inventory>> getDeletedItems() {
+        try {
+            List<Inventory> deletedItems = inventoryService.getDeletedItems();
+            return ResponseEntity.ok(deletedItems);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @GetMapping("/{id}/dependencies")
+    public ResponseEntity<?> checkDependencies(@PathVariable Long id) {
+        try {
+            var dependencies = inventoryService.checkDependencies(id);
+            return ResponseEntity.ok(Map.of(
+                "hasDependencies", dependencies.hasDependencies(),
+                "orderItems", dependencies.getOrderItems(),
+                "cartItems", dependencies.getCartItems(),
+                "requests", dependencies.getRequests(),
+                "description", dependencies.getDependencyDescription(),
+                "canDelete", !dependencies.hasDependencies()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
         }
     }
     

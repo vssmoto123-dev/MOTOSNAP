@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -30,6 +32,7 @@ public class PricingRule {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
+    @JsonBackReference
     private Service service;
     
     @CreationTimestamp

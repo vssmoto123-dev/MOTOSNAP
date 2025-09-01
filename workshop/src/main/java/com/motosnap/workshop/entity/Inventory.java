@@ -51,6 +51,9 @@ public class Inventory {
     @Column(nullable = false)
     private Boolean active = true;
     
+    @Column(nullable = false)
+    private Boolean deleted = false;
+    
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -78,6 +81,7 @@ public class Inventory {
         this.category = category;
         this.brand = brand;
         this.active = true;
+        this.deleted = false;
     }
     
     // Helper method to check if stock is low
@@ -97,5 +101,17 @@ public class Inventory {
     // Helper method to add stock
     public void addStock(Integer quantity) {
         this.qty += quantity;
+    }
+    
+    // Helper method for soft delete
+    public void markAsDeleted() {
+        this.deleted = true;
+        this.active = false;
+    }
+    
+    // Helper method to restore from soft delete
+    public void restore() {
+        this.deleted = false;
+        this.active = true;
     }
 }

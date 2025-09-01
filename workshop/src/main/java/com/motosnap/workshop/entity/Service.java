@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,9 +51,11 @@ public class Service {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<PricingRule> pricingRules = new ArrayList<>();
     
     @OneToMany(mappedBy = "service", fetch = FetchType.LAZY)
+    @JsonManagedReference("service-bookings")
     private List<Booking> bookings = new ArrayList<>();
     
     // Constructor for creating new services
