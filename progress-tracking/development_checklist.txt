@@ -84,8 +84,11 @@ MOTOSNAP Development Checklist
 [x] `GET /api/orders/{orderId}/receipt/{receiptId}/view` - View uploaded receipt.
 
 **Service Booking & Parts Request:**
-[ ] `POST /api/bookings` - Allow a customer to book a new service appointment.
-[ ] `GET /api/bookings` - Allow ADMINs or MECHANICs to view all appointments.
+[x] `POST /api/bookings` - Allow a customer to book a new service appointment.
+[x] `GET /api/bookings` - Allow ADMINs or MECHANICs to view all appointments.
+[x] `GET /api/bookings/my` - Allow customers to view their own bookings.
+[x] `PUT /api/bookings/{id}/status` - Allow admins/mechanics to update booking status.
+[x] `PUT /api/bookings/{id}/assign` - Allow admins to assign mechanics to bookings.
 [ ] `POST /api/bookings/{bookingId}/request-part` - Allow a mechanic to request a part for a job.
 [ ] **Inventory Logic:** Ensure the parts request automatically deducts the quantity from the inventory.
 
@@ -112,16 +115,17 @@ MOTOSNAP Development Checklist
 
 ### Recent Enhancements Completed (Latest Session)
 
-**Inventory Management Fixes:**
-[x] **Soft Delete Implementation:** Fixed foreign key constraint issues by implementing soft delete
-[x] **Inventory Entity:** Added `deleted` boolean field with helper methods
-[x] **Repository Updates:** Updated all queries to filter out soft-deleted items
-[x] **Service Logic:** Removed dependency checks for seamless deletion
-[x] **Controller Enhancement:** Updated delete endpoint with proper soft delete handling
+**Service Booking System Implementation (Milestone 3.2):**
+[x] **Backend APIs:** Complete BookingController with all CRUD endpoints
+[x] **BookingService:** Full business logic for booking lifecycle management
+[x] **DTOs:** BookingRequest, BookingResponse, BookingStatusUpdateRequest
+[x] **Frontend Integration:** Real API calls replacing mock alerts in booking form
+[x] **Customer UI:** Complete booking status tracking page (/dashboard/bookings)
+[x] **Navigation:** Added "My Bookings" link to main dashboard
+[x] **Status Tracking:** Visual progress timeline for booking lifecycle
+[x] **Role Security:** Proper access control for all booking endpoints
 
-**Frontend Payment Enhancement:**
-[x] **Receipt Upload Modal:** Enhanced modal with bank QR code integration
-[x] **Two-Column Layout:** Implemented responsive QR code + form layout
-[x] **DuitNow Integration:** Added QR code display with account EZCAB 0224
-[x] **Payment Instructions:** Added step-by-step payment guidance
-[x] **Mobile Optimization:** Responsive design for all screen sizes
+**Previous Session Enhancements:**
+[x] **Soft Delete Implementation:** Fixed foreign key constraint issues
+[x] **Frontend Payment Enhancement:** Bank QR code integration in receipt upload
+[x] **Mobile Optimization:** Responsive design improvements

@@ -4,59 +4,43 @@
 
 ## Recent Completion Summary (Latest Session)
 
-### ✅ **Fixed: Inventory Deletion Issue**
-- **Problem Solved**: Foreign key constraint errors when deleting inventory items
-- **Solution**: Implemented comprehensive soft delete functionality
-- **Impact**: Admins can now delete inventory items seamlessly while preserving data integrity
+### ✅ **MILESTONE 3.2 COMPLETED: Service Booking System**
+- **Backend Implementation**: Complete BookingController, BookingService, and 3 DTOs
+- **Customer Booking**: Full booking form with vehicle selection and scheduling
+- **Status Tracking**: Customer booking history page with progress timeline
+- **Admin Features**: Booking management endpoints with mechanic assignment
+- **Integration**: Real API calls replacing mock alerts throughout
+- **Impact**: Customers can now book services and track progress; admins can manage bookings
 
-### ✅ **Enhanced: Payment User Experience** 
-- **Feature Added**: Bank QR code integration in receipt upload modal
-- **Implementation**: Two-column responsive layout with DuitNow QR (EZCAB 0224)
-- **Impact**: Streamlined payment process with visual guidance for customers
+### ✅ **Previous Session: Enhanced Payment UX & Inventory Fixes** 
+- **Fixed**: Inventory soft delete implementation for data integrity
+- **Enhanced**: Bank QR code integration in receipt upload modal (DuitNow EZCAB 0224)
 
 ---
 
-## Immediate Priority: Complete Milestone 3.2 (Service Booking)
+## Immediate Priority: Complete Admin Booking Management UI
 
-### Backend Tasks - Service Booking Controller
+### Remaining Tasks - Admin Booking Management UI
 
-#### 1. Create BookingController (`/api/bookings`)
-- [ ] `POST /api/bookings` - Create service appointment
-- [ ] `GET /api/bookings` - List appointments (admin/mechanic view)
-- [ ] `GET /api/bookings/{id}` - Get booking details
-- [ ] `PUT /api/bookings/{id}/status` - Update booking status
-- [ ] `DELETE /api/bookings/{id}` - Cancel booking
+#### 1. Admin Booking Management Page (`/dashboard/admin/bookings`)
+- [ ] Create booking list table with all customer bookings
+- [ ] Implement mechanic selection dropdown (fetched from `/api/users?role=MECHANIC`)
+- [ ] Add booking assignment functionality with "Assign" buttons
+- [ ] Status update interface for admins/mechanics
+- [ ] Booking filters (by status, date, mechanic)
 
-#### 2. Create BookingService
-- [ ] Implement booking logic with vehicle association
-- [ ] Add service date/time validation
-- [ ] Implement booking status management
-- [ ] Add mechanic assignment functionality
+#### 2. Mechanic Dashboard (`/dashboard/mechanic/bookings`)
+- [ ] Create mechanic-specific booking view
+- [ ] Show only assigned bookings for logged-in mechanic
+- [ ] Status update interface (CONFIRMED → IN_PROGRESS → COMPLETED)
+- [ ] Parts request interface for mechanics
 
-#### 3. Parts Request System
+#### 3. Parts Request System (Milestone 3.2 Completion)
 - [ ] `POST /api/bookings/{id}/request-parts` - Request parts for job
 - [ ] `GET /api/bookings/{id}/parts-requests` - List parts requests
 - [ ] Automatic inventory deduction logic
 - [ ] Parts availability checking
-
-### Frontend Tasks - Service Booking UI
-
-#### 1. Service Booking Page (`/dashboard/bookings`)
-- [ ] Create booking form with service selection
-- [ ] Vehicle selection for authenticated customers
-- [ ] Date/time picker for appointments
-- [ ] Service cost calculation display
-
-#### 2. Booking Management (Admin/Mechanic)
-- [ ] Booking list view with filters
-- [ ] Booking details modal
-- [ ] Status update interface
-- [ ] Parts request interface for mechanics
-
-#### 3. Customer Booking History
-- [ ] Add bookings section to profile page
-- [ ] Booking status tracking
-- [ ] Service history display
+- [ ] Frontend UI for mechanics to request parts during service
 
 ## Medium Priority: Complete Milestone 4 (Workflow & Notifications)
 
