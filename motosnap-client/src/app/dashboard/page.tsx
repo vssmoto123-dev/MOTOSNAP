@@ -171,6 +171,12 @@ function DashboardContent() {
             >
               My Orders
             </Button>
+            <Button
+              onClick={() => router.push('/dashboard/bookings')}
+              className="h-16 bg-teal-600 hover:bg-teal-700 text-white"
+            >
+              My Bookings
+            </Button>
             {user?.role === 'ADMIN' && (
               <Button
                 onClick={() => router.push('/dashboard/admin')}
