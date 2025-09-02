@@ -177,6 +177,14 @@ function DashboardContent() {
             >
               My Bookings
             </Button>
+            {user?.role === 'MECHANIC' && (
+              <Button
+                onClick={() => router.push('/dashboard/mechanic/bookings')}
+                className="h-16 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                My Assignments
+              </Button>
+            )}
             {user?.role === 'ADMIN' && (
               <Button
                 onClick={() => router.push('/dashboard/admin')}

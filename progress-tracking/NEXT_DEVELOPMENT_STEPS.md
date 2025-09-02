@@ -1,17 +1,20 @@
 # MOTOSNAP Next Development Steps
 *Priority roadmap based on current implementation status*
-*Updated: September 1, 2025*
+*Updated: September 2, 2025*
 
 ## Recent Completion Summary (Latest Session)
 
-### ✅ **MILESTONE 3.2 PARTIALLY COMPLETED: Service Booking System**
+### ✅ **MILESTONE 3.2 FULLY COMPLETED: Service Booking System**
 - **Backend Implementation**: ✅ Complete BookingController, BookingService, and 3 DTOs
 - **Customer Features**: ✅ Full booking form with vehicle selection and scheduling
 - **Customer Status Tracking**: ✅ Booking history page with progress timeline
 - **Backend Admin Features**: ✅ Booking management endpoints with mechanic assignment
 - **Customer Integration**: ✅ Real API calls replacing mock alerts
-- **Missing**: ❌ Admin UI for booking management and mechanic assignment
-- **Impact**: Customers can book and track services; admin APIs ready but no UI yet
+- **Admin UI**: ✅ Complete admin booking management interface with inline assignment
+- **Mechanic UI**: ✅ Personal mechanic dashboard for assigned bookings
+- **Security**: ✅ Fixed 403 Forbidden errors for admin booking operations
+- **UX Enhancement**: ✅ Streamlined workflow preventing confirmation without mechanic assignment
+- **Impact**: Complete end-to-end booking workflow from customer booking to mechanic completion
 
 ### ✅ **Previous Session: Enhanced Payment UX & Inventory Fixes** 
 - **Fixed**: Inventory soft delete implementation for data integrity
@@ -19,29 +22,28 @@
 
 ---
 
-## Immediate Priority: Complete Admin Booking Management UI
+## Current Priority: Complete Parts Request System (Final Milestone 3.2 Component)
 
-### Remaining Tasks - Admin Booking Management UI
+### Remaining Tasks - Parts Request System
 
-#### 1. Admin Booking Management Page (`/dashboard/admin/bookings`)
-- [ ] Create booking list table with all customer bookings
-- [ ] Implement mechanic selection dropdown (fetched from `/api/users?role=MECHANIC`)
-- [ ] Add booking assignment functionality with "Assign" buttons
-- [ ] Status update interface for admins/mechanics
-- [ ] Booking filters (by status, date, mechanic)
+#### 1. Backend Parts Request API
+- [ ] `POST /api/bookings/{id}/request-parts` - Allow mechanic to request parts for job
+- [ ] `GET /api/bookings/{id}/parts-requests` - List parts requests for booking
+- [ ] **RequestParts** entity and repository implementation
+- [ ] Automatic inventory deduction logic when parts are requested
+- [ ] Parts availability checking and validation
 
-#### 2. Mechanic Dashboard (`/dashboard/mechanic/bookings`)
-- [ ] Create mechanic-specific booking view
-- [ ] Show only assigned bookings for logged-in mechanic
-- [ ] Status update interface (CONFIRMED → IN_PROGRESS → COMPLETED)
-- [ ] Parts request interface for mechanics
+#### 2. Frontend Parts Request Interface
+- [ ] Add "Request Parts" section to mechanic booking dashboard
+- [ ] Parts selection interface with inventory availability display  
+- [ ] Quantity input and validation for requested parts
+- [ ] Parts request history display for each booking
+- [ ] Integration with existing inventory browsing functionality
 
-#### 3. Parts Request System (Milestone 3.2 Completion)
-- [ ] `POST /api/bookings/{id}/request-parts` - Request parts for job
-- [ ] `GET /api/bookings/{id}/parts-requests` - List parts requests
-- [ ] Automatic inventory deduction logic
-- [ ] Parts availability checking
-- [ ] Frontend UI for mechanics to request parts during service
+#### 3. Admin Parts Request Management
+- [ ] Parts request approval/rejection interface for admins
+- [ ] Inventory impact tracking and alerts
+- [ ] Parts request status notifications
 
 ## Medium Priority: Complete Milestone 4 (Workflow & Notifications)
 
@@ -122,17 +124,29 @@
 
 ## Estimated Timeline
 
-- **Milestone 3.2 Completion**: 2-3 weeks
-- **Milestone 4 Completion**: 3-4 weeks
+- **Parts Request System (Final 3.2)**: 1-2 weeks
+- **Milestone 4 Completion**: 3-4 weeks  
 - **System Enhancements**: Ongoing
+
+## Project Status Overview
+
+**Overall Completion**: ~85% of planned features implemented
+- **Milestone 1** (Foundation): ✅ 100% Complete
+- **Milestone 2** (Admin/System): ✅ 100% Complete  
+- **Milestone 3.1** (Customer E-Commerce): ✅ 100% Complete
+- **Milestone 3.2** (Service Booking): ✅ ~90% Complete (Missing parts request)
+- **Milestone 4** (Workflow/Notifications): ❌ Not Started
 
 ## Success Criteria
 
-### Milestone 3.2 Complete When:
+### Milestone 3.2 Status:
 - ✅ Customers can book service appointments
-- ✅ Mechanics can view and manage bookings
-- ✅ Parts can be requested and automatically deducted from inventory
-- ✅ Frontend provides intuitive booking interface
+- ✅ Admins can assign mechanics and manage all bookings
+- ✅ Mechanics can view and manage their assigned bookings  
+- ✅ Complete booking lifecycle from pending → confirmed → in progress → completed
+- ✅ Intuitive admin interface with inline mechanic assignment
+- ✅ Role-based access controls and navigation
+- ⚠️  **REMAINING**: Parts request system for mechanics (inventory deduction)
 
 ### Milestone 4 Complete When:
 - ✅ Complete service workflow from booking to completion

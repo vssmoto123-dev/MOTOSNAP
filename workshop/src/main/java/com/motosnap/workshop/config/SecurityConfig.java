@@ -47,8 +47,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**", "/api/users/**", 
                                 "/api/inventory/**", "/api/services/**").hasRole("ADMIN")
                 
-                // Mechanic endpoints
-                .requestMatchers("/api/bookings/*/status", "/api/requests/**").hasRole("MECHANIC")
+                // Booking management endpoints (Admin and Mechanic)
+                .requestMatchers("/api/bookings/*/status", "/api/bookings/*/assign").hasAnyRole("ADMIN", "MECHANIC")
+                
+                // Mechanic-only endpoints
+                .requestMatchers("/api/requests/**").hasRole("MECHANIC")
                 
                 // Customer endpoints
                 .requestMatchers("/api/me/**", "/api/bookings/create").hasRole("CUSTOMER")
