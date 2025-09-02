@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,7 +56,7 @@ public class Service {
     private List<PricingRule> pricingRules = new ArrayList<>();
     
     @OneToMany(mappedBy = "service", fetch = FetchType.LAZY)
-    @JsonManagedReference("service-bookings")
+    @JsonIgnore
     private List<Booking> bookings = new ArrayList<>();
     
     // Constructor for creating new services

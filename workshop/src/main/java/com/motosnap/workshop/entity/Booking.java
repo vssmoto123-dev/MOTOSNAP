@@ -73,6 +73,7 @@ public class Booking {
     @JsonManagedReference("booking-invoice")
     private Invoice invoice;
     
+    
     // Constructor for creating new bookings
     public Booking(LocalDateTime scheduledDateTime, String notes, User user, Vehicle vehicle, Service service) {
         this.scheduledDateTime = scheduledDateTime;

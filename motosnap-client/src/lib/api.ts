@@ -627,6 +627,7 @@ class ApiClient {
       body: JSON.stringify({ mechanicId }),
     });
   }
+
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

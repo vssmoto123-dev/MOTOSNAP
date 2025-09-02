@@ -38,7 +38,8 @@ export default function MechanicBookingsPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.getUserBookings(); // This will get mechanic's assigned bookings
+      // Use getAllBookings (which mechanics have access to) instead of getUserBookings
+      const data = await apiClient.getAllBookings(); 
       // Filter to only show bookings assigned to this mechanic
       const mechanicBookings = data.filter(booking => booking.assignedMechanicId === user?.id);
       setBookings(mechanicBookings);
@@ -197,7 +198,7 @@ export default function MechanicBookingsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           >
             <option value="">All Bookings</option>
             <option value="CONFIRMED">Ready to Start</option>
@@ -208,6 +209,7 @@ export default function MechanicBookingsPage() {
             onClick={fetchBookings}
             variant="outline"
             size="sm"
+            className='text-black'
           >
             Refresh
           </Button>
@@ -349,6 +351,7 @@ export default function MechanicBookingsPage() {
                   </div>
                 )}
               </div>
+
             </div>
           ))}
         </div>

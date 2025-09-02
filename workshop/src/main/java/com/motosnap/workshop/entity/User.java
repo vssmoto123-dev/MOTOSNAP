@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -52,19 +53,19 @@ public class User {
     
     // Relationships - mapped by related entities
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonIgnore
     private List<Vehicle> vehicles = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("user-orders")
+    @JsonIgnore
     private List<Order> orders = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  
-    @JsonManagedReference("user-bookings")
+    @JsonIgnore
     private List<Booking> bookings = new ArrayList<>();
 
     @OneToMany(mappedBy = "assignedMechanic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("mechanic-bookings")
+    @JsonIgnore
     private List<Booking> assignedBookings = new ArrayList<>();
     
     // Constructor for creating new users (without relationships)
