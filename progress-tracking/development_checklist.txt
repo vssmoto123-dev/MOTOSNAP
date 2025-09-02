@@ -115,15 +115,18 @@ MOTOSNAP Development Checklist
 
 ### Recent Enhancements Completed (Latest Session)
 
-**Service Booking System Implementation (Milestone 3.2):**
+**Service Booking System Implementation (Milestone 3.2 - Partial):**
 [x] **Backend APIs:** Complete BookingController with all CRUD endpoints
 [x] **BookingService:** Full business logic for booking lifecycle management
 [x] **DTOs:** BookingRequest, BookingResponse, BookingStatusUpdateRequest
-[x] **Frontend Integration:** Real API calls replacing mock alerts in booking form
+[x] **Customer Booking:** Real API integration for service booking form
 [x] **Customer UI:** Complete booking status tracking page (/dashboard/bookings)
 [x] **Navigation:** Added "My Bookings" link to main dashboard
 [x] **Status Tracking:** Visual progress timeline for booking lifecycle
 [x] **Role Security:** Proper access control for all booking endpoints
+[ ] **Admin UI:** Admin booking management page for mechanic assignment
+[ ] **Mechanic UI:** Mechanic dashboard for assigned bookings
+[ ] **Assignment Interface:** Frontend UI for admin to assign mechanics
 
 **Previous Session Enhancements:**
 [x] **Soft Delete Implementation:** Fixed foreign key constraint issues

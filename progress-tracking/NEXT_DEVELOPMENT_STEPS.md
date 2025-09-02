@@ -4,13 +4,14 @@
 
 ## Recent Completion Summary (Latest Session)
 
-### ✅ **MILESTONE 3.2 COMPLETED: Service Booking System**
-- **Backend Implementation**: Complete BookingController, BookingService, and 3 DTOs
-- **Customer Booking**: Full booking form with vehicle selection and scheduling
-- **Status Tracking**: Customer booking history page with progress timeline
-- **Admin Features**: Booking management endpoints with mechanic assignment
-- **Integration**: Real API calls replacing mock alerts throughout
-- **Impact**: Customers can now book services and track progress; admins can manage bookings
+### ✅ **MILESTONE 3.2 PARTIALLY COMPLETED: Service Booking System**
+- **Backend Implementation**: ✅ Complete BookingController, BookingService, and 3 DTOs
+- **Customer Features**: ✅ Full booking form with vehicle selection and scheduling
+- **Customer Status Tracking**: ✅ Booking history page with progress timeline
+- **Backend Admin Features**: ✅ Booking management endpoints with mechanic assignment
+- **Customer Integration**: ✅ Real API calls replacing mock alerts
+- **Missing**: ❌ Admin UI for booking management and mechanic assignment
+- **Impact**: Customers can book and track services; admin APIs ready but no UI yet
 
 ### ✅ **Previous Session: Enhanced Payment UX & Inventory Fixes** 
 - **Fixed**: Inventory soft delete implementation for data integrity
