@@ -121,20 +121,28 @@ export default function ServicesPage() {
     try {
       setBookingLoading(true);
       
-      // TODO: Implement booking API call
-      console.log('Booking submission:', {
-        ...bookingForm,
-        serviceName: selectedService?.name,
-        servicePrice: selectedService?.basePrice
-      });
+      // Prepare booking data for API
+      const bookingData = {
+        serviceId: bookingForm.serviceId,
+        vehicleId: bookingForm.vehicleId,
+        scheduledDateTime: bookingForm.scheduledDateTime,
+        notes: bookingForm.notes
+      };
       
-      // Mock success for now
-      alert(`Booking request submitted successfully!\n\nService: ${selectedService?.name}\nEstimated Price: $${selectedService?.basePrice}\n\nYou will receive a confirmation email shortly.`);
+      console.log('Submitting booking:', bookingData);
+      
+      // Call the booking API
+      const response = await apiClient.createBooking(bookingData);
+      
+      console.log('Booking created successfully:', response);
+      
+      alert(`Booking request submitted successfully!\n\nBooking ID: ${response.id}\nService: ${selectedService?.name}\nScheduled: ${new Date(bookingForm.scheduledDateTime).toLocaleString()}\nEstimated Price: $${selectedService?.basePrice}\n\nYou will receive a confirmation email shortly.`);
       closeBookingModal();
       
     } catch (err: any) {
       console.error('Failed to submit booking:', err);
-      alert('Failed to submit booking. Please try again.');
+      const errorMessage = err?.error || 'Failed to submit booking. Please try again.';
+      alert(`Error: ${errorMessage}`);
     } finally {
       setBookingLoading(false);
     }

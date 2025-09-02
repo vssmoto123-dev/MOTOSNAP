@@ -8,6 +8,11 @@ import {
   UpdateRoleRequest, 
   UserStats 
 } from '@/types/admin';
+import { 
+  BookingRequest, 
+  BookingResponse, 
+  BookingStatusUpdateRequest 
+} from '@/types/booking';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -583,6 +588,44 @@ class ApiClient {
 
   async debugInventoryCount(): Promise<any> {
     return this.request<any>('/debug/inventory/count');
+  }
+
+  // Booking endpoints
+  async createBooking(data: BookingRequest): Promise<BookingResponse> {
+    return this.request<BookingResponse>('/bookings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserBookings(): Promise<BookingResponse[]> {
+    return this.request<BookingResponse[]>('/bookings/my');
+  }
+
+  async getAllBookings(filter?: string, status?: string): Promise<BookingResponse[]> {
+    const params = new URLSearchParams();
+    if (filter) params.append('filter', filter);
+    if (status) params.append('status', status);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return this.request<BookingResponse[]>(`/bookings${queryString}`);
+  }
+
+  async getBookingById(bookingId: number): Promise<BookingResponse> {
+    return this.request<BookingResponse>(`/bookings/${bookingId}`);
+  }
+
+  async updateBookingStatus(bookingId: number, data: BookingStatusUpdateRequest): Promise<BookingResponse> {
+    return this.request<BookingResponse>(`/bookings/${bookingId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async assignMechanic(bookingId: number, mechanicId: number): Promise<BookingResponse> {
+    return this.request<BookingResponse>(`/bookings/${bookingId}/assign`, {
+      method: 'PUT',
+      body: JSON.stringify({ mechanicId }),
+    });
   }
 }
 
