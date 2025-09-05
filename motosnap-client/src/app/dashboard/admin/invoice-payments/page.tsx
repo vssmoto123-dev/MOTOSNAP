@@ -44,6 +44,8 @@ export default function InvoicePaymentsPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -104,14 +106,43 @@ export default function InvoicePaymentsPage() {
     setRejectReason('');
   };
 
-  const viewReceipt = (payment: InvoicePayment) => {
-    setSelectedPayment(payment);
-    setShowReceiptModal(true);
+  const viewReceipt = async (payment: InvoicePayment) => {
+    if (!payment.receipt?.fileUrl) return;
+    
+    try {
+      setReceiptLoading(true);
+      setSelectedPayment(payment);
+      
+      const response = await fetch(apiClient.getInvoiceReceiptUrl(payment.id), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setReceiptImageUrl(imageUrl);
+      setShowReceiptModal(true);
+    } catch (err) {
+      console.error('Failed to fetch receipt:', err);
+      setError('Failed to load receipt image');
+    } finally {
+      setReceiptLoading(false);
+    }
   };
 
-  const getReceiptImageUrl = (payment: InvoicePayment) => {
-    if (!payment.receipt?.fileUrl) return null;
-    return `/api/invoices/payments/${payment.id}/receipt`;
+  const handleReceiptModalClose = () => {
+    setShowReceiptModal(false);
+    setSelectedPayment(null);
+    if (receiptImageUrl) {
+      URL.revokeObjectURL(receiptImageUrl);
+      setReceiptImageUrl(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -292,9 +323,10 @@ export default function InvoicePaymentsPage() {
                       {payment.receipt && (
                         <button
                           onClick={() => viewReceipt(payment)}
-                          className="text-blue-600 hover:text-blue-900"
+                          disabled={receiptLoading}
+                          className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          View Receipt
+                          {receiptLoading ? 'Loading...' : 'View Receipt'}
                         </button>
                       )}
                       
@@ -337,7 +369,7 @@ export default function InvoicePaymentsPage() {
                   <p className="text-gray-600">Invoice #{selectedPayment.invoice.invoiceNumber}</p>
                 </div>
                 <button
-                  onClick={() => setShowReceiptModal(false)}
+                  onClick={handleReceiptModalClose}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,15 +427,22 @@ export default function InvoicePaymentsPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Receipt Image</label>
                       <div className="border rounded-lg p-4 bg-gray-50">
-                        <img
-                          src={getReceiptImageUrl(selectedPayment)}
-                          alt="Payment Receipt"
-                          className="w-full h-auto rounded"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZCNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD4KPC9zdmc+';
-                          }}
-                        />
+                        {receiptImageUrl ? (
+                          <img
+                            src={receiptImageUrl}
+                            alt="Payment Receipt"
+                            className="w-full h-auto rounded"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-64 bg-gray-100 rounded">
+                            <div className="text-center">
+                              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="mt-2 text-sm text-gray-500">Receipt image not available</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -412,7 +451,7 @@ export default function InvoicePaymentsPage() {
                     <div className="flex justify-end space-x-3 pt-6 border-t">
                       <Button
                         onClick={() => {
-                          setShowReceiptModal(false);
+                          handleReceiptModalClose();
                           openRejectModal(selectedPayment);
                         }}
                         variant="secondary"
@@ -422,7 +461,7 @@ export default function InvoicePaymentsPage() {
                       </Button>
                       <Button
                         onClick={() => {
-                          setShowReceiptModal(false);
+                          handleReceiptModalClose();
                           handleApprovePayment(selectedPayment.id);
                         }}
                         className="bg-green-600 hover:bg-green-700 text-white"

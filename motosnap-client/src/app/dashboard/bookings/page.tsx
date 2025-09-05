@@ -31,12 +31,27 @@ export default function BookingsPage() {
       setLoading(true);
       const data = await apiClient.getUserBookings();
       
-      // For completed bookings, fetch additional invoice information
+      // For completed bookings, fetch additional invoice and payment information
       const bookingsWithInvoices = await Promise.all(
         data.map(async (booking) => {
           if (booking.status === 'COMPLETED') {
             try {
               const detailedBooking = await apiClient.getBookingWithInvoice(booking.id);
+              
+              // If booking has invoice, check payment status
+              if (detailedBooking.invoice?.id) {
+                try {
+                  const paymentStatus = await apiClient.getInvoicePaymentStatus(detailedBooking.invoice.id);
+                  console.log(`Payment status for invoice ${detailedBooking.invoice.id}:`, paymentStatus);
+                  
+                  // Add payment status to the invoice object
+                  detailedBooking.invoice.invoicePayment = paymentStatus.status !== 'NO_PAYMENT_INITIATED' ? paymentStatus : null;
+                } catch (paymentErr) {
+                  console.log(`No payment data for invoice ${detailedBooking.invoice.id}`);
+                  detailedBooking.invoice.invoicePayment = null;
+                }
+              }
+              
               return detailedBooking;
             } catch (err) {
               console.log(`No invoice data for booking ${booking.id}`);
@@ -122,6 +137,8 @@ export default function BookingsPage() {
   const handlePaymentComplete = () => {
     // Refresh bookings to get updated payment status
     fetchBookings();
+    // Close modals
+    handleCloseModals();
   };
 
   const getPaymentStatusColor = (status: string) => {
