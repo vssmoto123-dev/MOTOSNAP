@@ -117,10 +117,10 @@ export default function PartsPage() {
         {filteredParts.map((part) => (
           <div key={part.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             {/* Image Section */}
-            {part.imageUrl && (
+            {(part as any).imageUrl && (
               <div className="h-48 w-full overflow-hidden">
                 <img 
-                  src={`http://localhost:8080${part.imageUrl}`} 
+                  src={`http://localhost:8080${(part as any).imageUrl}`} 
                   alt={part.partName}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />

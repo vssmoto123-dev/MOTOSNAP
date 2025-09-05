@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api';
 import { BookingResponse, BookingStatus, BookingStatusUpdateRequest } from '@/types/booking';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
+import { PartsRequestWidget } from '@/components/mechanic/PartsRequestWidget';
 
 export default function MechanicBookingsPage() {
   const { user } = useAuth();
@@ -105,7 +106,17 @@ export default function MechanicBookingsPage() {
     }
   };
 
-  const filteredBookings = bookings.filter(booking => {
+  // Smart sorting: IN_PROGRESS first, then by createdAt descending (newest first)
+  const sortedBookings = [...bookings].sort((a, b) => {
+    // Priority 1: IN_PROGRESS bookings always come first
+    if (a.status === 'IN_PROGRESS' && b.status !== 'IN_PROGRESS') return -1;
+    if (b.status === 'IN_PROGRESS' && a.status !== 'IN_PROGRESS') return 1;
+    
+    // Priority 2: Sort by creation date descending (newest first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const filteredBookings = sortedBookings.filter(booking => {
     return !statusFilter || booking.status === statusFilter;
   });
 
@@ -191,29 +202,68 @@ export default function MechanicBookingsPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Filter by status:</label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          >
-            <option value="">All Bookings</option>
-            <option value="CONFIRMED">Ready to Start</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
+      {/* Navigation Tabs */}
+      <div className="bg-white rounded-lg border border-gray-200 mb-6">
+        <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setStatusFilter('')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                statusFilter === '' 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              All Bookings ({bookings.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('IN_PROGRESS')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                statusFilter === 'IN_PROGRESS' 
+                  ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              🔧 In Progress ({bookings.filter(b => b.status === 'IN_PROGRESS').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('CONFIRMED')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                statusFilter === 'CONFIRMED' 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              ✅ Ready to Start ({bookings.filter(b => b.status === 'CONFIRMED').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('COMPLETED')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                statusFilter === 'COMPLETED' 
+                  ? 'bg-green-100 text-green-700 border border-green-200' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              ✓ Completed ({bookings.filter(b => b.status === 'COMPLETED').length})
+            </button>
+          </div>
           <Button
             onClick={fetchBookings}
-            variant="outline"
+            variant="secondary"
             size="sm"
-            className='text-black'
+            className="text-gray-600 border-gray-300 hover:bg-gray-50"
           >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
             Refresh
           </Button>
         </div>
+        {!statusFilter && filteredBookings.length > 0 && (
+          <div className="px-4 py-2 bg-gray-50 text-xs text-gray-600 border-t">
+            📋 Showing {filteredBookings.length} assignments sorted by: IN_PROGRESS first, then newest first
+          </div>
+        )}
       </div>
 
       {/* Bookings List */}
@@ -352,6 +402,11 @@ export default function MechanicBookingsPage() {
                 )}
               </div>
 
+              {/* Parts Request Widget - Only show for confirmed or in-progress bookings */}
+              {(['CONFIRMED', 'IN_PROGRESS'].includes(booking.status)) && (
+                <PartsRequestWidget bookingId={booking.id} />
+              )}
+
             </div>
           ))}
         </div>
@@ -361,7 +416,7 @@ export default function MechanicBookingsPage() {
       {updatingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
+            <h3 className="text-lg font-semibold mb-4 text-black">
               Complete Service - Booking #{updatingBooking.id}
             </h3>
             
@@ -378,13 +433,13 @@ export default function MechanicBookingsPage() {
                 onChange={(e) => setStatusNotes(e.target.value)}
                 placeholder="Add any notes about the completed service..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               />
             </div>
             
             <div className="flex justify-end space-x-3">
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => {
                   setUpdatingBooking(null);
                   setStatusNotes('');

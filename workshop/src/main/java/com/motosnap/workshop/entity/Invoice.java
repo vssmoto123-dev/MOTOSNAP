@@ -6,7 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +19,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class Invoice {
     
     @Id
@@ -41,6 +45,10 @@ public class Invoice {
     @JoinColumn(name = "booking_id", nullable = false)
     @JsonBackReference("booking-invoice")
     private Booking booking;
+    
+    @OneToOne(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private InvoicePayment invoicePayment;
     
     @CreationTimestamp
     @Column(updatable = false)

@@ -3,6 +3,7 @@ package com.motosnap.workshop.service;
 import com.motosnap.workshop.dto.BookingRequest;
 import com.motosnap.workshop.dto.BookingResponse;
 import com.motosnap.workshop.dto.BookingStatusUpdateRequest;
+import com.motosnap.workshop.dto.InvoiceResponse;
 import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +30,9 @@ public class BookingService {
 
     @Autowired
     private ServiceRepository serviceRepository;
+
+    @Autowired
+    private InvoiceService invoiceService;
 
     public BookingResponse createBooking(String userEmail, BookingRequest request) {
         User user = userRepository.findByEmail(userEmail)
@@ -112,6 +117,11 @@ public class BookingService {
 
         BookingStatus oldStatus = booking.getStatus();
         booking.setStatus(request.getStatus());
+        
+        // Set status notes if provided
+        if (request.getStatusNotes() != null && !request.getStatusNotes().trim().isEmpty()) {
+            booking.setStatusNotes(request.getStatusNotes());
+        }
 
         // Handle status-specific logic
         switch (request.getStatus()) {
@@ -184,6 +194,7 @@ public class BookingService {
         response.setScheduledDateTime(booking.getScheduledDateTime());
         response.setStatus(booking.getStatus());
         response.setNotes(booking.getNotes());
+        response.setStatusNotes(booking.getStatusNotes());
         response.setCreatedAt(booking.getCreatedAt());
         response.setUpdatedAt(booking.getUpdatedAt());
         response.setStartedAt(booking.getStartedAt());
@@ -219,6 +230,14 @@ public class BookingService {
             response.setAssignedMechanicName(mechanic.getName());
         }
 
+        // Invoice status - simple check using existing relationship
+        response.setHasInvoice(booking.getInvoice() != null);
+
         return response;
+    }
+
+    // Helper method to access InvoiceService from controller
+    public InvoiceService getInvoiceService() {
+        return invoiceService;
     }
 }

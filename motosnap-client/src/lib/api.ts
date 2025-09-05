@@ -13,6 +13,11 @@ import {
   BookingResponse, 
   BookingStatusUpdateRequest 
 } from '@/types/booking';
+import { 
+  Invoice, 
+  InvoicePdfUrlUpdateRequest, 
+  MonthlyRevenueData 
+} from '@/types/invoice';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -602,6 +607,10 @@ class ApiClient {
     return this.request<BookingResponse[]>('/bookings/my');
   }
 
+  async getBookingWithInvoice(bookingId: number): Promise<any> {
+    return this.request<any>(`/bookings/${bookingId}/with-invoice`);
+  }
+
   async getAllBookings(filter?: string, status?: string): Promise<BookingResponse[]> {
     const params = new URLSearchParams();
     if (filter) params.append('filter', filter);
@@ -626,6 +635,144 @@ class ApiClient {
       method: 'PUT',
       body: JSON.stringify({ mechanicId }),
     });
+  }
+
+  // Parts Request endpoints (Mechanic)
+  async createPartsRequest(bookingId: number, data: {
+    partId: number;
+    quantity: number;
+    reason: string;
+  }): Promise<any> {
+    return this.request<any>(`/bookings/${bookingId}/requests`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getPartsRequestsForBooking(bookingId: number): Promise<any[]> {
+    return this.request<any[]>(`/bookings/${bookingId}/requests`);
+  }
+
+  async getMechanicPartsRequests(): Promise<any[]> {
+    return this.request<any[]>('/mechanics/me/requests');
+  }
+
+  async checkCanRequestParts(bookingId: number): Promise<{ canRequest: boolean; message?: string }> {
+    return this.request<{ canRequest: boolean; message?: string }>(`/bookings/${bookingId}/can-request-parts`);
+  }
+
+  // Parts Request endpoints (Admin)
+  async getPendingPartsRequests(): Promise<any[]> {
+    return this.request<any[]>('/admin/requests/pending');
+  }
+
+  async approvePartsRequest(requestId: number, data?: { adminNotes?: string }): Promise<any> {
+    return this.request<any>(`/admin/requests/${requestId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async rejectPartsRequest(requestId: number, data: { adminNotes: string }): Promise<any> {
+    return this.request<any>(`/admin/requests/${requestId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Invoice Management
+  async generateInvoice(bookingId: number): Promise<Invoice> {
+    return this.request<Invoice>(`/invoices/generate/${bookingId}`, {
+      method: 'POST',
+    });
+  }
+
+  async getInvoice(invoiceId: number): Promise<Invoice> {
+    return this.request<Invoice>(`/invoices/${invoiceId}`);
+  }
+
+  async getInvoiceByBooking(bookingId: number): Promise<Invoice> {
+    return this.request<Invoice>(`/invoices/booking/${bookingId}`);
+  }
+
+  async getAllInvoices(days: number = 30): Promise<Invoice[]> {
+    return this.request<Invoice[]>(`/invoices?days=${days}`);
+  }
+
+  async updateInvoicePdfUrl(invoiceId: number, data: InvoicePdfUrlUpdateRequest): Promise<Invoice> {
+    return this.request<Invoice>(`/invoices/${invoiceId}/pdf-url`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMonthlyRevenue(months: number = 12): Promise<MonthlyRevenueData[]> {
+    return this.request<MonthlyRevenueData[]>(`/invoices/revenue/monthly?months=${months}`);
+  }
+
+  // Invoice Payment Management
+  async initiateInvoicePayment(invoiceId: number): Promise<any> {
+    return this.request<any>(`/invoices/${invoiceId}/payment`, {
+      method: 'POST',
+    });
+  }
+
+  async uploadInvoiceReceipt(invoiceId: number, file: File, receiptAmount: number, notes: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('receiptAmount', receiptAmount.toString());
+    formData.append('notes', notes);
+
+    const url = `${this.baseURL}/invoices/${invoiceId}/payment/receipt`;
+    const config: RequestInit = {
+      method: 'POST',
+      body: formData,
+    };
+
+    // Add authorization header
+    if (this.accessToken) {
+      config.headers = {
+        Authorization: `Bearer ${this.accessToken}`,
+      };
+    }
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getInvoicePaymentStatus(invoiceId: number): Promise<any> {
+    return this.request<any>(`/invoices/${invoiceId}/payment/status`);
+  }
+
+  async getPendingInvoicePayments(): Promise<any[]> {
+    return this.request<any[]>(`/invoices/payments/pending`);
+  }
+
+  async approveInvoicePayment(paymentId: number): Promise<any> {
+    return this.request<any>(`/invoices/payments/${paymentId}/approve`, {
+      method: 'PUT',
+    });
+  }
+
+  async rejectInvoicePayment(paymentId: number, reason?: string): Promise<any> {
+    const url = `/invoices/payments/${paymentId}/reject${reason ? `?reason=${encodeURIComponent(reason)}` : ''}`;
+    return this.request<any>(url, {
+      method: 'PUT',
+    });
+  }
+
+  async getAllInvoicePayments(days: number = 30): Promise<any[]> {
+    return this.request<any[]>(`/invoices/payments?days=${days}`);
+  }
+
+  getInvoiceReceiptUrl(paymentId: number): string {
+    return `${this.baseURL}/invoices/payments/${paymentId}/receipt`;
   }
 
 }

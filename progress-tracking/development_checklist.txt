@@ -89,16 +89,20 @@ MOTOSNAP Development Checklist
 [x] `GET /api/bookings/my` - Allow customers to view their own bookings.
 [x] `PUT /api/bookings/{id}/status` - Allow admins/mechanics to update booking status.
 [x] `PUT /api/bookings/{id}/assign` - Allow admins to assign mechanics to bookings.
-[ ] `POST /api/bookings/{bookingId}/request-part` - Allow a mechanic to request a part for a job.
-[ ] **Inventory Logic:** Ensure the parts request automatically deducts the quantity from the inventory.
+[x] `POST /api/bookings/{bookingId}/requests` - Allow a mechanic to request parts for a job.
+[x] `GET /api/bookings/{bookingId}/requests` - Get all parts requests for a booking.
+[x] `GET /api/mechanics/me/requests` - Allow a mechanic to view their own parts requests.
+[x] **Inventory Logic:** Parts request system with pending approval workflow implemented.
+[x] **Business Rules:** Mechanics can only request parts for CONFIRMED or IN_PROGRESS bookings they're assigned to.
+[x] **Admin Approval:** Admin endpoints for approving/rejecting parts requests (`PUT /api/admin/requests/{id}/approve`, `PUT /api/admin/requests/{id}/reject`).
 
 ---
 
 ### Milestone 4: The Service Workflow & Notifications
 
 **Admin Order Management:**
-[ ] `GET /api/admin/orders` - Allow an admin to view all pending purchase orders.
-[ ] `PUT /api/admin/orders/{orderId}/status` - Allow an admin to approve or reject an order.
+[x] `GET /api/admin/orders` - Allow an admin to view all pending purchase orders.
+[x] `PUT /api/admin/orders/{orderId}/status` - Allow an admin to approve or reject an order.
 
 **Job Status & History:**
 [ ] `PUT /api/bookings/{bookingId}/status` - Allow a mechanic to update a booking's status.
@@ -143,3 +147,59 @@ MOTOSNAP Development Checklist
 [x] **Soft Delete Implementation:** Fixed foreign key constraint issues
 [x] **Frontend Payment Enhancement:** Bank QR code integration in receipt upload
 [x] **Mobile Optimization:** Responsive design improvements
+
+**MECHANIC PARTS REQUEST SYSTEM - FULLY COMPLETED (September 3, 2025):**
+[x] **Backend Foundation Complete:** Full API implementation for mechanic parts request system
+[x] **Request Entity:** Updated default status from APPROVED to PENDING for proper approval workflow
+[x] **RequestService:** Complete business logic with validation rules implemented
+[x] **RequestController:** REST API endpoints for mechanic and admin operations
+[x] **Request DTOs:** RequestCreateDTO and RequestResponseDTO for API communication
+[x] **Business Logic Validation:** Mechanics can only request parts for bookings they're assigned to with status CONFIRMED or IN_PROGRESS
+[x] **Inventory Integration:** Stock checking and automatic deduction on approval
+[x] **Duplicate Prevention:** System prevents duplicate requests for same part in same booking
+[x] **Admin Approval Workflow:** Pending → Approved/Rejected status flow with inventory management
+
+**FRONTEND IMPLEMENTATION - COMPLETED (September 3, 2025):**
+[x] **PartsRequestWidget Component:** Complete mechanic interface for requesting parts
+[x] **Inventory Integration:** Real-time parts loading with stock filtering (qty > 0)
+[x] **Request Form:** Parts selection, quantity validation, and automatic reason generation
+[x] **Status Tracking:** Display of current requests with approval status indicators
+[x] **API Integration:** Fixed field mapping to match backend DTOs (partId, quantity, reason)
+[x] **Error Handling:** Comprehensive error handling and user feedback
+[x] **Mechanic Dashboard:** Integrated parts request widget into booking cards
+[x] **Admin Interface:** Complete parts request management page with approve/reject functionality
+[x] **Data Structure Fix:** Updated TypeScript interfaces to match backend RequestResponseDTO
+[x] **Price Calculations:** Fixed NaN errors by correcting field mappings (inventoryItemPrice → partPrice)
+[x] **Real-time Updates:** Parts requests refresh after approval/rejection actions
+[x] **Role-based Access:** Proper security implementation for mechanic and admin workflows
+[x] **Admin Navigation:** Added Parts Request Management link to admin sidebar menu
+
+**MECHANIC DASHBOARD UX ENHANCEMENTS - COMPLETED (September 3, 2025):**
+[x] **Smart Sorting Algorithm:** IN_PROGRESS bookings prioritized first, then newest first (by createdAt)
+[x] **Navigation Tabs Interface:** Modern tab-based navigation replacing old dropdown filter
+[x] **Real-time Status Counts:** Live count display for each status category in tab labels
+[x] **Visual Status Indicators:** Color-coded tabs with icons (🔧 In Progress, ✅ Ready, ✓ Completed)
+[x] **Sorting Transparency:** Visual indicator showing current sorting logic to users
+[x] **Enhanced UX Design:** Improved hover effects, active states, and responsive layout
+[x] **Proper Property Usage:** Correct use of BookingResponse.createdAt for date sorting
+
+**ADMIN BOOKING DETAILS MODAL - COMPLETED (September 3, 2025):**
+[x] **Completed Booking Details Modal:** Comprehensive modal interface for viewing completed service details
+[x] **Service Information Display:** Shows booking ID, service type, customer, vehicle, and dates
+[x] **Service Timeline:** Visual timeline showing scheduled, started, and completed dates
+[x] **Parts Usage Tracking:** Detailed breakdown of parts used with quantities and individual costs
+[x] **Cost Calculations:** Automatic calculation showing base service cost + parts total = service total
+[x] **Mechanic Notes Section:** Display of any notes left by the assigned mechanic during service
+[x] **Invoice Generation Placeholder:** Button prepared for future invoice generation functionality
+[x] **Proper API Integration:** Fetches booking details and associated parts requests via API calls
+
+**CUSTOMER BOOKINGS DASHBOARD UI CLEANUP - COMPLETED (September 3, 2025):**
+[x] **Navigation Tabs Implementation:** Status-based filtering with All, Active, Pending, and Completed tabs
+[x] **Real-time Tab Counts:** Live booking counts displayed in each tab with emoji icons (📋 All (5), ⚡ Active (2), ⏳ Pending (1), ✅ Completed (2))
+[x] **Latest-First Sorting:** Chronological sorting by createdAt descending (newest bookings appear first)
+[x] **Aesthetic Panel Container:** Clean white panel with subtle shadow, rounded corners, and proper padding
+[x] **Filter Information Display:** Shows current view count and sorting method with visual indicators
+[x] **Empty State Handling:** Proper messaging for filtered views with no matching bookings
+[x] **Tab Active States:** Blue highlighting for active tab with smooth transition animations
+[x] **Responsive Design:** Tab layout that adapts to mobile and desktop screen sizes
+[x] **Consistent Styling:** Matches overall dashboard aesthetic and design system

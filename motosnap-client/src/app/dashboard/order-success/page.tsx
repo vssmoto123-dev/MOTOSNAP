@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 
@@ -26,7 +26,7 @@ interface Order {
   hasReceipt: boolean;
 }
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get('orderId');
@@ -419,5 +419,13 @@ export default function OrderSuccessPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

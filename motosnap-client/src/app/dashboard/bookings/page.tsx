@@ -4,12 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { BookingResponse, BookingStatus } from '@/types/booking';
+import { Invoice } from '@/types/invoice';
+import InvoicePreview from '@/components/InvoicePreview';
+import InvoicePaymentModal from '@/components/InvoicePaymentModal';
+
+type TabType = 'all' | 'active' | 'pending' | 'completed';
 
 export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('all');
+  
+  // Modal states
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -19,13 +30,112 @@ export default function BookingsPage() {
     try {
       setLoading(true);
       const data = await apiClient.getUserBookings();
-      setBookings(data);
+      
+      // For completed bookings, fetch additional invoice information
+      const bookingsWithInvoices = await Promise.all(
+        data.map(async (booking) => {
+          if (booking.status === 'COMPLETED') {
+            try {
+              const detailedBooking = await apiClient.getBookingWithInvoice(booking.id);
+              return detailedBooking;
+            } catch (err) {
+              console.log(`No invoice data for booking ${booking.id}`);
+              return booking;
+            }
+          }
+          return booking;
+        })
+      );
+      
+      setBookings(bookingsWithInvoices);
       setError(null);
     } catch (err: any) {
       console.error('Failed to fetch bookings:', err);
       setError(err?.error || 'Failed to load bookings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewInvoice = async (bookingId: number, invoiceData: any) => {
+    try {
+      // Create invoice object with proper structure for InvoicePreview component
+      const invoice = {
+        id: invoiceData.id,
+        invoiceNumber: invoiceData.invoiceNumber,
+        serviceAmount: invoiceData.serviceAmount || 0,
+        partsAmount: invoiceData.partsAmount || 0,
+        totalAmount: invoiceData.totalAmount,
+        generatedAt: invoiceData.generatedAt,
+        booking: {
+          id: bookingId,
+          customerName: bookings.find(b => b.id === bookingId)?.customerName || '',
+          customerEmail: bookings.find(b => b.id === bookingId)?.customerEmail || '',
+          serviceName: bookings.find(b => b.id === bookingId)?.serviceName || '',
+          vehiclePlateNo: bookings.find(b => b.id === bookingId)?.vehiclePlateNo || '',
+          vehicleBrand: bookings.find(b => b.id === bookingId)?.vehicleBrand || '',
+          vehicleModel: bookings.find(b => b.id === bookingId)?.vehicleModel || ''
+        }
+      };
+      setSelectedInvoice(invoice);
+      setShowInvoicePreview(true);
+    } catch (err: any) {
+      console.error('Failed to prepare invoice data:', err);
+      setError(err?.message || 'Failed to load invoice');
+    }
+  };
+
+  const handlePayInvoice = async (bookingId: number, invoiceData: any) => {
+    try {
+      // Create invoice object with proper structure for InvoicePaymentModal component
+      const invoice = {
+        id: invoiceData.id,
+        invoiceNumber: invoiceData.invoiceNumber,
+        serviceAmount: invoiceData.serviceAmount || 0,
+        partsAmount: invoiceData.partsAmount || 0,
+        totalAmount: invoiceData.totalAmount,
+        generatedAt: invoiceData.generatedAt,
+        booking: {
+          id: bookingId,
+          customerName: bookings.find(b => b.id === bookingId)?.customerName || '',
+          customerEmail: bookings.find(b => b.id === bookingId)?.customerEmail || '',
+          serviceName: bookings.find(b => b.id === bookingId)?.serviceName || '',
+          vehiclePlateNo: bookings.find(b => b.id === bookingId)?.vehiclePlateNo || '',
+          vehicleBrand: bookings.find(b => b.id === bookingId)?.vehicleBrand || '',
+          vehicleModel: bookings.find(b => b.id === bookingId)?.vehicleModel || ''
+        }
+      };
+      setSelectedInvoice(invoice);
+      setShowPaymentModal(true);
+    } catch (err: any) {
+      console.error('Failed to prepare invoice data:', err);
+      setError(err?.message || 'Failed to load invoice');
+    }
+  };
+
+  const handleCloseModals = () => {
+    setSelectedInvoice(null);
+    setShowInvoicePreview(false);
+    setShowPaymentModal(false);
+  };
+
+  const handlePaymentComplete = () => {
+    // Refresh bookings to get updated payment status
+    fetchBookings();
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'PAYMENT_SUBMITTED':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'APPROVED':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -50,6 +160,40 @@ export default function BookingsPage() {
     const date = new Date(dateTimeString);
     return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   };
+
+  // Filter and sort bookings based on active tab
+  const getFilteredBookings = () => {
+    const filtered = bookings.filter(booking => {
+      switch (activeTab) {
+        case 'active': 
+          return ['CONFIRMED', 'IN_PROGRESS'].includes(booking.status);
+        case 'pending': 
+          return booking.status === 'PENDING';
+        case 'completed': 
+          return booking.status === 'COMPLETED';
+        default: 
+          return true; // all
+      }
+    });
+    
+    // Sort by createdAt descending (latest first)
+    return filtered.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  };
+
+  // Get count for each tab
+  const getTabCounts = () => {
+    const all = bookings.length;
+    const active = bookings.filter(b => ['CONFIRMED', 'IN_PROGRESS'].includes(b.status)).length;
+    const pending = bookings.filter(b => b.status === 'PENDING').length;
+    const completed = bookings.filter(b => b.status === 'COMPLETED').length;
+    
+    return { all, active, pending, completed };
+  };
+
+  const filteredBookings = getFilteredBookings();
+  const tabCounts = getTabCounts();
 
   if (loading) {
     return (
@@ -86,10 +230,69 @@ export default function BookingsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+
+      {/* Main Panel */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Bookings</h1>
         <p className="text-gray-600 mt-2">Track your service appointments and their progress</p>
+      </div>
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+              activeTab === 'all'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📋 All ({tabCounts.all})
+          </button>
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+              activeTab === 'active'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            ⚡ Active ({tabCounts.active})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+              activeTab === 'pending'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            ⏳ Pending ({tabCounts.pending})
+          </button>
+          <button
+            onClick={() => setActiveTab('completed')}
+            className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+              activeTab === 'completed'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            ✅ Completed ({tabCounts.completed})
+          </button>
+        </div>
+        
+        {/* Filter Info */}
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>
+            Showing {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''} 
+            {activeTab !== 'all' && ` in ${activeTab} status`}
+          </span>
+          <span className="text-xs">
+            📅 Sorted by newest first
+          </span>
+        </div>
       </div>
 
       {/* Bookings List */}
@@ -109,9 +312,19 @@ export default function BookingsPage() {
             </button>
           </div>
         </div>
+      ) : filteredBookings.length === 0 ? (
+        <div className="text-center py-12">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v8a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No {activeTab} bookings</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            You don't have any bookings with {activeTab} status.
+          </p>
+        </div>
       ) : (
         <div className="space-y-6">
-          {bookings.map((booking) => (
+          {filteredBookings.map((booking) => (
             <div key={booking.id} className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -215,10 +428,85 @@ export default function BookingsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Invoice & Payment Section */}
+              {booking.status === 'COMPLETED' && booking.invoice && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border-t">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Invoice & Payment</h4>
+                      <p className="text-sm text-gray-600">Invoice #{booking.invoice.invoiceNumber}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-lg text-gray-900">${booking.invoice.totalAmount.toFixed(2)}</p>
+                      <p className="text-xs text-gray-500">Total amount</p>
+                    </div>
+                  </div>
+
+                  {/* Payment Status */}
+                  {booking.invoice.invoicePayment ? (
+                    <div className="mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">Payment Status:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPaymentStatusColor(booking.invoice.invoicePayment.status)}`}>
+                          {booking.invoice.invoicePayment.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                      {booking.invoice.invoicePayment.status === 'REJECTED' && booking.invoice.invoicePayment.receipt?.adminNotes && (
+                        <p className="text-sm text-red-600 mt-1">
+                          Reason: {booking.invoice.invoicePayment.receipt.adminNotes}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mb-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border bg-gray-100 text-gray-600`}>
+                        Payment not initiated
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => handleViewInvoice(booking.id, booking.invoice)}
+                      className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm font-medium flex items-center gap-1"
+                    >
+                      📄 View Invoice
+                    </button>
+                    
+                    {!booking.invoice.invoicePayment && (
+                      <button
+                        onClick={() => handlePayInvoice(booking.id, booking.invoice)}
+                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium flex items-center gap-1"
+                      >
+                        💳 Pay Invoice
+                      </button>
+                    )}
+                    
+                    {booking.invoice.invoicePayment && 
+                     (booking.invoice.invoicePayment.status === 'PENDING' || booking.invoice.invoicePayment.status === 'REJECTED') && (
+                      <button
+                        onClick={() => handlePayInvoice(booking.id, booking.invoice)}
+                        className="px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium flex items-center gap-1"
+                      >
+                        📤 Upload Receipt
+                      </button>
+                    )}
+
+                    {booking.invoice.invoicePayment?.status === 'APPROVED' && (
+                      <div className="px-3 py-2 bg-green-100 text-green-700 rounded-md text-sm font-medium flex items-center gap-1">
+                        ✅ Payment Confirmed
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
+      </div>
 
       {/* Navigation Back */}
       <div className="mt-8">
@@ -229,6 +517,23 @@ export default function BookingsPage() {
           ← Back to Dashboard
         </button>
       </div>
+
+      {/* Modals */}
+      {selectedInvoice && showInvoicePreview && (
+        <InvoicePreview
+          invoice={selectedInvoice}
+          onClose={handleCloseModals}
+        />
+      )}
+
+      {selectedInvoice && showPaymentModal && (
+        <InvoicePaymentModal
+          invoice={selectedInvoice}
+          isOpen={showPaymentModal}
+          onClose={handleCloseModals}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Request {
     
     @Id
@@ -26,7 +28,7 @@ public class Request {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RequestStatus status = RequestStatus.APPROVED; // Auto-approved per requirements
+    private RequestStatus status = RequestStatus.PENDING; // Waiting for admin approval
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mechanic_id", nullable = false)
@@ -51,6 +53,6 @@ public class Request {
         this.mechanic = mechanic;
         this.part = part;
         this.booking = booking;
-        this.status = RequestStatus.APPROVED; // Auto-approved as per requirements
+        this.status = RequestStatus.PENDING; // Waiting for admin approval
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,9 @@ public class BookingController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private com.motosnap.workshop.service.InvoicePaymentService invoicePaymentService;
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
@@ -198,6 +202,102 @@ public class BookingController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Internal server error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{bookingId}/with-invoice")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN') or hasRole('MECHANIC')")
+    public ResponseEntity<?> getBookingWithInvoice(
+            @PathVariable Long bookingId,
+            Authentication authentication) {
+        try {
+            System.out.println("DEBUG: Getting booking with invoice for ID: " + bookingId);
+            
+            // Get basic booking information
+            BookingResponse booking = bookingService.getBookingById(bookingId);
+            
+            // Check if customer can only view their own bookings
+            if (authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_CUSTOMER"))) {
+                if (!booking.getCustomerEmail().equals(authentication.getName())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("error", "Access denied"));
+                }
+            }
+            
+            // Create extended response with invoice information
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", booking.getId());
+            response.put("scheduledDateTime", booking.getScheduledDateTime());
+            response.put("status", booking.getStatus());
+            response.put("notes", booking.getNotes() != null ? booking.getNotes() : "");
+            response.put("statusNotes", booking.getStatusNotes() != null ? booking.getStatusNotes() : "");
+            response.put("serviceId", booking.getServiceId());
+            response.put("serviceName", booking.getServiceName());
+            response.put("serviceCategory", booking.getServiceCategory());
+            response.put("serviceDescription", booking.getServiceDescription() != null ? booking.getServiceDescription() : "");
+            response.put("serviceBasePrice", booking.getServiceBasePrice());
+            response.put("serviceEstimatedDurationMinutes", booking.getServiceEstimatedDurationMinutes());
+            response.put("vehicleId", booking.getVehicleId());
+            response.put("vehiclePlateNo", booking.getVehiclePlateNo());
+            response.put("vehicleModel", booking.getVehicleModel());
+            response.put("vehicleBrand", booking.getVehicleBrand());
+            response.put("vehicleYear", booking.getVehicleYear());
+            response.put("customerId", booking.getCustomerId());
+            response.put("customerName", booking.getCustomerName());
+            response.put("customerEmail", booking.getCustomerEmail());
+            response.put("assignedMechanicId", booking.getAssignedMechanicId());
+            response.put("assignedMechanicName", booking.getAssignedMechanicName() != null ? booking.getAssignedMechanicName() : "");
+            response.put("createdAt", booking.getCreatedAt());
+            response.put("updatedAt", booking.getUpdatedAt());
+            response.put("startedAt", booking.getStartedAt());
+            response.put("completedAt", booking.getCompletedAt());
+            response.put("invoice", getInvoiceForBooking(bookingId));
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            System.err.println("ERROR: Failed to get booking with invoice - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage(), "details", e.getClass().getSimpleName()));
+        } catch (Exception e) {
+            System.err.println("ERROR: Unexpected error getting booking with invoice - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error: " + e.getMessage()));
+        }
+    }
+    
+    private Object getInvoiceForBooking(Long bookingId) {
+        try {
+            // Try to get invoice for this booking
+            var invoiceOpt = bookingService.getInvoiceService().getInvoiceByBookingId(bookingId);
+            if (invoiceOpt.isPresent()) {
+                var invoice = invoiceOpt.get();
+                Map<String, Object> invoiceMap = new HashMap<>();
+                invoiceMap.put("id", invoice.getId());
+                invoiceMap.put("invoiceNumber", invoice.getInvoiceNumber());
+                invoiceMap.put("serviceAmount", invoice.getServiceAmount());
+                invoiceMap.put("partsAmount", invoice.getPartsAmount());
+                invoiceMap.put("totalAmount", invoice.getTotalAmount());
+                invoiceMap.put("generatedAt", invoice.getGeneratedAt());
+                invoiceMap.put("invoicePayment", getInvoicePaymentInfo(invoice.getId()));
+                return invoiceMap;
+            }
+            return null;
+        } catch (Exception e) {
+            System.out.println("DEBUG: No invoice found for booking ID: " + bookingId + ", error: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    private Object getInvoicePaymentInfo(Long invoiceId) {
+        try {
+            // This would require access to InvoicePaymentService - for now return null
+            // TODO: Add proper invoice payment status lookup
+            return null;
+        } catch (Exception e) {
+            return null;
         }
     }
 }

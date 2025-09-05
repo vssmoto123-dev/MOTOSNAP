@@ -60,7 +60,7 @@ export default function ServicesPage() {
     try {
       setLoading(true);
       const fetchedServices = await apiClient.getPublicServices();
-      setServices(fetchedServices);
+      setServices(fetchedServices as any);
       
       // Extract unique categories
       const uniqueCategories = [...new Set(fetchedServices.map(s => s.category))];
@@ -157,8 +157,8 @@ export default function ServicesPage() {
       const date = new Date(now);
       date.setDate(now.getDate() + day);
       
-      // Skip past times for today
-      const startHour = day === 0 ? Math.max(now.getHours() + 2, 9) : 9;
+      // Skip past times for today - use larger buffer for server timezone differences
+      const startHour = day === 0 ? Math.max(now.getHours() + 4, 9) : 9;
       
       for (let hour = startHour; hour <= 17; hour++) {
         if (hour === 12 || hour === 13) continue; // Skip lunch hours
@@ -166,8 +166,16 @@ export default function ServicesPage() {
         const datetime = new Date(date);
         datetime.setHours(hour, 0, 0, 0);
         
+        // Format as local datetime string (YYYY-MM-DDTHH:mm:ss) to avoid UTC conversion issues
+        const year = datetime.getFullYear();
+        const month = String(datetime.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(datetime.getDate()).padStart(2, '0');
+        const hourStr = String(datetime.getHours()).padStart(2, '0');
+        const minute = String(datetime.getMinutes()).padStart(2, '0');
+        const second = String(datetime.getSeconds()).padStart(2, '0');
+        
         slots.push({
-          value: datetime.toISOString().slice(0, 16),
+          value: `${year}-${month}-${dayStr}T${hourStr}:${minute}:${second}`,
           label: `${datetime.toLocaleDateString()} at ${datetime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`
         });
       }

@@ -15,6 +15,7 @@ public class BookingResponse {
     private LocalDateTime scheduledDateTime;
     private BookingStatus status;
     private String notes;
+    private String statusNotes;
     
     // Service information
     private Long serviceId;
@@ -45,4 +46,7 @@ public class BookingResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
+    
+    // Invoice status (simple flag to show if invoice exists)
+    private Boolean hasInvoice = false;
 }

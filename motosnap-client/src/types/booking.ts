@@ -10,6 +10,7 @@ export interface BookingResponse {
   scheduledDateTime: string;
   status: BookingStatus;
   notes?: string;
+  statusNotes?: string;
   
   // Service information
   serviceId: number;
@@ -40,6 +41,10 @@ export interface BookingResponse {
   updatedAt: string;
   startedAt?: string;
   completedAt?: string;
+  
+  // Invoice status (simple flag)
+  hasInvoice?: boolean;
+  invoice?: Invoice;
 }
 
 export type BookingStatus = 

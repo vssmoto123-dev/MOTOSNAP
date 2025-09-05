@@ -186,12 +186,23 @@ function DashboardContent() {
               </Button>
             )}
             {user?.role === 'ADMIN' && (
-              <Button
-                onClick={() => router.push('/dashboard/admin')}
-                className="h-16 bg-red-600 hover:bg-red-700 text-white"
-              >
-                Admin Panel
-              </Button>
+              <>
+                <Button
+                  onClick={() => router.push('/dashboard/admin')}
+                  className="h-16 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Admin Panel
+                </Button>
+                <Button
+                  onClick={() => router.push('/dashboard/admin/parts-requests')}
+                  className="h-16 bg-orange-600 hover:bg-orange-700 text-white relative"
+                >
+                  Parts Requests
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center">
+                    !
+                  </span>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -248,8 +259,14 @@ function DashboardContent() {
                   <span className="text-text-muted">Low Stock Items</span>
                   <span className="text-xl font-bold text-warning">3</span>
                 </div>
+                {user?.role === 'ADMIN' && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-muted">Parts Requests</span>
+                    <span className="text-xl font-bold text-orange-600">New</span>
+                  </div>
+                )}
+                </div>
               </div>
-            </div>
 
             {/* Recent Activity */}
             <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg">
@@ -281,20 +298,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Coming Soon */}
-        <div className="mt-8 bg-muted/30 p-6 rounded-2xl border border-border/50">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-text mb-2">More Features Coming Soon</h3>
-            <p className="text-text-muted mb-4">
-              We&apos;re working on additional features for {user?.role?.toLowerCase()} users
-            </p>
-            <div className="flex justify-center space-x-4 text-sm text-text-muted">
-              <span>🚀 Advanced Analytics</span>
-              <span>📱 Mobile App</span>
-              <span>🔔 Real-time Notifications</span>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
