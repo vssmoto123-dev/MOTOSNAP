@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: motosnap
+    runtime: java
+    buildCommand: "./build.sh"
+    startCommand: "java -jar workshop/target/workshop-*.jar"
+    plan: free
+    env: production
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: "8080"
+      - key: UPLOAD_DIR
+        value: "./uploads"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SPRING_DATASOURCE_URL
+        value: "jdbc:h2:mem:motosnapdb"
+      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        value: "org.h2.Driver"
+      - key: SPRING_JPA_DATABASE_PLATFORM
+        value: "org.hibernate.dialect.H2Dialect"
+    healthCheckPath: /actuator/health
