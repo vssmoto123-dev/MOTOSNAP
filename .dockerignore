@@ -1,0 +1,84 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation and development files
+*.md
+documentations/
+progress-tracking/
+issue.txt
+Milestone*.md
+GEMINI.md
+DEVELOPMENT_PLAN.md
+API_DOCUMENTATION.md
+
+# IDE and editor files
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# Node.js
+motosnap-client/node_modules/
+motosnap-client/.next/
+motosnap-client/out/
+motosnap-client/.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java / Maven
+workshop/target/
+workshop/.mvn/wrapper/maven-wrapper.jar
+workshop/.mvn/wrapper/maven-wrapper.properties
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+workshop/.env.local
+
+# Build artifacts
+workshop/src/main/resources/static/*
+*.jar
+*.war
+*.class
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+uploads/*
+!uploads/README.md
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Scripts not needed in container
+build.sh
+build-and-deploy-frontend.bat
+run-springboot.bat
+verify-deployment-ready.sh
+
+# Old render configuration (we use Docker now)
+render.yaml
+
+# Docker files themselves
+Dockerfile*
+.dockerignore

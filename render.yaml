@@ -1,18 +1,14 @@
 services:
   - type: web
     name: motosnap
-    runtime: java
-    buildCommand: "./build.sh"
-    startCommand: "./workshop/mvnw -Dspring-boot.run.jvmArguments=-Dserver.port=$PORT -f workshop/pom.xml spring-boot:run"
+    runtime: docker
     plan: free
     env: production
     envVars:
-      - key: JAVA_OPTS
-        value: "-Dserver.port=$PORT"
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: UPLOAD_DIR
-        value: "./uploads"
+        value: "/app/uploads"
       - key: JWT_SECRET
         generateValue: true
       - key: SPRING_DATASOURCE_URL
@@ -23,4 +19,6 @@ services:
         value: "org.hibernate.dialect.H2Dialect"
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
         value: "create-drop"
+      - key: JAVA_OPTS
+        value: "-Xmx400m -Xms200m"
     healthCheckPath: /actuator/health
