@@ -19,4 +19,5 @@ public class InventoryResponse {
     private String category;
     private String brand;
     private Boolean active;
+    private String imageUrl;
 }

@@ -308,6 +308,7 @@ public class OrderService {
         response.setCategory(inventory.getCategory());
         response.setBrand(inventory.getBrand());
         response.setActive(inventory.getActive());
+        response.setImageUrl(inventory.getImageUrl());
         return response;
     }
 }
