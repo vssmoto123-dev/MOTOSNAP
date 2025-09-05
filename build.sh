@@ -18,6 +18,13 @@ cp -r out/* ../workshop/src/main/resources/static/
 cd ../workshop
 echo "Building backend..."
 chmod +x mvnw
-./mvnw clean package -DskipTests
+
+# Set JAVA_HOME if not set
+if [ -z "$JAVA_HOME" ]; then
+    export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+fi
+
+# Build with explicit Java version
+./mvnw clean package -DskipTests -Djava.version=17
 
 echo "Build completed successfully!"

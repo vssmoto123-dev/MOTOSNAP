@@ -3,22 +3,24 @@ services:
     name: motosnap
     runtime: java
     buildCommand: "./build.sh"
-    startCommand: "java -jar workshop/target/workshop-*.jar"
+    startCommand: "./workshop/mvnw -Dspring-boot.run.jvmArguments=-Dserver.port=$PORT -f workshop/pom.xml spring-boot:run"
     plan: free
     env: production
     envVars:
+      - key: JAVA_OPTS
+        value: "-Dserver.port=$PORT"
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: SERVER_PORT
-        value: "8080"
       - key: UPLOAD_DIR
         value: "./uploads"
       - key: JWT_SECRET
         generateValue: true
       - key: SPRING_DATASOURCE_URL
-        value: "jdbc:h2:mem:motosnapdb"
+        value: "jdbc:h2:mem:motosnapdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
       - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
         value: "org.h2.Driver"
       - key: SPRING_JPA_DATABASE_PLATFORM
         value: "org.hibernate.dialect.H2Dialect"
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: "create-drop"
     healthCheckPath: /actuator/health
