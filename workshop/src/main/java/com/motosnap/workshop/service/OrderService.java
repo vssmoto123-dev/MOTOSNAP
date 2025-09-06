@@ -6,6 +6,7 @@ import com.motosnap.workshop.dto.InventoryResponse;
 import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,7 @@ public class OrderService {
     private InventoryRepository inventoryRepository;
 
     @Autowired
+    @Lazy
     private FileStorageService fileStorageService;
 
     public OrderResponse createOrderFromCart(String userEmail) {

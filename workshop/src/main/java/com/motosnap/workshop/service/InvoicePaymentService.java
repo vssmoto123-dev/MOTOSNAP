@@ -4,6 +4,7 @@ import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
 import com.motosnap.workshop.dto.InvoicePaymentResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class InvoicePaymentService {
     private UserRepository userRepository;
 
     @Autowired
+    @Lazy
     private FileStorageService fileStorageService;
 
     public InvoicePayment initiatePayment(Long invoiceId, User user) {
