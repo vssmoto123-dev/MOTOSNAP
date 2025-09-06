@@ -22,7 +22,6 @@ import java.util.Map;
 @RequestMapping("/api/inventory")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
 public class InventoryController {
     
     private final InventoryService inventoryService;
