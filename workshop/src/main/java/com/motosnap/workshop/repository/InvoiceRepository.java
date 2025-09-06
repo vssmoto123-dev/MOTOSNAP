@@ -41,9 +41,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     BigDecimal getPartsRevenueBetweenDates(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
     
     // Monthly revenue
-    @Query("SELECT MONTH(i.generatedAt) as month, YEAR(i.generatedAt) as year, SUM(i.totalAmount) as revenue " +
-           "FROM Invoice i WHERE i.generatedAt >= :since GROUP BY YEAR(i.generatedAt), MONTH(i.generatedAt) " +
-           "ORDER BY year DESC, month DESC")
+    @Query(value = "SELECT MONTH(generated_at) as month, YEAR(generated_at) as year, SUM(total_amount) as revenue " +
+                   "FROM invoices WHERE generated_at >= :since GROUP BY YEAR(generated_at), MONTH(generated_at) " +
+                   "ORDER BY year DESC, month DESC", nativeQuery = true)
     List<Object[]> getMonthlyRevenue(@Param("since") LocalDateTime since);
     
     // Recent invoices

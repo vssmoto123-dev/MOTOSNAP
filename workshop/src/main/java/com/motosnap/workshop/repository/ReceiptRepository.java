@@ -23,8 +23,8 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     List<Receipt> findByStatusOrderByUploadedAtDesc(ReceiptStatus status);
     
     // Find pending receipts for admin approval
-    @Query("SELECT r FROM Receipt r WHERE r.status = 'PENDING' ORDER BY r.uploadedAt ASC")
-    List<Receipt> findPendingReceipts();
+    @Query("SELECT r FROM Receipt r WHERE r.status = :status ORDER BY r.uploadedAt ASC")
+    List<Receipt> findPendingReceipts(@Param("status") ReceiptStatus status);
     
     // Find receipts approved by admin
     List<Receipt> findByApprovedByOrderByApprovedAtDesc(User approvedBy);

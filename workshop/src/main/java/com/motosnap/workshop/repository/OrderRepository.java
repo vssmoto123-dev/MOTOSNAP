@@ -22,12 +22,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
     
     // Find pending orders for admin approval
-    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' ORDER BY o.createdAt ASC")
-    List<Order> findPendingOrders();
+    @Query("SELECT o FROM Order o WHERE o.status = :status ORDER BY o.createdAt ASC")
+    List<Order> findPendingOrders(@Param("status") OrderStatus status);
     
     // Find orders requiring approval (with receipts)
-    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' AND o.receipt IS NOT NULL ORDER BY o.createdAt ASC")
-    List<Order> findOrdersWithReceipts();
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.receipt IS NOT NULL ORDER BY o.createdAt ASC")
+    List<Order> findOrdersWithReceipts(@Param("status") OrderStatus status);
     
     // Find orders by date range
     List<Order> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime start, LocalDateTime end);

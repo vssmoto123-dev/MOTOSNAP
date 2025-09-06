@@ -34,19 +34,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findTodayBookings();
     
     // Find upcoming bookings
-    @Query("SELECT b FROM Booking b WHERE b.scheduledDateTime > CURRENT_TIMESTAMP AND b.status IN ('PENDING', 'CONFIRMED') ORDER BY b.scheduledDateTime ASC")
-    List<Booking> findUpcomingBookings();
+    @Query("SELECT b FROM Booking b WHERE b.scheduledDateTime > CURRENT_TIMESTAMP AND b.status IN (:pending, :confirmed) ORDER BY b.scheduledDateTime ASC")
+    List<Booking> findUpcomingBookings(@Param("pending") BookingStatus pending, @Param("confirmed") BookingStatus confirmed);
     
     // Find overdue bookings
-    @Query("SELECT b FROM Booking b WHERE b.scheduledDateTime < CURRENT_TIMESTAMP AND b.status = 'CONFIRMED' ORDER BY b.scheduledDateTime ASC")
-    List<Booking> findOverdueBookings();
+    @Query("SELECT b FROM Booking b WHERE b.scheduledDateTime < CURRENT_TIMESTAMP AND b.status = :status ORDER BY b.scheduledDateTime ASC")
+    List<Booking> findOverdueBookings(@Param("status") BookingStatus status);
     
     // Find bookings by vehicle
     List<Booking> findByVehicleOrderByScheduledDateTimeDesc(Vehicle vehicle);
     
     // Mechanic workload queries
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.assignedMechanic.id = :mechanicId AND b.status IN ('CONFIRMED', 'IN_PROGRESS')")
-    long countActivebookingsByMechanic(@Param("mechanicId") Long mechanicId);
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.assignedMechanic.id = :mechanicId AND b.status IN (:confirmed, :inProgress)")
+    long countActivebookingsByMechanic(@Param("mechanicId") Long mechanicId, @Param("confirmed") BookingStatus confirmed, @Param("inProgress") BookingStatus inProgress);
     
     @Query(value = "SELECT * FROM bookings WHERE assigned_mechanic_id = :mechanicId AND DATE(scheduled_date_time) = CURRENT_DATE", nativeQuery = true)
     List<Booking> findTodayBookingsByMechanic(@Param("mechanicId") Long mechanicId);
@@ -59,6 +59,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     long countBookingsBetweenDates(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
     
     // Find unassigned bookings
-    @Query("SELECT b FROM Booking b WHERE b.assignedMechanic IS NULL AND b.status = 'CONFIRMED' ORDER BY b.scheduledDateTime ASC")
-    List<Booking> findUnassignedBookings();
+    @Query("SELECT b FROM Booking b WHERE b.assignedMechanic IS NULL AND b.status = :status ORDER BY b.scheduledDateTime ASC")
+    List<Booking> findUnassignedBookings(@Param("status") BookingStatus status);
 }

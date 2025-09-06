@@ -29,8 +29,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     
     // Find mechanics for assignment
-    @Query("SELECT u FROM User u WHERE u.role = 'MECHANIC' AND u.active = true ORDER BY u.name")
-    List<User> findAvailableMechanics();
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.name")
+    List<User> findAvailableMechanics(@Param("role") Role role);
     
     // Search users by name or email
     @Query("SELECT u FROM User u WHERE (LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) " +

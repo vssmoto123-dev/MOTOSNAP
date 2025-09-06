@@ -3,8 +3,10 @@ package com.motosnap.workshop.repository;
 import com.motosnap.workshop.entity.Inventory;
 import com.motosnap.workshop.entity.Order;
 import com.motosnap.workshop.entity.OrderItem;
+import com.motosnap.workshop.entity.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,6 +29,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     // Revenue by part
     @Query("SELECT oi.part, SUM(oi.price * oi.qty) as totalRevenue FROM OrderItem oi " +
-           "JOIN oi.order o WHERE o.status = 'COMPLETED' GROUP BY oi.part ORDER BY totalRevenue DESC")
-    List<Object[]> findRevenueByPart();
+           "JOIN oi.order o WHERE o.status = :status GROUP BY oi.part ORDER BY totalRevenue DESC")
+    List<Object[]> findRevenueByPart(@Param("status") OrderStatus status);
 }

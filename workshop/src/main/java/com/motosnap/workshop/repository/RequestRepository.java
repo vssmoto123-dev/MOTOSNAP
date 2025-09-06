@@ -34,8 +34,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findRecentRequests(@Param("since") LocalDateTime since);
     
     // Parts usage statistics
-    @Query("SELECT r.part, SUM(r.qty) as totalUsed FROM Request r WHERE r.status = 'APPROVED' GROUP BY r.part ORDER BY totalUsed DESC")
-    List<Object[]> findMostUsedParts();
+    @Query("SELECT r.part, SUM(r.qty) as totalUsed FROM Request r WHERE r.status = :status GROUP BY r.part ORDER BY totalUsed DESC")
+    List<Object[]> findMostUsedParts(@Param("status") RequestStatus status);
     
     @Query("SELECT r.mechanic, COUNT(r) as requestCount FROM Request r GROUP BY r.mechanic ORDER BY requestCount DESC")
     List<Object[]> findMechanicRequestCounts();
@@ -44,6 +44,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByRequestedAtBetweenOrderByRequestedAtDesc(LocalDateTime start, LocalDateTime end);
     
     // Today's requests
-    @Query("SELECT r FROM Request r WHERE DATE(r.requestedAt) = CURRENT_DATE ORDER BY r.requestedAt DESC")
+    @Query(value = "SELECT * FROM requests WHERE DATE(requested_at) = CURRENT_DATE ORDER BY requested_at DESC", nativeQuery = true)
     List<Request> findTodayRequests();
 }

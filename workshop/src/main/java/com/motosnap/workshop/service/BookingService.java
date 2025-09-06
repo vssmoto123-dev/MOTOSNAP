@@ -101,7 +101,7 @@ public class BookingService {
     }
 
     public List<BookingResponse> getUpcomingBookings() {
-        List<Booking> bookings = bookingRepository.findUpcomingBookings();
+        List<Booking> bookings = bookingRepository.findUpcomingBookings(BookingStatus.PENDING, BookingStatus.CONFIRMED);
         return bookings.stream()
                 .map(this::convertToBookingResponse)
                 .collect(Collectors.toList());
