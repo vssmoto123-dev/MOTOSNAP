@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  
+  console.log('📊 Main Dashboard loading...', { userRole: user?.role });
 
   const handleLogout = () => {
     logout();
