@@ -25,8 +25,8 @@ WORKDIR /app
 COPY workshop/mvnw workshop/mvnw.cmd workshop/pom.xml ./
 COPY workshop/.mvn ./.mvn
 
-# Make Maven wrapper executable and verify
-RUN chmod +x mvnw && ls -la mvnw
+# Make Maven wrapper executable and verify directory structure
+RUN chmod +x mvnw && ls -la mvnw && ls -la .mvn/wrapper/
 
 # Download dependencies (cached layer)
 RUN ./mvnw dependency:go-offline -B

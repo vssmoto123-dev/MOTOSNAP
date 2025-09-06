@@ -32,8 +32,9 @@ yarn-error.log*
 
 # Java / Maven
 workshop/target/
-workshop/.mvn/wrapper/maven-wrapper.jar
-workshop/.mvn/wrapper/maven-wrapper.properties
+# Keep Maven wrapper files for Docker build
+# workshop/.mvn/wrapper/maven-wrapper.jar
+# workshop/.mvn/wrapper/maven-wrapper.properties
 
 # Environment files
 .env
