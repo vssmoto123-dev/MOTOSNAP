@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, getImageBaseUrl } from '@/lib/api';
 
 interface OrderItem {
   id: number;
@@ -133,7 +133,7 @@ export default function OrdersPage() {
     if (part.imageUrl) {
       return (
         <img
-          src={`http://localhost:8080${part.imageUrl}`}
+          src={`${getImageBaseUrl()}${part.imageUrl}`}
           alt={part.partName}
           className="w-12 h-12 rounded-lg object-cover border border-border"
         />

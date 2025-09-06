@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
+import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import DebugPanel from '@/components/DebugPanel';
 
@@ -238,7 +238,7 @@ export default function PartsPage() {
                 <div className="relative h-48 bg-muted/30">
                   {(part as any).imageUrl ? (
                     <img 
-                      src={`http://localhost:8080${(part as any).imageUrl}`} 
+                      src={`${getImageBaseUrl()}${(part as any).imageUrl}`} 
                       alt={part.partName}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

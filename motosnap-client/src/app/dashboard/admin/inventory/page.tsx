@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import apiClient from '@/lib/api';
+import apiClient, { getImageBaseUrl } from '@/lib/api';
 import { InventoryItem, InventoryRequest } from '@/types/admin';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -545,7 +545,7 @@ export default function InventoryManagement() {
                       <div className="flex items-center space-x-3">
                         {item.imageUrl && (
                           <img 
-                            src={`http://localhost:8080${item.imageUrl}`} 
+                            src={`${getImageBaseUrl()}${item.imageUrl}`} 
                             alt={item.partName}
                             className="h-10 w-10 object-cover rounded-md"
                           />

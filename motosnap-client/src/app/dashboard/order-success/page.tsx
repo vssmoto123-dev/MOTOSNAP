@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, getImageBaseUrl } from '@/lib/api';
 
 interface OrderItem {
   id: number;
@@ -154,7 +154,7 @@ function OrderSuccessContent() {
     if (part.imageUrl) {
       return (
         <img 
-          src={`http://localhost:8080${part.imageUrl}`}
+          src={`${getImageBaseUrl()}${part.imageUrl}`}
           alt={part.partName}
           className="w-16 h-16 object-cover rounded-lg"
         />

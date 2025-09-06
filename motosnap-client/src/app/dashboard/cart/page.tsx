@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
+import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 interface CartItem {
@@ -110,7 +110,7 @@ export default function CartPage() {
     if (inventory.imageUrl) {
       return (
         <img 
-          src={`http://localhost:8080${inventory.imageUrl}`}
+          src={`${getImageBaseUrl()}${inventory.imageUrl}`}
           alt={inventory.partName}
           className="w-16 h-16 object-cover rounded-lg"
         />

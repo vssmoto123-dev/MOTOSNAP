@@ -40,6 +40,25 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// Function to get the base URL for images (without /api suffix)
+export const getImageBaseUrl = (): string => {
+  // First try environment variable
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace('/api', '');
+  }
+  
+  // Runtime detection for production (fallback)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('onrender.com')) {
+      return window.location.origin;
+    }
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:8080';
+};
+
 // Debug logging to help track API URL
 console.log('🔧 API Configuration:', {
   environment: process.env.NODE_ENV,
