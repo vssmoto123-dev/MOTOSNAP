@@ -4,7 +4,10 @@ const nextConfig: NextConfig = {
   output: 'export',
   basePath: '',
   assetPrefix: '',
-  trailingSlash: false,
+  trailingSlash: true,  // Enable trailing slashes for static export
+  images: {
+    unoptimized: true,  // Required for static export
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
