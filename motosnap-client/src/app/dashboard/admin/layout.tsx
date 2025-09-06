@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import apiClient from '@/lib/api';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,18 +15,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('AdminLayout state:', { 
+      mounted, 
+      loading, 
+      userRole: user?.role, 
+      userName: user?.name 
+    });
+  }, [mounted, loading, user]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (mounted && !loading) {
-      if (!user) {
+      // Check if we have any authentication token at all
+      const hasToken = apiClient.isAuthenticated();
+      
+      // Only redirect to login if no user AND no token
+      if (!user && !hasToken) {
+        console.log('AdminLayout: No user and no token, redirecting to login');
         router.push('/login');
         return;
       }
       
-      if (user.role !== 'ADMIN') {
+      // Only redirect if we have a user and they're definitely not an admin
+      if (user && user.role && user.role !== 'ADMIN') {
+        console.log('AdminLayout: Non-admin user detected, redirecting to dashboard');
         router.push('/dashboard');
         return;
       }
@@ -43,8 +61,43 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!user || user.role !== 'ADMIN') {
-    return null;
+  // Check authentication state more carefully
+  const hasToken = apiClient.isAuthenticated();
+  
+  // Show loading if we have a token but no user yet (user is still being loaded)
+  if (hasToken && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render if we have a user but they're not an admin
+  if (user && user.role !== 'ADMIN') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render if no token and no user
+  if (!hasToken && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

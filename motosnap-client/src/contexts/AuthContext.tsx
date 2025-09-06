@@ -24,19 +24,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       try {
         if (apiClient?.isAuthenticated?.()) {
+          console.log('AuthContext: Token found, attempting refresh...');
           // Try to refresh token to get user info
           try {
             const response = await apiClient.refreshToken();
             if (response?.user) {
+              console.log('AuthContext: User restored from token:', response.user);
               setUser(response.user);
+            } else {
+              console.log('AuthContext: No user data in refresh response');
+              apiClient.clearTokens();
             }
           } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
+            console.error('AuthContext: Token refresh failed:', refreshError);
             apiClient.clearTokens();
+            // Don't immediately redirect - let the layout components handle it
           }
+        } else {
+          console.log('AuthContext: No valid token found');
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
+        console.error('AuthContext: Auth initialization failed:', error);
       } finally {
         setLoading(false);
       }
