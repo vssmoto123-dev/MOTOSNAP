@@ -11,6 +11,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  console.log('🏗️ AdminLayout component loading...');
   const { user, loading } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -36,17 +37,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       
       // Only redirect to login if no user AND no token
       if (!user && !hasToken) {
-        console.log('AdminLayout: No user and no token, redirecting to login');
+        console.log('🚨 AdminLayout: No user and no token, redirecting to login');
         router.push('/login');
         return;
       }
       
       // Only redirect if we have a user and they're definitely not an admin
       if (user && user.role && user.role !== 'ADMIN') {
-        console.log('AdminLayout: Non-admin user detected, redirecting to dashboard');
+        console.log('🚨 AdminLayout: Non-admin user detected, redirecting to dashboard', {
+          userRole: user.role,
+          userEmail: user.email
+        });
         router.push('/dashboard');
         return;
       }
+      
+      console.log('✅ AdminLayout: Admin user confirmed, no redirect needed', {
+        userRole: user?.role,
+        hasToken,
+        mounted,
+        loading
+      });
     }
   }, [user, loading, mounted, router]);
 

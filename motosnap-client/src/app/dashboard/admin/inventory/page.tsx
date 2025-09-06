@@ -15,6 +15,7 @@ interface InventoryFormData extends InventoryRequest {
 }
 
 export default function InventoryManagement() {
+  console.log('🔍 InventoryManagement component loading...');
   const { user } = useAuth();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
