@@ -14,13 +14,13 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Development origins
+        // Development and production origins
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",  // Next.js dev server
-            "http://localhost:3001",  // Alternative port
-            "file://",               // Allow local HTML files
-            "null",                  // Allow file:// protocol
-            "https://yourdomain.com"  // Production domain (update as needed)
+            "http://localhost:3000",      // Next.js dev server
+            "http://localhost:3001",      // Alternative port
+            "file://",                   // Allow local HTML files
+            "null",                      // Allow file:// protocol
+            "https://*.onrender.com"     // All Render.com domains (production)
         ));
         
         configuration.setAllowedMethods(Arrays.asList(
