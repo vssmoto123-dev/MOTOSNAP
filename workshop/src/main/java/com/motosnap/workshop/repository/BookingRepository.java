@@ -30,7 +30,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByScheduledDateTimeBetweenOrderByScheduledDateTimeAsc(LocalDateTime start, LocalDateTime end);
     
     // Find today's bookings
-    @Query("SELECT b FROM Booking b WHERE DATE(b.scheduledDateTime) = CURRENT_DATE ORDER BY b.scheduledDateTime ASC")
+    @Query(value = "SELECT * FROM bookings WHERE DATE(scheduled_date_time) = CURRENT_DATE ORDER BY scheduled_date_time ASC", nativeQuery = true)
     List<Booking> findTodayBookings();
     
     // Find upcoming bookings
@@ -48,7 +48,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.assignedMechanic.id = :mechanicId AND b.status IN ('CONFIRMED', 'IN_PROGRESS')")
     long countActivebookingsByMechanic(@Param("mechanicId") Long mechanicId);
     
-    @Query("SELECT b FROM Booking b WHERE b.assignedMechanic.id = :mechanicId AND DATE(b.scheduledDateTime) = CURRENT_DATE")
+    @Query(value = "SELECT * FROM bookings WHERE assigned_mechanic_id = :mechanicId AND DATE(scheduled_date_time) = CURRENT_DATE", nativeQuery = true)
     List<Booking> findTodayBookingsByMechanic(@Param("mechanicId") Long mechanicId);
     
     // Statistics queries
