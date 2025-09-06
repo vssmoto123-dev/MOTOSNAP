@@ -19,7 +19,34 @@ import {
   MonthlyRevenueData 
 } from '@/types/invoice';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Dynamic API URL detection for production/development
+const getApiBaseUrl = (): string => {
+  // First try environment variable
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // Runtime detection for production (fallback)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('onrender.com')) {
+      return `${window.location.origin}/api`;
+    }
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:8080/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Debug logging to help track API URL
+console.log('🔧 API Configuration:', {
+  environment: process.env.NODE_ENV,
+  envVariable: process.env.NEXT_PUBLIC_API_URL,
+  finalApiUrl: API_BASE_URL,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server-side'
+});
 
 class ApiClient {
   private baseURL: string;
