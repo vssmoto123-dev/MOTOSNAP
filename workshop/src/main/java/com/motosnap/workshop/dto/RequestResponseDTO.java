@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -34,4 +35,8 @@ public class RequestResponseDTO {
     private String serviceName;
     private String customerName;
     private String vehiclePlateNo;
+    
+    // Variation information
+    private Map<String, String> selectedVariations;
+    private String selectedVariationsDisplay; // Formatted for UI display
 }

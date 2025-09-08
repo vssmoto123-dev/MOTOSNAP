@@ -1,6 +1,7 @@
 package com.motosnap.workshop.service;
 
 import com.motosnap.workshop.dto.InventoryRequest;
+import com.motosnap.workshop.dto.VariationDefinition;
 import com.motosnap.workshop.entity.Inventory;
 import com.motosnap.workshop.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,6 +83,34 @@ public class InventoryService {
         inventory.setBrand(request.getBrand());
         inventory.setImageUrl(request.getImageUrl());
         
+        // Handle variations if provided
+        if (request.getVariations() != null && !request.getVariations().isEmpty()) {
+            Map<String, Object> variationData = convertVariationDefinitionsToMap(request.getVariations());
+            inventory.setVariationDefinitions(variationData);
+            
+            // Initialize variation stock if stock allocations are provided
+            if (request.getVariationStock() != null && !request.getVariationStock().isEmpty()) {
+                Map<String, Object> stockData = new HashMap<>();
+                stockData.put("trackByVariation", true);
+                stockData.put("allocations", request.getVariationStock());
+                
+                // Calculate unallocated stock
+                int totalAllocated = request.getVariationStock().values().stream()
+                    .mapToInt(Integer::intValue).sum();
+                int unallocated = Math.max(0, request.getQty() - totalAllocated);
+                stockData.put("unallocated", unallocated);
+                
+                inventory.setVariationStockData(stockData);
+            } else {
+                // Default: all stock is unallocated for new varied products
+                Map<String, Object> stockData = new HashMap<>();
+                stockData.put("trackByVariation", true);
+                stockData.put("allocations", new HashMap<String, Integer>());
+                stockData.put("unallocated", request.getQty());
+                inventory.setVariationStockData(stockData);
+            }
+        }
+        
         return inventoryRepository.save(inventory);
     }
     
@@ -103,6 +134,33 @@ public class InventoryService {
         inventory.setBrand(request.getBrand());
         if (request.getImageUrl() != null) {
             inventory.setImageUrl(request.getImageUrl());
+        }
+        
+        // Handle variations update
+        if (request.getVariations() != null && !request.getVariations().isEmpty()) {
+            Map<String, Object> variationData = convertVariationDefinitionsToMap(request.getVariations());
+            inventory.setVariationDefinitions(variationData);
+            
+            // Update variation stock if provided
+            if (request.getVariationStock() != null && !request.getVariationStock().isEmpty()) {
+                Map<String, Object> existingStockData = inventory.getVariationStockData();
+                
+                Map<String, Object> stockData = new HashMap<>();
+                stockData.put("trackByVariation", true);
+                stockData.put("allocations", request.getVariationStock());
+                
+                // Calculate unallocated stock
+                int totalAllocated = request.getVariationStock().values().stream()
+                    .mapToInt(Integer::intValue).sum();
+                int unallocated = Math.max(0, request.getQty() - totalAllocated);
+                stockData.put("unallocated", unallocated);
+                
+                inventory.setVariationStockData(stockData);
+            }
+        } else {
+            // Remove variations if not provided
+            inventory.setVariationDefinitions(null);
+            inventory.setVariationStockData(null);
         }
         
         return inventoryRepository.save(inventory);
@@ -300,5 +358,170 @@ public class InventoryService {
             // Log error but don't throw exception to not interrupt the main operation
             System.err.println("Failed to delete old image file: " + e.getMessage());
         }
+    }
+    
+    // ===============================================================================
+    // VARIATION-AWARE METHODS
+    // ===============================================================================
+    
+    // Convert VariationDefinition list to Map for JSON storage
+    private Map<String, Object> convertVariationDefinitionsToMap(List<VariationDefinition> variations) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("hasVariations", true);
+        
+        List<Map<String, Object>> options = new ArrayList<>();
+        for (VariationDefinition variation : variations) {
+            Map<String, Object> option = new HashMap<>();
+            option.put("id", variation.getId());
+            option.put("name", variation.getName());
+            option.put("type", variation.getType());
+            option.put("values", variation.getValues());
+            option.put("required", variation.isRequired());
+            options.add(option);
+        }
+        
+        result.put("options", options);
+        return result;
+    }
+    
+    // Allocate stock to specific variation
+    public void allocateStockToVariation(Long inventoryId, String variationKey, Integer quantity) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            throw new RuntimeException("Cannot allocate stock to variations for non-varied product");
+        }
+        
+        inventory.updateVariationStock(variationKey, quantity);
+        inventoryRepository.save(inventory);
+    }
+    
+    // Reallocate stock across variations
+    public void reallocateStock(Long inventoryId, Map<String, Integer> newAllocations) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            throw new RuntimeException("Cannot reallocate stock for non-varied product");
+        }
+        
+        // Calculate total allocated
+        int totalAllocated = newAllocations.values().stream().mapToInt(Integer::intValue).sum();
+        
+        if (totalAllocated > inventory.getQty()) {
+            throw new RuntimeException("Total allocated stock (" + totalAllocated + 
+                ") cannot exceed total stock (" + inventory.getQty() + ")");
+        }
+        
+        // Update variation stock data
+        Map<String, Object> stockData = new HashMap<>();
+        stockData.put("trackByVariation", true);
+        stockData.put("allocations", newAllocations);
+        stockData.put("unallocated", inventory.getQty() - totalAllocated);
+        
+        inventory.setVariationStockData(stockData);
+        inventoryRepository.save(inventory);
+    }
+    
+    // Get variation stock summary
+    public Map<String, Integer> getVariationStockSummary(Long inventoryId) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            return Map.of("total", inventory.getQty());
+        }
+        
+        Map<String, Object> stockData = inventory.getVariationStockData();
+        Map<String, Integer> result = new HashMap<>();
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> allocations = (Map<String, Integer>) stockData.get("allocations");
+        if (allocations != null) {
+            result.putAll(allocations);
+        }
+        
+        Integer unallocated = (Integer) stockData.get("unallocated");
+        if (unallocated != null && unallocated > 0) {
+            result.put("unallocated", unallocated);
+        }
+        
+        result.put("total", inventory.getQty());
+        return result;
+    }
+    
+    // Validate variation selection against inventory
+    public boolean validateVariationSelection(Long inventoryId, Map<String, String> selectedVariations) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            return selectedVariations == null || selectedVariations.isEmpty();
+        }
+        
+        if (selectedVariations == null || selectedVariations.isEmpty()) {
+            return false; // Varied products must have variations selected
+        }
+        
+        Map<String, Object> variationDefs = inventory.getVariationDefinitions();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> options = (List<Map<String, Object>>) variationDefs.get("options");
+        
+        if (options == null) {
+            return false;
+        }
+        
+        // Check each selected variation against definitions
+        for (Map<String, Object> option : options) {
+            String optionId = (String) option.get("id");
+            Boolean required = (Boolean) option.get("required");
+            @SuppressWarnings("unchecked")
+            List<String> validValues = (List<String>) option.get("values");
+            
+            String selectedValue = selectedVariations.get(optionId);
+            
+            // Check required variations
+            if (required != null && required && selectedValue == null) {
+                return false;
+            }
+            
+            // Check valid values
+            if (selectedValue != null && validValues != null && !validValues.contains(selectedValue)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Check stock availability for specific variation
+    public boolean checkVariationStockAvailability(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            return inventory.getQty() >= quantity;
+        }
+        
+        String variationKey = Inventory.buildVariationKey(selectedVariations);
+        Integer availableStock = inventory.getAvailableStockForVariation(variationKey);
+        
+        return availableStock >= quantity;
+    }
+    
+    // Deduct stock for specific variation (used during order processing)
+    public void deductVariationStock(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+        Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
+            .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
+        
+        if (!inventory.hasVariations()) {
+            inventory.deductStock(quantity);
+        } else {
+            String variationKey = Inventory.buildVariationKey(selectedVariations);
+            inventory.deductVariationStock(variationKey, quantity);
+        }
+        
+        inventoryRepository.save(inventory);
     }
 }

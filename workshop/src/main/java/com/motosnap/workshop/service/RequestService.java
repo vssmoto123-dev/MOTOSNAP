@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -44,9 +45,28 @@ public class RequestService {
         Inventory part = inventoryRepository.findById(dto.getPartId())
             .orElseThrow(() -> new RuntimeException("Part not found"));
         
-        // Check inventory availability
-        if (part.getQty() < dto.getQuantity()) {
-            throw new RuntimeException("Insufficient stock available. Available: " + part.getQty() + ", Requested: " + dto.getQuantity());
+        // Validate variation selection if part has variations
+        if (part.hasVariations()) {
+            if (dto.getSelectedVariations() == null || dto.getSelectedVariations().isEmpty()) {
+                throw new RuntimeException("Variation selection is required for this part");
+            }
+            
+            // Validate selected variations against part's variation definitions
+            if (!validateVariationSelection(part, dto.getSelectedVariations())) {
+                throw new RuntimeException("Invalid variation selection");
+            }
+            
+            // Check variation-specific stock availability
+            String variationKey = Inventory.buildVariationKey(dto.getSelectedVariations());
+            Integer availableStock = part.getAvailableStockForVariation(variationKey);
+            if (availableStock < dto.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for selected variation. Available: " + availableStock + ", Requested: " + dto.getQuantity());
+            }
+        } else {
+            // For non-varied parts, check regular stock
+            if (part.getQty() < dto.getQuantity()) {
+                throw new RuntimeException("Insufficient stock available. Available: " + part.getQty() + ", Requested: " + dto.getQuantity());
+            }
         }
         
         // Check for duplicate requests (same part, same booking, pending)
@@ -61,6 +81,12 @@ public class RequestService {
         
         // Create new request
         Request request = new Request(dto.getQuantity(), mechanic, part, booking);
+        
+        // Set selected variations if provided
+        if (dto.getSelectedVariations() != null && !dto.getSelectedVariations().isEmpty()) {
+            request.setSelectedVariationsMap(dto.getSelectedVariations());
+        }
+        
         if (dto.getReason() != null && !dto.getReason().trim().isEmpty()) {
             // Note: Adding reason field would require entity modification
             // For now, we'll skip this or add it as a future enhancement
@@ -159,6 +185,12 @@ public class RequestService {
         dto.setCustomerName(request.getBooking().getUser().getName());
         dto.setVehiclePlateNo(request.getBooking().getVehicle().getPlateNo());
         
+        // Variation information
+        if (request.hasVariationSelection()) {
+            dto.setSelectedVariations(request.getSelectedVariationsMap());
+            dto.setSelectedVariationsDisplay(request.getVariationDisplayString());
+        }
+        
         return dto;
     }
     
@@ -216,5 +248,52 @@ public class RequestService {
         Request savedRequest = requestRepository.save(request);
         
         return convertToDTO(savedRequest);
+    }
+    
+    // ===============================================================================
+    // VARIATION VALIDATION METHODS
+    // ===============================================================================
+    
+    /**
+     * Validate selected variations against part's variation definitions
+     */
+    private boolean validateVariationSelection(Inventory part, Map<String, String> selectedVariations) {
+        if (!part.hasVariations()) {
+            return selectedVariations == null || selectedVariations.isEmpty();
+        }
+        
+        if (selectedVariations == null || selectedVariations.isEmpty()) {
+            return false; // Varied parts must have variations selected
+        }
+        
+        Map<String, Object> variationDefs = part.getVariationDefinitions();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> options = (List<Map<String, Object>>) variationDefs.get("options");
+        
+        if (options == null) {
+            return false;
+        }
+        
+        // Check each selected variation against definitions
+        for (Map<String, Object> option : options) {
+            String optionId = (String) option.get("id");
+            Boolean required = (Boolean) option.get("required");
+            @SuppressWarnings("unchecked")
+            List<String> validValues = (List<String>) option.get("values");
+            
+            String selectedValue = selectedVariations.get(optionId);
+            
+            // Check required variations
+            if (required != null && required && selectedValue == null) {
+                return false;
+            }
+            
+            // Check valid values
+            if (selectedValue != null && validValues != null && !validValues.contains(selectedValue)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }

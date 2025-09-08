@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -20,4 +21,6 @@ public class RequestCreateDTO {
     private Integer quantity;
     
     private String reason; // Optional - why this part is needed
+    
+    private Map<String, String> selectedVariations; // Optional - selected product variations
 }

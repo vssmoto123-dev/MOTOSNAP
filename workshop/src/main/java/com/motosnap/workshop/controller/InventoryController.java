@@ -267,4 +267,150 @@ public class InventoryController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
+    // ===============================================================================
+    // VARIATION-SPECIFIC ENDPOINTS
+    // ===============================================================================
+    
+    /**
+     * Allocate stock to specific variation combination
+     */
+    @PutMapping("/{id}/variation-stock")
+    public ResponseEntity<?> allocateVariationStock(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            String variationKey = (String) request.get("variationKey");
+            Integer quantity = (Integer) request.get("quantity");
+            
+            if (variationKey == null || quantity == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "variationKey and quantity are required"));
+            }
+            
+            inventoryService.allocateStockToVariation(id, variationKey, quantity);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Stock allocated successfully",
+                "variationKey", variationKey,
+                "quantity", quantity
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to allocate variation stock"));
+        }
+    }
+    
+    /**
+     * Get stock summary by variation
+     */
+    @GetMapping("/{id}/variation-summary")
+    public ResponseEntity<?> getVariationStockSummary(@PathVariable Long id) {
+        try {
+            Map<String, Integer> summary = inventoryService.getVariationStockSummary(id);
+            return ResponseEntity.ok(summary);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to get variation stock summary"));
+        }
+    }
+    
+    /**
+     * Reallocate stock across all variations
+     */
+    @PostMapping("/{id}/reallocate-stock")
+    public ResponseEntity<?> reallocateStock(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> allocations) {
+        try {
+            inventoryService.reallocateStock(id, allocations);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Stock reallocated successfully",
+                "allocations", allocations
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to reallocate stock"));
+        }
+    }
+    
+    /**
+     * Validate variation selection for a product
+     */
+    @PostMapping("/{id}/validate-variations")
+    public ResponseEntity<?> validateVariations(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> selectedVariations) {
+        try {
+            boolean isValid = inventoryService.validateVariationSelection(id, selectedVariations);
+            
+            return ResponseEntity.ok(Map.of(
+                "valid", isValid,
+                "message", isValid ? "Valid variation selection" : "Invalid variation selection"
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to validate variations"));
+        }
+    }
+    
+    /**
+     * Check stock availability for specific variation
+     */
+    @PostMapping("/{id}/check-variation-stock")
+    public ResponseEntity<?> checkVariationStock(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, String> selectedVariations = (Map<String, String>) request.get("selectedVariations");
+            Integer quantity = (Integer) request.get("quantity");
+            
+            if (selectedVariations == null || quantity == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "selectedVariations and quantity are required"));
+            }
+            
+            boolean available = inventoryService.checkVariationStockAvailability(id, selectedVariations, quantity);
+            
+            return ResponseEntity.ok(Map.of(
+                "available", available,
+                "message", available ? "Stock is available" : "Insufficient stock for this variation"
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to check variation stock"));
+        }
+    }
 }
