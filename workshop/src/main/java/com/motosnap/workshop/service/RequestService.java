@@ -188,7 +188,8 @@ public class RequestService {
         // Variation information
         if (request.hasVariationSelection()) {
             dto.setSelectedVariations(request.getSelectedVariationsMap());
-            dto.setSelectedVariationsDisplay(request.getVariationDisplayString());
+            // Build meaningful variation display string using part's variation definitions
+            dto.setSelectedVariationsDisplay(buildMeaningfulVariationDisplayString(request));
         }
         
         return dto;
@@ -295,5 +296,84 @@ public class RequestService {
         }
         
         return true;
+    }
+    
+    /**
+     * Build meaningful variation display string by resolving variation IDs to names
+     */
+    private String buildMeaningfulVariationDisplayString(Request request) {
+        if (!request.hasVariationSelection()) {
+            return "";
+        }
+        
+        Map<String, String> selectedVariations = request.getSelectedVariationsMap();
+        if (selectedVariations.isEmpty()) {
+            return "";
+        }
+        
+        // Get part's variation definitions
+        Map<String, Object> variationDefinitions = request.getPart().getVariationDefinitions();
+        if (variationDefinitions == null || variationDefinitions.isEmpty()) {
+            // Fallback to the original display if no definitions available
+            return request.getVariationDisplayString();
+        }
+        
+        // Build display string with meaningful names
+        StringBuilder displayString = new StringBuilder();
+        boolean first = true;
+        
+        for (Map.Entry<String, String> entry : selectedVariations.entrySet()) {
+            String variationId = entry.getKey();
+            String selectedValue = entry.getValue();
+            
+            // Find the variation definition by ID
+            String variationName = findVariationNameById(variationDefinitions, variationId);
+            
+            if (!first) {
+                displayString.append(", ");
+            }
+            
+            if (variationName != null) {
+                displayString.append(variationName).append(": ").append(selectedValue);
+            } else {
+                // Fallback to showing ID if name not found
+                displayString.append(variationId).append(": ").append(selectedValue);
+            }
+            
+            first = false;
+        }
+        
+        return displayString.toString();
+    }
+    
+    /**
+     * Find variation name by ID in the variation definitions
+     */
+    @SuppressWarnings("unchecked")
+    private String findVariationNameById(Map<String, Object> variationDefinitions, String variationId) {
+        try {
+            // Handle the backend format: {hasVariations: true, options: [...]}
+            Object optionsObj = variationDefinitions.get("options");
+            if (optionsObj instanceof List) {
+                List<?> options = (List<?>) optionsObj;
+                
+                for (Object optionObj : options) {
+                    if (optionObj instanceof Map) {
+                        Map<String, Object> option = (Map<String, Object>) optionObj;
+                        String id = (String) option.get("id");
+                        String name = (String) option.get("name");
+                        
+                        if (variationId.equals(id) && name != null) {
+                            return name;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Log error but don't fail - fallback to ID
+            System.err.println("Error resolving variation name for ID: " + variationId + " - " + e.getMessage());
+        }
+        
+        return null; // Not found
     }
 }

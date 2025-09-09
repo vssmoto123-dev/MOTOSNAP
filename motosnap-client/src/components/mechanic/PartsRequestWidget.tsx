@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { apiClient } from '@/lib/api';
+import { VariationDefinition, SelectedVariations } from '@/types/variations';
 
 interface PartsRequest {
   id: number;
@@ -27,6 +28,10 @@ interface PartsRequest {
   serviceName: string;
   customerName: string;
   vehiclePlateNo: string;
+  
+  // Variation information
+  selectedVariations?: SelectedVariations;
+  selectedVariationsDisplay?: string;
 }
 
 interface InventoryItem {
@@ -45,6 +50,9 @@ interface InventoryItem {
   createdAt: string;
   updatedAt: string;
   lowStock: boolean;
+  // Variation support
+  variations?: string | VariationDefinition[] | {hasVariations: boolean, options: VariationDefinition[]};
+  variationStock?: string | {allocations: Record<string, number>, unallocated: number};
 }
 
 interface PartsRequestWidgetProps {
@@ -62,6 +70,83 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Variation support
+  const [selectedVariations, setSelectedVariations] = useState<SelectedVariations>({});
+  const [variationDefinitions, setVariationDefinitions] = useState<VariationDefinition[]>([]);
+  const [showVariations, setShowVariations] = useState(false);
+
+  // Helper function to parse variation data from inventory item (same logic as admin page)
+  const parseVariationData = (item: InventoryItem): { hasVariations: boolean; variations: VariationDefinition[] } => {
+    let variations: VariationDefinition[] = [];
+    let hasVariations = false;
+    
+    try {
+      if (item.variations) {
+        if (typeof item.variations === 'string') {
+          const parsed = JSON.parse(item.variations);
+          // Handle the backend format: {hasVariations: true, options: [...]}
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.options && Array.isArray(parsed.options)) {
+              variations = parsed.options;
+              hasVariations = parsed.hasVariations === true;
+            } else if (Array.isArray(parsed)) {
+              variations = parsed;
+              hasVariations = variations.length > 0;
+            }
+          }
+        } else if (Array.isArray(item.variations)) {
+          variations = item.variations;
+          hasVariations = variations.length > 0;
+        } else if (typeof item.variations === 'object' && item.variations !== null) {
+          // Handle object format from backend
+          const variationsObj = item.variations as any;
+          if (variationsObj.options && Array.isArray(variationsObj.options)) {
+            variations = variationsObj.options;
+            hasVariations = variationsObj.hasVariations === true;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse variation data:', error);
+      variations = [];
+      hasVariations = false;
+    }
+    
+    return { hasVariations, variations };
+  };
+
+  // Helper function to get variation display text for an item
+  const getVariationDisplayText = (item: InventoryItem): string => {
+    const { hasVariations, variations } = parseVariationData(item);
+    if (hasVariations && variations.length > 0) {
+      return ` (${variations.length} variation${variations.length > 1 ? 's' : ''})`;
+    }
+    return '';
+  };
+
+  // Handle part selection change
+  const handlePartSelection = (partId: string) => {
+    setSelectedPartId(partId);
+    setSelectedVariations({});
+    
+    if (partId) {
+      const selectedPart = inventory.find(part => part.id.toString() === partId);
+      if (selectedPart) {
+        const { hasVariations, variations } = parseVariationData(selectedPart);
+        setVariationDefinitions(variations);
+        setShowVariations(hasVariations);
+        
+        if (!hasVariations) {
+          setSelectedVariations({});
+        }
+      }
+    } else {
+      setVariationDefinitions([]);
+      setShowVariations(false);
+      setSelectedVariations({});
+    }
+  };
 
   // Load parts requests and inventory on component mount
   useEffect(() => {
@@ -125,27 +210,67 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
       return;
     }
 
-    if (quantity > selectedPart.qty) {
-      setError(`Not enough stock. Available: ${selectedPart.qty}`);
-      return;
+    // Validation for variations
+    if (showVariations && variationDefinitions.length > 0) {
+      // Check if all required variations are selected
+      const requiredVariations = variationDefinitions.filter(v => v.required);
+      const missingRequired = requiredVariations.filter(v => 
+        !selectedVariations[v.id] || !selectedVariations[v.id].trim()
+      );
+      
+      if (missingRequired.length > 0) {
+        setError(`Please select required variations: ${missingRequired.map(v => v.name).join(', ')}`);
+        return;
+      }
+
+      // For varied products, we'll use a simplified stock check for now
+      // In a full implementation, this would check variation-specific stock
+      if (quantity > selectedPart.qty) {
+        setError(`Not enough total stock for this variation. Available: ${selectedPart.qty}`);
+        return;
+      }
+    } else {
+      // For non-varied products, check regular stock
+      if (quantity > selectedPart.qty) {
+        setError(`Not enough stock. Available: ${selectedPart.qty}`);
+        return;
+      }
     }
 
     setLoading(true);
     setError(null);
     
     try {
+      // Build variation display string
+      let variationDisplayString = '';
+      if (showVariations && Object.keys(selectedVariations).length > 0) {
+        variationDisplayString = Object.entries(selectedVariations)
+          .filter(([_, value]) => value)
+          .map(([varId, value]) => {
+            const variation = variationDefinitions.find(v => v.id === varId);
+            return `${variation?.name || varId}: ${value}`;
+          })
+          .join(', ');
+      }
+
       await apiClient.createPartsRequest(bookingId, {
         partId: selectedPart.id,
         quantity: quantity,
-        reason: `Requested ${selectedPart.partName} for booking #${bookingId}`,
+        reason: `Requested ${selectedPart.partName}${variationDisplayString ? ` (${variationDisplayString})` : ''} for booking #${bookingId}`,
+        selectedVariations: Object.keys(selectedVariations).length > 0 ? selectedVariations : undefined,
       });
 
       // Refresh the requests list
       await fetchPartsRequests();
       
+      // Reset form
       setSelectedPartId('');
       setQuantity(1);
-      setSuccess(`${selectedPart.partName} x${quantity} requested successfully!`);
+      setSelectedVariations({});
+      setVariationDefinitions([]);
+      setShowVariations(false);
+      
+      setSuccess(`${selectedPart.partName}${variationDisplayString ? ` (${variationDisplayString})` : ''} x${quantity} requested successfully!`);
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
@@ -208,7 +333,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
       <div className="flex gap-2 mb-4">
         <select
           value={selectedPartId}
-          onChange={(e) => setSelectedPartId(e.target.value)}
+          onChange={(e) => handlePartSelection(e.target.value)}
           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-black"
           disabled={loading || loadingInventory}
         >
@@ -217,7 +342,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
           </option>
           {inventory.map((part) => (
             <option key={part.id} value={part.id.toString()}>
-              {part.partName} - ${part.unitPrice.toFixed(2)} (Stock: {part.qty})
+              {part.partName}{getVariationDisplayText(part)} - ${part.unitPrice.toFixed(2)} (Stock: {part.qty})
             </option>
           ))}
         </select>
@@ -242,6 +367,79 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
         </Button>
       </div>
       
+      {/* Variation Selection UI */}
+      {showVariations && variationDefinitions.length > 0 && (
+        <div className="mb-4 p-3 border border-blue-200 rounded-md bg-blue-50">
+          <h5 className="font-medium text-blue-900 text-sm mb-3">Select Variations:</h5>
+          <div className="space-y-3">
+            {variationDefinitions.map((variation) => (
+              <div key={variation.id} className="space-y-1">
+                <label className="block text-sm font-medium text-blue-800">
+                  {variation.name}
+                  {variation.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                
+                {variation.type === 'dropdown' && (
+                  <select
+                    value={selectedVariations[variation.id] || ''}
+                    onChange={(e) => setSelectedVariations(prev => ({
+                      ...prev,
+                      [variation.id]: e.target.value
+                    }))}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={loading}
+                  >
+                    <option value="">Select {variation.name.toLowerCase()}...</option>
+                    {variation.values.filter(val => val.trim()).map((value) => (
+                      <option key={value} value={value}>{value}</option>
+                    ))}
+                  </select>
+                )}
+                
+                {variation.type === 'radio' && (
+                  <div className="space-y-1">
+                    {variation.values.filter(val => val.trim()).map((value) => (
+                      <label key={value} className="flex items-center space-x-2 text-sm">
+                        <input
+                          type="radio"
+                          name={`variation_${variation.id}`}
+                          value={value}
+                          checked={selectedVariations[variation.id] === value}
+                          onChange={(e) => setSelectedVariations(prev => ({
+                            ...prev,
+                            [variation.id]: e.target.value
+                          }))}
+                          className="text-blue-600"
+                          disabled={loading}
+                        />
+                        <span className="text-gray-700">{value}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Show current selection */}
+          {Object.keys(selectedVariations).length > 0 && (
+            <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
+              <strong className="text-blue-900">Selected:</strong>{' '}
+              <span className="text-blue-800">
+                {Object.entries(selectedVariations)
+                  .filter(([_, value]) => value)
+                  .map(([varId, value]) => {
+                    const variation = variationDefinitions.find(v => v.id === varId);
+                    return `${variation?.name || varId}: ${value}`;
+                  })
+                  .join(', ')
+                }
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Requests List */}
       {requests.length > 0 && (
         <div className="space-y-2">
@@ -252,6 +450,13 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
                 <span className="font-medium text-black">• {request.partName}</span>
                 <span className="text-gray-600"> x{request.quantity}</span>
                 <span className="text-gray-500 text-xs"> (${request.partPrice?.toFixed(2)})</span>
+                {/* Display variation information if available */}
+                {request.selectedVariationsDisplay && (
+                  <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                    <span>📋</span>
+                    <span>{request.selectedVariationsDisplay}</span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {getStatusDisplay(request.status)}

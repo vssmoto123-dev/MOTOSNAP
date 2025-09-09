@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { apiClient } from '@/lib/api';
+import { SelectedVariations } from '@/types/variations';
 
 interface PartsRequest {
   id: number;
@@ -30,6 +31,10 @@ interface PartsRequest {
   serviceName: string;
   customerName: string;
   vehiclePlateNo: string;
+  
+  // Variation information
+  selectedVariations?: SelectedVariations;
+  selectedVariationsDisplay?: string;
 }
 
 export default function AdminPartsRequestsPage() {
@@ -107,7 +112,8 @@ export default function AdminPartsRequestsPage() {
           return updated;
         });
         
-        setSuccess(`Approved ${request?.partName} x${request?.quantity} for ${request?.mechanicName}`);
+        const variationText = request?.selectedVariationsDisplay ? ` (${request.selectedVariationsDisplay})` : '';
+        setSuccess(`Approved ${request?.partName}${variationText} x${request?.quantity} for ${request?.mechanicName}`);
       }
       
       // Refresh the requests list
@@ -140,7 +146,8 @@ export default function AdminPartsRequestsPage() {
           return updated;
         });
         
-        setSuccess(`Rejected ${request?.partName} x${request?.quantity} for ${request?.mechanicName}`);
+        const variationText = request?.selectedVariationsDisplay ? ` (${request.selectedVariationsDisplay})` : '';
+        setSuccess(`Rejected ${request?.partName}${variationText} x${request?.quantity} for ${request?.mechanicName}`);
       }
       
       // Refresh the requests list
@@ -312,6 +319,12 @@ export default function AdminPartsRequestsPage() {
                           <div>
                             <div className="text-sm font-medium text-gray-900">{request.partName}</div>
                             <div className="text-sm text-gray-500">Quantity: {request.quantity}</div>
+                            {request.selectedVariationsDisplay && (
+                              <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                                <span>📋</span>
+                                <span>{request.selectedVariationsDisplay}</span>
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -385,7 +398,9 @@ export default function AdminPartsRequestsPage() {
                       {request.status}
                     </span>
                     <span className="text-sm text-gray-900">
-                      {request.partName} x{request.quantity} → {request.mechanicName}
+                      {request.partName}
+                      {request.selectedVariationsDisplay && ` (${request.selectedVariationsDisplay})`}
+                      {` x${request.quantity} → ${request.mechanicName}`}
                     </span>
                   </div>
                   <div className="text-sm text-gray-500">
