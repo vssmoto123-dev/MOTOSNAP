@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,9 @@ public class CartService {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private InventoryService inventoryService;
+
     public CartResponse getUserCart(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -48,24 +52,48 @@ public class CartService {
         Inventory inventory = inventoryRepository.findById(request.getInventoryId())
                 .orElseThrow(() -> new RuntimeException("Inventory item not found"));
 
-        if (inventory.getQty() < request.getQuantity()) {
-            throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+        // Validate variation selection and check stock
+        if (inventory.hasVariations()) {
+            if (request.getSelectedVariations() == null || request.getSelectedVariations().isEmpty()) {
+                throw new RuntimeException("Variation selection is required for this product");
+            }
+            
+            // Validate selected variations against product's variation definitions
+            if (!inventoryService.validateVariationSelection(inventory.getId(), request.getSelectedVariations())) {
+                throw new RuntimeException("Invalid variation selection");
+            }
+            
+            // Check variation-specific stock availability
+            if (!inventoryService.checkVariationStockAvailability(inventory.getId(), request.getSelectedVariations(), request.getQuantity())) {
+                throw new RuntimeException("Insufficient stock for selected variation");
+            }
+        } else {
+            // For non-varied products, check regular stock
+            if (inventory.getQty() < request.getQuantity()) {
+                throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+            }
         }
 
         Cart cart = cartRepository.findByUser(user)
                 .orElseGet(() -> createNewCart(user));
 
-        // Check if item already exists in cart
-        Optional<CartItem> existingItem = cartItemRepository
-                .findByCartIdAndInventoryId(cart.getId(), inventory.getId());
+        // Check if item with same variations already exists in cart
+        Optional<CartItem> existingItem = findExistingCartItem(cart, inventory, request.getSelectedVariations());
 
         if (existingItem.isPresent()) {
             // Update existing item quantity
             CartItem cartItem = existingItem.get();
             int newQuantity = cartItem.getQuantity() + request.getQuantity();
             
-            if (inventory.getQty() < newQuantity) {
-                throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+            // Re-check stock availability for updated quantity
+            if (inventory.hasVariations()) {
+                if (!inventoryService.checkVariationStockAvailability(inventory.getId(), request.getSelectedVariations(), newQuantity)) {
+                    throw new RuntimeException("Insufficient stock for selected variation. Cannot add more items.");
+                }
+            } else {
+                if (inventory.getQty() < newQuantity) {
+                    throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+                }
             }
             
             cartItem.setQuantity(newQuantity);
@@ -77,6 +105,12 @@ public class CartService {
             cartItem.setInventory(inventory);
             cartItem.setQuantity(request.getQuantity());
             cartItem.setUnitPrice(inventory.getUnitPrice().doubleValue());
+            
+            // Set selected variations if provided
+            if (request.getSelectedVariations() != null && !request.getSelectedVariations().isEmpty()) {
+                cartItem.setSelectedVariationsMap(request.getSelectedVariations());
+            }
+            
             cartItemRepository.save(cartItem);
         }
 
@@ -113,10 +147,16 @@ public class CartService {
             throw new RuntimeException("Unauthorized to update this cart item");
         }
 
-        // Check if there's enough inventory
+        // Check if there's enough inventory (variation-aware)
         Inventory inventory = cartItem.getInventory();
-        if (inventory.getQty() < newQuantity) {
-            throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+        if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
+            if (!inventoryService.checkVariationStockAvailability(inventory.getId(), cartItem.getSelectedVariationsMap(), newQuantity)) {
+                throw new RuntimeException("Insufficient stock for selected variation");
+            }
+        } else {
+            if (inventory.getQty() < newQuantity) {
+                throw new RuntimeException("Insufficient stock. Available: " + inventory.getQty());
+            }
         }
 
         cartItem.setQuantity(newQuantity);
@@ -160,6 +200,13 @@ public class CartService {
         response.setUnitPrice(cartItem.getUnitPrice());
         response.setAddedAt(cartItem.getAddedAt());
         response.setInventory(convertToInventoryResponse(cartItem.getInventory()));
+        
+        // Include variation information if available
+        if (cartItem.hasVariationSelection()) {
+            response.setSelectedVariations(cartItem.getSelectedVariationsMap());
+            response.setSelectedVariationsDisplay(cartItem.getVariationDisplayString());
+        }
+        
         return response;
     }
     
@@ -176,5 +223,30 @@ public class CartService {
         response.setActive(inventory.getActive());
         response.setImageUrl(inventory.getImageUrl());
         return response;
+    }
+    
+    // Helper method to find existing cart item with same product and variations
+    private Optional<CartItem> findExistingCartItem(Cart cart, Inventory inventory, Map<String, String> selectedVariations) {
+        if (cart.getCartItems() == null) {
+            return Optional.empty();
+        }
+        
+        return cart.getCartItems().stream()
+            .filter(item -> item.getInventory().getId().equals(inventory.getId()))
+            .filter(item -> {
+                // For products without variations, just match the inventory
+                if (!inventory.hasVariations()) {
+                    return !item.hasVariationSelection();
+                }
+                
+                // For products with variations, match the selected variations
+                if (selectedVariations == null || selectedVariations.isEmpty()) {
+                    return !item.hasVariationSelection();
+                }
+                
+                Map<String, String> itemVariations = item.getSelectedVariationsMap();
+                return selectedVariations.equals(itemVariations);
+            })
+            .findFirst();
     }
 }

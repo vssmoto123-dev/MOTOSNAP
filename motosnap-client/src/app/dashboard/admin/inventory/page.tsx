@@ -4,14 +4,22 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient, { getImageBaseUrl } from '@/lib/api';
 import { InventoryItem, InventoryRequest } from '@/types/admin';
+import { VariationDefinition } from '@/types/variations';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
+import { VariationBuilder } from '@/components/admin/VariationBuilder';
+import { VariationStockAllocator } from '@/components/admin/VariationStockAllocator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface InventoryFormData extends InventoryRequest {
   id?: number;
   imageFile?: File | null;
   imagePreview?: string;
+  // Variation support
+  hasVariations?: boolean;
+  variations?: VariationDefinition[];
+  variationStockAllocations?: Record<string, number>;
 }
 
 export default function InventoryManagement() {
@@ -35,6 +43,9 @@ export default function InventoryManagement() {
     brand: '',
     imageFile: null,
     imagePreview: '',
+    hasVariations: false,
+    variations: [],
+    variationStockAllocations: {},
   });
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
@@ -121,6 +132,36 @@ export default function InventoryManagement() {
       errors.brand = 'Brand cannot exceed 50 characters';
     }
 
+    // Variation validation
+    if (formData.hasVariations && formData.variations) {
+      for (let i = 0; i < formData.variations.length; i++) {
+        const variation = formData.variations[i];
+        
+        // Variation name is required
+        if (!variation.name || !variation.name.trim()) {
+          errors[`variation_${i}_name`] = `Variation ${i + 1}: Name is required`;
+        }
+        
+        // At least one variation value is required
+        const validValues = variation.values.filter(v => v && v.trim());
+        if (validValues.length === 0) {
+          errors[`variation_${i}_values`] = `Variation ${i + 1}: At least one value is required`;
+        }
+        
+        // Each variation value must not be empty
+        for (let j = 0; j < variation.values.length; j++) {
+          if (!variation.values[j] || !variation.values[j].trim()) {
+            errors[`variation_${i}_value_${j}`] = `Variation ${i + 1}, Value ${j + 1}: Cannot be empty`;
+          }
+        }
+      }
+      
+      // If variations are enabled, at least one variation must be defined
+      if (formData.variations.length === 0) {
+        errors.variations = 'When variations are enabled, you must define at least one variation';
+      }
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -146,7 +187,7 @@ export default function InventoryManagement() {
         imageUrl = uploadResponse.imageUrl;
       }
       
-      // Prepare form data with image URL
+      // Prepare form data with image URL and variations
       const submitData: InventoryRequest = {
         partName: formData.partName,
         partCode: formData.partCode,
@@ -157,6 +198,13 @@ export default function InventoryManagement() {
         category: formData.category,
         brand: formData.brand,
         imageUrl: imageUrl,
+        // Include variation data in the format the backend expects
+        variations: formData.hasVariations && formData.variations && formData.variations.length > 0 
+          ? formData.variations  // Send as array - backend will handle formatting
+          : undefined,
+        variationStock: formData.hasVariations && formData.variationStockAllocations 
+          ? formData.variationStockAllocations 
+          : undefined,
       };
 
       if (editingItem) {
@@ -180,6 +228,74 @@ export default function InventoryManagement() {
 
   const handleEdit = (item: InventoryItem) => {
     setEditingItem(item);
+    
+    // Parse variation data if it exists
+    let variations: VariationDefinition[] = [];
+    let variationStockAllocations: Record<string, number> = {};
+    let hasVariations = false;
+    
+    try {
+      console.log('DEBUG: Parsing variation data for item:', item.id);
+      console.log('DEBUG: Raw variations:', item.variations);
+      console.log('DEBUG: Raw variationStock:', item.variationStock);
+      
+      if (item.variations) {
+        if (typeof item.variations === 'string') {
+          const parsed = JSON.parse(item.variations);
+          // Handle the backend format: {hasVariations: true, options: [...]}
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.options && Array.isArray(parsed.options)) {
+              variations = parsed.options;
+              hasVariations = parsed.hasVariations === true;
+            } else if (Array.isArray(parsed)) {
+              variations = parsed;
+              hasVariations = variations.length > 0;
+            }
+          }
+        } else if (Array.isArray(item.variations)) {
+          variations = item.variations;
+          hasVariations = variations.length > 0;
+        } else if (typeof item.variations === 'object' && item.variations !== null) {
+          // Handle object format from backend
+          const variationsObj = item.variations as any;
+          if (variationsObj.options && Array.isArray(variationsObj.options)) {
+            variations = variationsObj.options;
+            hasVariations = variationsObj.hasVariations === true;
+          }
+        } else {
+          console.warn('Unexpected variations format:', typeof item.variations);
+          variations = [];
+        }
+        console.log('DEBUG: Parsed variations:', variations);
+        console.log('DEBUG: hasVariations:', hasVariations);
+      }
+      
+      if (item.variationStock) {
+        if (typeof item.variationStock === 'string') {
+          const stockData = JSON.parse(item.variationStock);
+          if (stockData && typeof stockData === 'object') {
+            // Handle both direct allocations and nested structure
+            variationStockAllocations = stockData.allocations || stockData;
+          }
+        } else if (typeof item.variationStock === 'object' && item.variationStock !== null) {
+          // Handle object format - could be direct allocations or nested
+          variationStockAllocations = item.variationStock.allocations || item.variationStock;
+        }
+        console.log('DEBUG: Parsed variationStockAllocations:', variationStockAllocations);
+      }
+    } catch (error) {
+      console.error('Failed to parse variation data:', error);
+      variations = [];
+      variationStockAllocations = {};
+      hasVariations = false;
+    }
+    
+    console.log('DEBUG: Final form data being set:', {
+      hasVariations,
+      variations,
+      variationStockAllocations
+    });
+    
     setFormData({
       partName: item.partName,
       partCode: item.partCode,
@@ -192,6 +308,9 @@ export default function InventoryManagement() {
       imageUrl: item.imageUrl,
       imageFile: null,
       imagePreview: item.imageUrl ? `http://localhost:8080${item.imageUrl}` : undefined,
+      hasVariations,
+      variations,
+      variationStockAllocations,
     });
     setShowForm(true);
   };
@@ -224,6 +343,9 @@ export default function InventoryManagement() {
       imageUrl: undefined,
       imageFile: null,
       imagePreview: undefined,
+      hasVariations: false,
+      variations: [],
+      variationStockAllocations: {},
     });
     setValidationErrors({});
   };
@@ -492,6 +614,67 @@ export default function InventoryManagement() {
                   </div>
                 </div>
 
+                {/* Product Variations Section */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Product Variations</h4>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="enable-variations"
+                        checked={formData.hasVariations}
+                        onCheckedChange={(checked) => 
+                          setFormData({ 
+                            ...formData, 
+                            hasVariations: !!checked,
+                            variations: checked ? formData.variations : [],
+                            variationStockAllocations: checked ? formData.variationStockAllocations : {}
+                          })
+                        }
+                      />
+                      <label htmlFor="enable-variations" className="text-sm font-medium text-black">
+                        Enable variations for this product
+                      </label>
+                    </div>
+                    {validationErrors.variations && (
+                      <p className="mt-2 text-sm text-red-600 font-medium">{validationErrors.variations}</p>
+                    )}
+                  </div>
+                  
+                  {formData.hasVariations ? (
+                    <div className="space-y-6">
+                      <VariationBuilder
+                        initialVariations={formData.variations || []}
+                        onChange={(variations) => 
+                          setFormData({ 
+                            ...formData, 
+                            variations,
+                            // Reset stock allocations when variations change
+                            variationStockAllocations: {}
+                          })
+                        }
+                        disabled={false}
+                        validationErrors={validationErrors}
+                      />
+                      
+                      {formData.variations && formData.variations.length > 0 && (
+                        <VariationStockAllocator
+                          variations={formData.variations}
+                          totalStock={formData.qty}
+                          initialStockAllocations={formData.variationStockAllocations || {}}
+                          onChange={(allocations) => 
+                            setFormData({ ...formData, variationStockAllocations: allocations })
+                          }
+                          disabled={false}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>Variations are disabled. Enable them to allow customers to select options like size, color, or model.</p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-4 pt-6 border-t">
                   <Button type="button" onClick={cancelForm} variant="secondary" className="px-6 py-2">
@@ -552,10 +735,51 @@ export default function InventoryManagement() {
                           />
                         )}
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{item.partName}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-medium text-gray-900">{item.partName}</div>
+                            {(() => {
+                              try {
+                                let hasVariations = false;
+                                
+                                if (item.variations) {
+                                  if (typeof item.variations === 'string') {
+                                    const parsed = JSON.parse(item.variations);
+                                    // Check for backend format: {hasVariations: true, options: [...]}
+                                    if (parsed && typeof parsed === 'object') {
+                                      hasVariations = parsed.hasVariations === true && 
+                                                    parsed.options && 
+                                                    Array.isArray(parsed.options) && 
+                                                    parsed.options.length > 0;
+                                    } else if (Array.isArray(parsed)) {
+                                      hasVariations = parsed.length > 0;
+                                    }
+                                  } else if (Array.isArray(item.variations)) {
+                                    hasVariations = item.variations.length > 0;
+                                  } else if (typeof item.variations === 'object') {
+                                    const variationsObj = item.variations as any;
+                                    hasVariations = variationsObj.hasVariations === true && 
+                                                  variationsObj.options && 
+                                                  Array.isArray(variationsObj.options) && 
+                                                  variationsObj.options.length > 0;
+                                  }
+                                }
+                                
+                                if (hasVariations) {
+                                  return (
+                                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                      Variations
+                                    </span>
+                                  );
+                                }
+                              } catch (e) {
+                                // Ignore parsing errors
+                              }
+                              return null;
+                            })()}
+                          </div>
                           <div className="text-sm text-gray-500">{item.partCode}</div>
                           {item.description && (
-                            <div className="text-sm text-gray-500">{item.description}</div>
+                            <div className="text-sm text-gray-500 truncate max-w-xs">{item.description}</div>
                           )}
                         </div>
                       </div>

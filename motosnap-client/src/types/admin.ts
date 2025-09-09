@@ -1,3 +1,5 @@
+import { VariationDefinition, VariationStockData } from './variations';
+
 export interface InventoryItem {
   id: number;
   partName: string;
@@ -13,6 +15,9 @@ export interface InventoryItem {
   updatedAt: string;
   lowStock: boolean;
   imageUrl?: string;
+  // Variation support
+  variations?: string | VariationDefinition[]; // JSON string or parsed array
+  variationStock?: string | VariationStockData; // JSON string or parsed object
 }
 
 export interface InventoryRequest {
@@ -25,6 +30,9 @@ export interface InventoryRequest {
   category?: string;
   brand?: string;
   imageUrl?: string;
+  // Variation support  
+  variations?: VariationDefinition[];         // Variation definitions for this product
+  variationStock?: Record<string, number>;    // Stock allocation per variation combination
 }
 
 export interface Service {

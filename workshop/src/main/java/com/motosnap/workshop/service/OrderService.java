@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +41,9 @@ public class OrderService {
 
     @Autowired
     private InventoryRepository inventoryRepository;
+    
+    @Autowired
+    private InventoryService inventoryService;
 
     @Autowired
     @Lazy
@@ -56,12 +60,26 @@ public class OrderService {
             throw new RuntimeException("Cart is empty");
         }
 
-        // Verify stock availability before creating order
+        // Verify stock availability before creating order (variation-aware)
         for (CartItem cartItem : cart.getCartItems()) {
             Inventory inventory = cartItem.getInventory();
-            if (inventory.getQty() < cartItem.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for item: " + inventory.getPartName() + 
-                    ". Available: " + inventory.getQty() + ", Required: " + cartItem.getQuantity());
+            
+            if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
+                // Check variation-specific stock
+                if (!inventoryService.checkVariationStockAvailability(
+                    inventory.getId(), 
+                    cartItem.getSelectedVariationsMap(), 
+                    cartItem.getQuantity()
+                )) {
+                    throw new RuntimeException("Insufficient stock for item: " + inventory.getPartName() + 
+                        " (Variation: " + cartItem.getVariationDisplayString() + ")");
+                }
+            } else {
+                // Check regular stock for non-varied products
+                if (inventory.getQty() < cartItem.getQuantity()) {
+                    throw new RuntimeException("Insufficient stock for item: " + inventory.getPartName() + 
+                        ". Available: " + inventory.getQty() + ", Required: " + cartItem.getQuantity());
+                }
             }
         }
 
@@ -71,7 +89,7 @@ public class OrderService {
         order.setStatus(OrderStatus.PENDING);
         order = orderRepository.save(order);
 
-        // Create order items and deduct inventory
+        // Create order items and deduct inventory (variation-aware)
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cart.getCartItems()) {
             OrderItem orderItem = new OrderItem();
@@ -79,13 +97,28 @@ public class OrderService {
             orderItem.setPart(cartItem.getInventory());
             orderItem.setQty(cartItem.getQuantity());
             orderItem.setPrice(BigDecimal.valueOf(cartItem.getUnitPrice()));
+            
+            // Transfer selected variations from cart to order
+            if (cartItem.hasVariationSelection()) {
+                orderItem.setSelectedVariationsMap(cartItem.getSelectedVariationsMap());
+            }
+            
             orderItemRepository.save(orderItem);
             orderItems.add(orderItem);
 
-            // Deduct from inventory
+            // Deduct from inventory using variation-aware deduction
             Inventory inventory = cartItem.getInventory();
-            inventory.setQty(inventory.getQty() - cartItem.getQuantity());
-            inventoryRepository.save(inventory);
+            if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
+                inventoryService.deductVariationStock(
+                    inventory.getId(), 
+                    cartItem.getSelectedVariationsMap(), 
+                    cartItem.getQuantity()
+                );
+            } else {
+                // Regular stock deduction for non-varied products
+                inventory.setQty(inventory.getQty() - cartItem.getQuantity());
+                inventoryRepository.save(inventory);
+            }
         }
 
         // Clear the cart items but keep the cart
@@ -296,6 +329,13 @@ public class OrderService {
         response.setQty(orderItem.getQty());
         response.setPrice(orderItem.getPrice());
         response.setPart(convertToInventoryResponse(orderItem.getPart()));
+        
+        // Include variation information if available
+        if (orderItem.hasVariationSelection()) {
+            response.setSelectedVariations(orderItem.getSelectedVariationsMap());
+            response.setSelectedVariationsDisplay(orderItem.getVariationDisplayString());
+        }
+        
         return response;
     }
     

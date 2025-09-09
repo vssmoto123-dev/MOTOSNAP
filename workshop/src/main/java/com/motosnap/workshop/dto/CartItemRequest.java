@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +19,6 @@ public class CartItemRequest {
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
+    
+    private Map<String, String> selectedVariations; // Optional - selected product variations
 }

@@ -18,6 +18,23 @@ import {
   InvoicePdfUrlUpdateRequest, 
   MonthlyRevenueData 
 } from '@/types/invoice';
+import {
+  VariationStockUpdateRequest,
+  VariationValidationRequest,
+  VariationStockCheckRequest,
+  VariationValidationResponse,
+  VariationStockCheckResponse,
+  VariationStockSummary,
+  SelectedVariations
+} from '@/types/variations';
+import {
+  CartItemRequest,
+  CartResponse
+} from '@/types/customer';
+import {
+  PartsRequestCreateDTO,
+  PartsRequestResponseDTO
+} from '@/types/mechanic';
 
 // Dynamic API URL detection for production/development
 const getApiBaseUrl = (): string => {
@@ -420,6 +437,47 @@ class ApiClient {
     return this.request<InventoryItem[]>('/inventory?lowStock=true');
   }
 
+  // ===============================================================================
+  // VARIATION-SPECIFIC INVENTORY METHODS
+  // ===============================================================================
+
+  // Allocate stock to specific variation combination
+  async allocateVariationStock(inventoryId: number, request: VariationStockUpdateRequest): Promise<{ message: string; variationKey: string; quantity: number }> {
+    return this.request(`/inventory/${inventoryId}/variation-stock`, {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Get stock summary by variation
+  async getVariationStockSummary(inventoryId: number): Promise<VariationStockSummary> {
+    return this.request<VariationStockSummary>(`/inventory/${inventoryId}/variation-summary`);
+  }
+
+  // Reallocate stock across all variations
+  async reallocateStock(inventoryId: number, allocations: Record<string, number>): Promise<{ message: string; allocations: Record<string, number> }> {
+    return this.request(`/inventory/${inventoryId}/reallocate-stock`, {
+      method: 'POST',
+      body: JSON.stringify(allocations),
+    });
+  }
+
+  // Validate variation selection for a product
+  async validateVariations(inventoryId: number, selectedVariations: SelectedVariations): Promise<VariationValidationResponse> {
+    return this.request<VariationValidationResponse>(`/inventory/${inventoryId}/validate-variations`, {
+      method: 'POST',
+      body: JSON.stringify(selectedVariations),
+    });
+  }
+
+  // Check stock availability for specific variation
+  async checkVariationStock(inventoryId: number, request: VariationStockCheckRequest): Promise<VariationStockCheckResponse> {
+    return this.request<VariationStockCheckResponse>(`/inventory/${inventoryId}/check-variation-stock`, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   // Public - Service Browsing
   async getPublicServices(): Promise<Service[]> {
     return this.request<Service[]>('/public/services');
@@ -544,25 +602,25 @@ class ApiClient {
   }
 
   // Customer - Shopping Cart
-  async getCart(): Promise<any> {
-    return this.request<any>('/cart');
+  async getCart(): Promise<CartResponse> {
+    return this.request<CartResponse>('/cart');
   }
 
-  async addToCart(data: any): Promise<any> {
-    return this.request<any>('/cart/items', {
+  async addToCart(data: CartItemRequest): Promise<CartResponse> {
+    return this.request<CartResponse>('/cart/items', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async removeFromCart(itemId: number): Promise<any> {
-    return this.request<any>(`/cart/items/${itemId}`, {
+  async removeFromCart(itemId: number): Promise<CartResponse> {
+    return this.request<CartResponse>(`/cart/items/${itemId}`, {
       method: 'DELETE',
     });
   }
 
-  async updateCartItemQuantity(itemId: number, quantity: number): Promise<any> {
-    return this.request<any>(`/cart/items/${itemId}`, {
+  async updateCartItemQuantity(itemId: number, quantity: number): Promise<CartResponse> {
+    return this.request<CartResponse>(`/cart/items/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
     });
@@ -684,23 +742,19 @@ class ApiClient {
   }
 
   // Parts Request endpoints (Mechanic)
-  async createPartsRequest(bookingId: number, data: {
-    partId: number;
-    quantity: number;
-    reason: string;
-  }): Promise<any> {
-    return this.request<any>(`/bookings/${bookingId}/requests`, {
+  async createPartsRequest(bookingId: number, data: PartsRequestCreateDTO): Promise<PartsRequestResponseDTO> {
+    return this.request<PartsRequestResponseDTO>(`/bookings/${bookingId}/requests`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async getPartsRequestsForBooking(bookingId: number): Promise<any[]> {
-    return this.request<any[]>(`/bookings/${bookingId}/requests`);
+  async getPartsRequestsForBooking(bookingId: number): Promise<PartsRequestResponseDTO[]> {
+    return this.request<PartsRequestResponseDTO[]>(`/bookings/${bookingId}/requests`);
   }
 
-  async getMechanicPartsRequests(): Promise<any[]> {
-    return this.request<any[]>('/mechanics/me/requests');
+  async getMechanicPartsRequests(): Promise<PartsRequestResponseDTO[]> {
+    return this.request<PartsRequestResponseDTO[]>('/mechanics/me/requests');
   }
 
   async checkCanRequestParts(bookingId: number): Promise<{ canRequest: boolean; message?: string }> {
@@ -708,19 +762,19 @@ class ApiClient {
   }
 
   // Parts Request endpoints (Admin)
-  async getPendingPartsRequests(): Promise<any[]> {
-    return this.request<any[]>('/admin/requests/pending');
+  async getPendingPartsRequests(): Promise<PartsRequestResponseDTO[]> {
+    return this.request<PartsRequestResponseDTO[]>('/admin/requests/pending');
   }
 
-  async approvePartsRequest(requestId: number, data?: { adminNotes?: string }): Promise<any> {
-    return this.request<any>(`/admin/requests/${requestId}/approve`, {
+  async approvePartsRequest(requestId: number, data?: { adminNotes?: string }): Promise<PartsRequestResponseDTO> {
+    return this.request<PartsRequestResponseDTO>(`/admin/requests/${requestId}/approve`, {
       method: 'PUT',
       body: JSON.stringify(data || {}),
     });
   }
 
-  async rejectPartsRequest(requestId: number, data: { adminNotes: string }): Promise<any> {
-    return this.request<any>(`/admin/requests/${requestId}/reject`, {
+  async rejectPartsRequest(requestId: number, data: { adminNotes: string }): Promise<PartsRequestResponseDTO> {
+    return this.request<PartsRequestResponseDTO>(`/admin/requests/${requestId}/reject`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -819,6 +873,53 @@ class ApiClient {
 
   getInvoiceReceiptUrl(paymentId: number): string {
     return `${this.baseURL}/invoices/payments/${paymentId}/receipt`;
+  }
+
+  // ===============================================================================
+  // VARIATION UTILITY METHODS
+  // ===============================================================================
+
+  // Helper method to build variation key from selected variations (matches backend logic)
+  buildVariationKey(selectedVariations: SelectedVariations): string {
+    if (!selectedVariations || Object.keys(selectedVariations).length === 0) {
+      return '';
+    }
+    
+    // Sort by key to ensure consistent ordering (matches backend)
+    return Object.entries(selectedVariations)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}:${value}`)
+      .join(',');
+  }
+
+  // Helper method to parse variation key back to map
+  parseVariationKey(variationKey: string): SelectedVariations {
+    const result: SelectedVariations = {};
+    
+    if (!variationKey || variationKey.trim() === '') {
+      return result;
+    }
+    
+    const pairs = variationKey.split(',');
+    for (const pair of pairs) {
+      const [key, value] = pair.split(':', 2);
+      if (key && value) {
+        result[key] = value;
+      }
+    }
+    
+    return result;
+  }
+
+  // Helper method to format variation selection for display
+  formatVariationsForDisplay(selectedVariations: SelectedVariations): string {
+    if (!selectedVariations || Object.keys(selectedVariations).length === 0) {
+      return '';
+    }
+    
+    return Object.entries(selectedVariations)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
   }
 
 }

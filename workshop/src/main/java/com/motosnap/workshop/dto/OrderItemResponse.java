@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -14,4 +15,8 @@ public class OrderItemResponse {
     private int qty;
     private BigDecimal price;
     private InventoryResponse part;
+    
+    // Variation information
+    private Map<String, String> selectedVariations;
+    private String selectedVariationsDisplay; // Formatted for UI display
 }

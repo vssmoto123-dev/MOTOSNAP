@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +16,10 @@ public class CartItemResponse {
     private Double unitPrice;
     private LocalDateTime addedAt;
     private InventoryResponse inventory;
+    
+    // Variation information
+    private Map<String, String> selectedVariations;
+    private String selectedVariationsDisplay; // Formatted for UI display
     
     public double getSubtotal() {
         return unitPrice * quantity;
