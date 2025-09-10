@@ -585,6 +585,27 @@ class ApiClient {
     return this.request<InventoryItem>(`/parts/${id}`);
   }
 
+  // Get variation definitions for a specific part
+  async getPartVariations(id: number): Promise<any> {
+    return this.request<any>(`/parts/${id}/variations`);
+  }
+
+  // Check stock availability for specific variation combination
+  async checkVariationStock(inventoryId: number, data: VariationStockCheckRequest): Promise<VariationStockCheckResponse> {
+    return this.request<VariationStockCheckResponse>(`/inventory/${inventoryId}/check-variation-stock`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Validate variation selection for a part
+  async validateVariationSelection(inventoryId: number, selectedVariations: SelectedVariations): Promise<VariationValidationResponse> {
+    return this.request<VariationValidationResponse>(`/inventory/${inventoryId}/validate-variations`, {
+      method: 'POST',
+      body: JSON.stringify({ selectedVariations }),
+    });
+  }
+
   // Customer - Profile Management
   async getUserProfile(): Promise<any> {
     return this.request<any>('/me');
@@ -622,6 +643,14 @@ class ApiClient {
   async updateCartItemQuantity(itemId: number, quantity: number): Promise<CartResponse> {
     return this.request<CartResponse>(`/cart/items/${itemId}`, {
       method: 'PUT',
+      body: JSON.stringify({ quantity }),
+    });
+  }
+
+  // Validate cart item quantity against variation-specific stock
+  async validateCartItemQuantity(itemId: number, quantity: number): Promise<{ valid: boolean; maxAvailable: number; message: string }> {
+    return this.request<{ valid: boolean; maxAvailable: number; message: string }>(`/cart/items/${itemId}/validate-quantity`, {
+      method: 'POST',
       body: JSON.stringify({ quantity }),
     });
   }

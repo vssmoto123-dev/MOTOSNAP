@@ -3,35 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-
-interface CartItem {
-  id: number;
-  quantity: number;
-  unitPrice: number;
-  inventory: {
-    id: number;
-    partName: string;
-    partCode: string;
-    unitPrice: number;
-    qty: number;
-    brand?: string;
-    description?: string;
-    imageUrl?: string;
-  };
-}
-
-interface Cart {
-  id: number;
-  cartItems: CartItem[];
-  totalAmount: number;
-  totalItems: number;
-}
+import { CartResponse, CartItemResponse } from '@/types/customer';
 
 export default function CartPage() {
-  const [cart, setCart] = useState<Cart | null>(null);
+  const [cart, setCart] = useState<CartResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [removingItemId, setRemovingItemId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,11 +33,33 @@ export default function CartPage() {
 
   const removeFromCart = async (itemId: number) => {
     try {
+      setRemovingItemId(itemId);
+      console.log('🗑️ Attempting to remove cart item:', itemId);
+      
       await apiClient.removeFromCart(itemId);
+      console.log('✅ Cart item removed successfully');
+      
       fetchCart(); // Refresh cart
-    } catch (err) {
-      alert('Failed to remove item from cart');
-      console.error('Error removing from cart:', err);
+      setError(null); // Clear any previous errors
+    } catch (err: any) {
+      console.error('❌ Error removing from cart:', err);
+      
+      // Extract meaningful error message
+      let errorMessage = 'Failed to remove item from cart';
+      if (err?.error) {
+        errorMessage = err.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(`Remove failed: ${errorMessage}`);
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setRemovingItemId(null);
     }
   };
 
@@ -69,7 +70,24 @@ export default function CartPage() {
       return;
     }
 
+    // Find the cart item to validate variation stock
+    const cartItem = cart?.cartItems.find(item => item.id === itemId);
+    if (!cartItem) return;
+
     try {
+      // Check variation stock if item has selected variations
+      if (cartItem.selectedVariations) {
+        const stockCheck = await apiClient.checkVariationStock(cartItem.inventory.id, {
+          selectedVariations: cartItem.selectedVariations,
+          requestedQuantity: newQuantity
+        });
+        
+        if (!stockCheck.available) {
+          alert(`Only ${stockCheck.availableQuantity || 0} units available for this variation`);
+          return;
+        }
+      }
+      
       await apiClient.updateCartItemQuantity(itemId, newQuantity);
       fetchCart(); // Refresh cart
     } catch (err) {
@@ -83,6 +101,23 @@ export default function CartPage() {
 
     try {
       setOrderLoading(true);
+      
+      // Validate all cart items with variations before creating order
+      for (const item of cart.cartItems) {
+        if (item.selectedVariations) {
+          const stockCheck = await apiClient.checkVariationStock(item.inventory.id, {
+            selectedVariations: item.selectedVariations,
+            requestedQuantity: item.quantity
+          });
+          
+          if (!stockCheck.available) {
+            alert(`Insufficient stock for ${item.inventory.partName}. Only ${stockCheck.availableQuantity || 0} units available for selected variation.`);
+            setOrderLoading(false);
+            return;
+          }
+        }
+      }
+      
       const order = await apiClient.createOrder();
       
       // Store order data temporarily for the success page
@@ -101,11 +136,11 @@ export default function CartPage() {
     }
   };
 
-  const getSubtotal = (item: CartItem) => {
+  const getSubtotal = (item: CartItemResponse) => {
     return item.quantity * item.unitPrice;
   };
 
-  const getProductThumbnail = (item: CartItem) => {
+  const getProductThumbnail = (item: CartItemResponse) => {
     const { inventory } = item;
     if (inventory.imageUrl) {
       return (
@@ -250,7 +285,26 @@ export default function CartPage() {
                         <p className="text-text-muted text-sm mb-2 line-clamp-1">{item.inventory.description}</p>
                       )}
                       
+                      {/* Variation Display */}
+                      {item.selectedVariationsDisplay && (
+                        <div className="text-sm text-blue-600 mb-2 flex items-center gap-1">
+                          <span>📋</span>
+                          <span>{item.selectedVariationsDisplay}</span>
+                        </div>
+                      )}
+                      
                       <p className="text-text font-medium">${item.unitPrice.toFixed(2)} each</p>
+                      
+                      {/* Stock Status */}
+                      <div className="text-xs text-text-muted mt-1">
+                        {item.inventory.qty <= 5 ? (
+                          <span className="text-orange-600 font-medium">
+                            ⚠️ Only {item.inventory.qty} left in stock
+                          </span>
+                        ) : (
+                          <span>{item.inventory.qty} in stock</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Quantity Controls & Actions */}
@@ -272,6 +326,7 @@ export default function CartPage() {
                           onClick={() => updateQuantity(item.id, item.quantity, 1)}
                           className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 text-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={item.quantity >= item.inventory.qty}
+                          title={item.quantity >= item.inventory.qty ? 'Maximum quantity reached' : 'Increase quantity'}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -284,9 +339,15 @@ export default function CartPage() {
                         <p className="font-bold text-xl text-text mb-2">${getSubtotal(item).toFixed(2)}</p>
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="text-red-500 hover:text-red-600 text-sm font-medium transition-colors"
+                          disabled={removingItemId === item.id}
+                          className="text-red-500 hover:text-red-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Remove
+                          {removingItemId === item.id ? (
+                            <div className="flex items-center gap-1">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-500"></div>
+                              <span>Removing...</span>
+                            </div>
+                          ) : 'Remove'}
                         </button>
                       </div>
                     </div>
@@ -323,7 +384,12 @@ export default function CartPage() {
                 disabled={orderLoading}
                 className="w-full bg-primary text-white py-3 rounded-lg hover:bg-primary/90 disabled:bg-muted disabled:text-text-muted font-semibold transition-all duration-200 mb-3"
               >
-                {orderLoading ? 'Creating Order...' : 'Proceed to Checkout'}
+                {orderLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Validating & Creating Order...</span>
+                  </div>
+                ) : 'Proceed to Checkout'}
               </button>
 
               <button

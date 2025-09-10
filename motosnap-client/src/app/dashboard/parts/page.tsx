@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import DebugPanel from '@/components/DebugPanel';
+import { VariationDefinition, SelectedVariations } from '@/types/variations';
 
 interface InventoryItem {
   id: number;
@@ -15,6 +16,10 @@ interface InventoryItem {
   category?: string;
   brand?: string;
   active: boolean;
+  imageUrl?: string;
+  // Variation support
+  variations?: string | VariationDefinition[] | {hasVariations: boolean, options: VariationDefinition[]};
+  variationStock?: string | {allocations: Record<string, number>, unallocated: number};
 }
 
 export default function PartsPage() {
@@ -26,6 +31,122 @@ export default function PartsPage() {
   const [filteredParts, setFilteredParts] = useState<InventoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('name');
+  
+  // Variation selection state
+  const [selectedVariationsByPart, setSelectedVariationsByPart] = useState<Record<number, SelectedVariations>>({});
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
+
+  // Helper function to parse variation data from inventory item (same logic as admin/mechanic)
+  const parseVariationData = (item: InventoryItem): { hasVariations: boolean; variations: VariationDefinition[] } => {
+    let variations: VariationDefinition[] = [];
+    let hasVariations = false;
+    
+    try {
+      if (item.variations) {
+        if (typeof item.variations === 'string') {
+          const parsed = JSON.parse(item.variations);
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.options && Array.isArray(parsed.options)) {
+              variations = parsed.options;
+              hasVariations = parsed.hasVariations === true;
+            } else if (Array.isArray(parsed)) {
+              variations = parsed;
+              hasVariations = variations.length > 0;
+            }
+          }
+        } else if (Array.isArray(item.variations)) {
+          variations = item.variations;
+          hasVariations = variations.length > 0;
+        } else if (typeof item.variations === 'object' && item.variations !== null) {
+          const variationsObj = item.variations as any;
+          if (variationsObj.options && Array.isArray(variationsObj.options)) {
+            variations = variationsObj.options;
+            hasVariations = variationsObj.hasVariations === true;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse variation data:', error);
+      variations = [];
+      hasVariations = false;
+    }
+    
+    return { hasVariations, variations };
+  };
+
+  // Helper function to get variation display text for an item
+  const getVariationDisplayText = (item: InventoryItem): string => {
+    const { hasVariations, variations } = parseVariationData(item);
+    if (hasVariations && variations.length > 0) {
+      return ` (${variations.length} variation${variations.length > 1 ? 's' : ''})`;
+    }
+    return '';
+  };
+
+  // Handle variation selection for a specific part
+  const handleVariationSelection = (partId: number, variationId: string, value: string) => {
+    setSelectedVariationsByPart(prev => ({
+      ...prev,
+      [partId]: {
+        ...prev[partId],
+        [variationId]: value
+      }
+    }));
+  };
+
+  // Add to cart with variation support
+  const handleAddToCart = async (part: InventoryItem, quantity: number = 1) => {
+    setAddingToCart(part.id);
+    try {
+      const { hasVariations, variations } = parseVariationData(part);
+      
+      if (hasVariations) {
+        // Check if all required variations are selected
+        const selectedVariations = selectedVariationsByPart[part.id] || {};
+        const requiredVariations = variations.filter(v => v.required);
+        const missingRequired = requiredVariations.filter(v => 
+          !selectedVariations[v.id] || !selectedVariations[v.id].trim()
+        );
+        
+        if (missingRequired.length > 0) {
+          setError(`Please select required variations: ${missingRequired.map(v => v.name).join(', ')}`);
+          return;
+        }
+        
+        // Add to cart with variations
+        await apiClient.addToCart({
+          inventoryId: part.id,
+          quantity: quantity,
+          selectedVariations: selectedVariations
+        });
+      } else {
+        // Add to cart without variations
+        await apiClient.addToCart({
+          inventoryId: part.id,
+          quantity: quantity
+        });
+      }
+      
+      setError(null);
+      // Show success message
+      const variationText = hasVariations && selectedVariationsByPart[part.id] ? 
+        Object.entries(selectedVariationsByPart[part.id])
+          .filter(([_, value]) => value)
+          .map(([varId, value]) => {
+            const variation = variations.find(v => v.id === varId);
+            return `${variation?.name || varId}: ${value}`;
+          })
+          .join(', ') : '';
+      
+      alert(`Added ${part.partName}${variationText ? ` (${variationText})` : ''} to cart!`);
+      
+    } catch (err: any) {
+      console.error('Failed to add to cart:', err);
+      setError(err?.message || 'Failed to add item to cart');
+    } finally {
+      setAddingToCart(null);
+    }
+  };
 
   useEffect(() => {
     fetchParts();
@@ -269,7 +390,7 @@ export default function PartsPage() {
                   
                   {/* Product Name */}
                   <h3 className="text-lg font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {part.partName}
+                    {part.partName}{getVariationDisplayText(part)}
                   </h3>
                   
                   {/* Part Code */}
@@ -296,17 +417,92 @@ export default function PartsPage() {
                     </div>
                   </div>
                   
+                  {/* Variation Selection UI */}
+                  {(() => {
+                    const { hasVariations, variations } = parseVariationData(part);
+                    if (hasVariations && variations.length > 0) {
+                      return (
+                        <div className="mb-3 p-3 bg-background/50 rounded-lg border border-border">
+                          <h5 className="text-sm font-medium text-text mb-2">Select Options:</h5>
+                          <div className="space-y-2">
+                            {variations.map((variation) => (
+                              <div key={variation.id} className="space-y-1">
+                                <label className="block text-xs font-medium text-text">
+                                  {variation.name}
+                                  {variation.required && <span className="text-red-500 ml-1">*</span>}
+                                </label>
+                                
+                                {variation.type === 'dropdown' && (
+                                  <select
+                                    value={selectedVariationsByPart[part.id]?.[variation.id] || ''}
+                                    onChange={(e) => handleVariationSelection(part.id, variation.id, e.target.value)}
+                                    className="w-full px-2 py-1 border border-border rounded text-xs text-text bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                  >
+                                    <option value="">Select {variation.name.toLowerCase()}...</option>
+                                    {variation.values.filter(val => val.trim()).map((value) => (
+                                      <option key={value} value={value}>{value}</option>
+                                    ))}
+                                  </select>
+                                )}
+                                
+                                {variation.type === 'radio' && (
+                                  <div className="space-y-1">
+                                    {variation.values.filter(val => val.trim()).map((value) => (
+                                      <label key={value} className="flex items-center space-x-2 text-xs">
+                                        <input
+                                          type="radio"
+                                          name={`variation_${part.id}_${variation.id}`}
+                                          value={value}
+                                          checked={selectedVariationsByPart[part.id]?.[variation.id] === value}
+                                          onChange={(e) => handleVariationSelection(part.id, variation.id, e.target.value)}
+                                          className="text-primary"
+                                        />
+                                        <span className="text-text">{value}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Show current selection */}
+                          {selectedVariationsByPart[part.id] && Object.keys(selectedVariationsByPart[part.id]).length > 0 && (
+                            <div className="mt-2 p-2 bg-primary/10 rounded text-xs">
+                              <strong className="text-primary">Selected:</strong>{' '}
+                              <span className="text-text">
+                                {Object.entries(selectedVariationsByPart[part.id])
+                                  .filter(([_, value]) => value)
+                                  .map(([varId, value]) => {
+                                    const variation = variations.find(v => v.id === varId);
+                                    return `${variation?.name || varId}: ${value}`;
+                                  })
+                                  .join(', ')
+                                }
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  
                   {/* Add to Cart Button */}
                   <button
-                    onClick={() => addToCart(part.id)}
-                    disabled={part.qty === 0}
+                    onClick={() => handleAddToCart(part)}
+                    disabled={part.qty === 0 || addingToCart === part.id}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
-                      part.qty > 0
+                      part.qty > 0 && addingToCart !== part.id
                         ? 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg active:scale-95'
                         : 'bg-muted text-text-muted cursor-not-allowed'
                     }`}
                   >
-                    {part.qty > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    {addingToCart === part.id 
+                      ? 'Adding...' 
+                      : part.qty > 0 
+                      ? 'Add to Cart' 
+                      : 'Out of Stock'}
                   </button>
                 </div>
               </div>

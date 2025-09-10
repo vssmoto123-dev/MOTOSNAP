@@ -101,16 +101,26 @@ public class CartController {
     }
 
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<CartResponse> removeItemFromCart(
+    public ResponseEntity<?> removeItemFromCart(
             @PathVariable Long itemId,
             Authentication authentication) {
         
         try {
+            System.out.println("DEBUG: Removing cart item " + itemId + " for user: " + authentication.getName());
             String email = authentication.getName();
             CartResponse cart = cartService.removeItemFromCart(email, itemId);
+            System.out.println("DEBUG: Cart item removed successfully");
             return ResponseEntity.ok(cart);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            System.err.println("ERROR: Failed to remove cart item " + itemId + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage(), "details", e.getClass().getSimpleName()));
+        } catch (Exception e) {
+            System.err.println("ERROR: Unexpected error removing cart item " + itemId + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error: " + e.getMessage()));
         }
     }
 }

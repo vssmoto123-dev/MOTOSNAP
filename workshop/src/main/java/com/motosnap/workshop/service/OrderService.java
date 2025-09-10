@@ -4,6 +4,8 @@ import com.motosnap.workshop.dto.OrderResponse;
 import com.motosnap.workshop.dto.OrderItemResponse;
 import com.motosnap.workshop.dto.InventoryResponse;
 import com.motosnap.workshop.entity.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.motosnap.workshop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -333,7 +335,7 @@ public class OrderService {
         // Include variation information if available
         if (orderItem.hasVariationSelection()) {
             response.setSelectedVariations(orderItem.getSelectedVariationsMap());
-            response.setSelectedVariationsDisplay(orderItem.getVariationDisplayString());
+            response.setSelectedVariationsDisplay(buildMeaningfulVariationDisplayString(orderItem));
         }
         
         return response;
@@ -352,5 +354,80 @@ public class OrderService {
         response.setActive(inventory.getActive());
         response.setImageUrl(inventory.getImageUrl());
         return response;
+    }
+    
+    // ===============================================================================
+    // VARIATION DISPLAY METHODS (similar to RequestService and CartService)
+    // ===============================================================================
+    
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    
+    private String buildMeaningfulVariationDisplayString(OrderItem orderItem) {
+        if (!orderItem.hasVariationSelection()) {
+            return "";
+        }
+        
+        Map<String, String> selectedVariations = orderItem.getSelectedVariationsMap();
+        if (selectedVariations == null || selectedVariations.isEmpty()) {
+            return "";
+        }
+        
+        Inventory inventory = orderItem.getPart();
+        if (!inventory.hasVariations()) {
+            // Fallback to simple key-value display if part definition is not available
+            return selectedVariations.entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+        }
+        
+        try {
+            // Get the variation definitions from the part
+            Map<String, Object> variationDefinitions = inventory.getVariationDefinitions();
+            if (variationDefinitions.isEmpty()) {
+                return "";
+            }
+            
+            List<Map<String, Object>> variations = (List<Map<String, Object>>) variationDefinitions.get("options");
+            if (variations == null) {
+                return "";
+            }
+            
+            // Build meaningful display string by resolving IDs to names
+            List<String> displayParts = new ArrayList<>();
+            
+            for (Map.Entry<String, String> selectedEntry : selectedVariations.entrySet()) {
+                String variationId = selectedEntry.getKey();
+                String selectedValue = selectedEntry.getValue();
+                
+                // Find the variation name by ID
+                String variationName = findVariationNameById(variations, variationId);
+                if (variationName != null) {
+                    displayParts.add(variationName + ": " + selectedValue);
+                } else {
+                    // Fallback to using the ID if name not found
+                    displayParts.add(variationId + ": " + selectedValue);
+                }
+            }
+            
+            return String.join(", ", displayParts);
+            
+        } catch (Exception e) {
+            // Fallback to simple display if JSON parsing fails
+            return selectedVariations.entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+        }
+    }
+    
+    private String findVariationNameById(List<Map<String, Object>> variations, String targetId) {
+        for (Map<String, Object> variation : variations) {
+            String id = (String) variation.get("id");
+            if (targetId.equals(id)) {
+                return (String) variation.get("name");
+            }
+        }
+        return null;
     }
 }
