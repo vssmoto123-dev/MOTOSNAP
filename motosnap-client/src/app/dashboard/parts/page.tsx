@@ -354,7 +354,11 @@ export default function PartsPage() {
           {filteredParts.map((part) => {
             const badge = getProductBadge(part);
             return (
-              <div key={part.id} className="bg-surface rounded-2xl border border-border shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group">
+              <div
+                key={part.id}
+                className="bg-surface rounded-2xl border border-border shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                onClick={() => router.push(`/dashboard/part-detail?id=${part.id}`)}
+              >
                 {/* Product Image */}
                 <div className="relative h-48 bg-muted/30">
                   {(part as any).imageUrl ? (
@@ -390,8 +394,16 @@ export default function PartsPage() {
                   
                   {/* Product Name */}
                   <h3 className="text-lg font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {part.partName}{getVariationDisplayText(part)}
+                    {part.partName}
                   </h3>
+
+                  {/* Click indicator */}
+                  <div className="flex items-center text-primary text-sm font-medium mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>View Details</span>
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                   
                   {/* Part Code */}
                   <p className="text-text-muted text-sm mb-2">Part #: {part.partCode}</p>
@@ -416,94 +428,6 @@ export default function PartsPage() {
                       {part.qty > 0 ? `${part.qty} in stock` : 'Out of stock'}
                     </div>
                   </div>
-                  
-                  {/* Variation Selection UI */}
-                  {(() => {
-                    const { hasVariations, variations } = parseVariationData(part);
-                    if (hasVariations && variations.length > 0) {
-                      return (
-                        <div className="mb-3 p-3 bg-background/50 rounded-lg border border-border">
-                          <h5 className="text-sm font-medium text-text mb-2">Select Options:</h5>
-                          <div className="space-y-2">
-                            {variations.map((variation) => (
-                              <div key={variation.id} className="space-y-1">
-                                <label className="block text-xs font-medium text-text">
-                                  {variation.name}
-                                  {variation.required && <span className="text-red-500 ml-1">*</span>}
-                                </label>
-                                
-                                {variation.type === 'dropdown' && (
-                                  <select
-                                    value={selectedVariationsByPart[part.id]?.[variation.id] || ''}
-                                    onChange={(e) => handleVariationSelection(part.id, variation.id, e.target.value)}
-                                    className="w-full px-2 py-1 border border-border rounded text-xs text-text bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                  >
-                                    <option value="">Select {variation.name.toLowerCase()}...</option>
-                                    {variation.values.filter(val => val.trim()).map((value) => (
-                                      <option key={value} value={value}>{value}</option>
-                                    ))}
-                                  </select>
-                                )}
-                                
-                                {variation.type === 'radio' && (
-                                  <div className="space-y-1">
-                                    {variation.values.filter(val => val.trim()).map((value) => (
-                                      <label key={value} className="flex items-center space-x-2 text-xs">
-                                        <input
-                                          type="radio"
-                                          name={`variation_${part.id}_${variation.id}`}
-                                          value={value}
-                                          checked={selectedVariationsByPart[part.id]?.[variation.id] === value}
-                                          onChange={(e) => handleVariationSelection(part.id, variation.id, e.target.value)}
-                                          className="text-primary"
-                                        />
-                                        <span className="text-text">{value}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* Show current selection */}
-                          {selectedVariationsByPart[part.id] && Object.keys(selectedVariationsByPart[part.id]).length > 0 && (
-                            <div className="mt-2 p-2 bg-primary/10 rounded text-xs">
-                              <strong className="text-primary">Selected:</strong>{' '}
-                              <span className="text-text">
-                                {Object.entries(selectedVariationsByPart[part.id])
-                                  .filter(([_, value]) => value)
-                                  .map(([varId, value]) => {
-                                    const variation = variations.find(v => v.id === varId);
-                                    return `${variation?.name || varId}: ${value}`;
-                                  })
-                                  .join(', ')
-                                }
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={() => handleAddToCart(part)}
-                    disabled={part.qty === 0 || addingToCart === part.id}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
-                      part.qty > 0 && addingToCart !== part.id
-                        ? 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg active:scale-95'
-                        : 'bg-muted text-text-muted cursor-not-allowed'
-                    }`}
-                  >
-                    {addingToCart === part.id 
-                      ? 'Adding...' 
-                      : part.qty > 0 
-                      ? 'Add to Cart' 
-                      : 'Out of Stock'}
-                  </button>
                 </div>
               </div>
             );

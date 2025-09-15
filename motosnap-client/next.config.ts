@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Disable static export for development to allow dynamic routes
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   basePath: '',
   assetPrefix: '',
-  trailingSlash: true,  // Enable trailing slashes for static export
+  trailingSlash: process.env.NODE_ENV === 'production',  // Only for static export
   images: {
-    unoptimized: true,  // Required for static export
+    unoptimized: process.env.NODE_ENV === 'production',  // Only required for static export
   },
   typescript: {
     ignoreBuildErrors: true,
