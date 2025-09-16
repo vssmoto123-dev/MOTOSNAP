@@ -585,6 +585,42 @@ class ApiClient {
     return this.request<InventoryItem>(`/parts/${id}`);
   }
 
+  // Get related products by brand and/or category
+  async getRelatedProducts(currentProductId: number): Promise<InventoryItem[]> {
+    try {
+      // Get all parts and filter on client side
+      const allParts = await this.getParts();
+
+      // Get current product details
+      const currentProduct = await this.getPart(currentProductId);
+
+      // Filter related products by brand or category, excluding current product
+      const relatedProducts = allParts.filter(part => {
+        if (part.id === currentProductId) return false; // Exclude current product
+
+        // Match by brand if available
+        if (currentProduct.brand && part.brand === currentProduct.brand) {
+          return true;
+        }
+
+        // Match by category if available
+        if (currentProduct.category && part.category === currentProduct.category) {
+          return true;
+        }
+
+        return false;
+      });
+
+      // Limit to 8 products and shuffle for variety
+      return relatedProducts
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 8);
+    } catch (error) {
+      console.error('Failed to get related products:', error);
+      return [];
+    }
+  }
+
   // Get variation definitions for a specific part
   async getPartVariations(id: number): Promise<any> {
     return this.request<any>(`/parts/${id}/variations`);

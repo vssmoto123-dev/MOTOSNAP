@@ -6,6 +6,7 @@ import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { InventoryItem } from '@/types/admin';
 import { VariationDefinition, SelectedVariations } from '@/types/variations';
 import DebugPanel from '@/components/DebugPanel';
+import PartsGrid from '@/components/PartsGrid';
 
 function ProductDetailContent() {
   const searchParams = useSearchParams();
@@ -18,6 +19,8 @@ function ProductDetailContent() {
   const [selectedVariations, setSelectedVariations] = useState<SelectedVariations>({});
   const [addingToCart, setAddingToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [relatedProducts, setRelatedProducts] = useState<InventoryItem[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
 
   // Helper function to parse variation data
   const parseVariationData = (item: InventoryItem): { hasVariations: boolean; variations: VariationDefinition[] } => {
@@ -133,6 +136,25 @@ function ProductDetailContent() {
 
     fetchProduct();
   }, [productId]);
+
+  // Fetch related products when product is loaded
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!product) return;
+
+      try {
+        setLoadingRelated(true);
+        const related = await apiClient.getRelatedProducts(product.id);
+        setRelatedProducts(related);
+      } catch (err) {
+        console.error('Error fetching related products:', err);
+      } finally {
+        setLoadingRelated(false);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [product]);
 
   const getStockStatus = () => {
     if (!product) return null;
@@ -397,6 +419,28 @@ function ProductDetailContent() {
             </div>
           </div>
         </div>
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16 pt-16 border-t border-border">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {loadingRelated ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <div className="text-text">Loading related products...</div>
+                  </div>
+                </div>
+              ) : (
+                <PartsGrid
+                  parts={relatedProducts}
+                  title="Related Products"
+                  maxItems={8}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
