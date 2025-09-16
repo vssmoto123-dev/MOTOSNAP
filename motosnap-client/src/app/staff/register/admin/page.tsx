@@ -6,17 +6,16 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Alert } from '@/components/ui/Alert';
 import { RegisterRequest } from '@/types/auth';
 
-export default function RegisterPage() {
-  const [formData, setFormData] = useState<Omit<RegisterRequest, 'role'> & { role: 'CUSTOMER' }>({
+export default function AdminRegisterPage() {
+  const [formData, setFormData] = useState<Omit<RegisterRequest, 'role'> & { role: 'ADMIN' }>({
     email: '',
     password: '',
     name: '',
     phone: '',
-    role: 'CUSTOMER',
+    role: 'ADMIN',
   });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -26,11 +25,10 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
 
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -65,7 +63,9 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required for admin accounts';
+    } else if (!/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
 
@@ -75,7 +75,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -85,8 +85,8 @@ export default function RegisterPage() {
       await register(formData);
       router.push('/dashboard');
     } catch (error: unknown) {
-      const errorMessage = (error && typeof error === 'object' && 'error' in error) 
-        ? (error as { error: string }).error 
+      const errorMessage = (error && typeof error === 'object' && 'error' in error)
+        ? (error as { error: string }).error
         : 'Registration failed. Please try again.';
       setApiError(errorMessage);
     } finally {
@@ -104,7 +104,7 @@ export default function RegisterPage() {
               MOTO<span className="text-primary">SNAP</span>
             </h1>
           </Link>
-          <p className="text-text-muted">Create your customer account to get started</p>
+          <p className="text-text-muted">Create your administrator account</p>
         </div>
 
         {/* Registration Form */}
@@ -141,17 +141,18 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Phone Number (Optional)"
+              label="Phone Number"
               name="phone"
               type="tel"
               value={formData.phone}
               onChange={handleChange}
               error={errors.phone}
               placeholder="+60 12-345 6789"
+              required
               autoComplete="tel"
+              helperText="Required for admin account"
             />
 
-  
             <Input
               label="Password"
               name="password"
@@ -187,8 +188,9 @@ export default function RegisterPage() {
               loading={loading}
               className="w-full"
               size="lg"
+              variant="secondary"
             >
-              Create Account
+              Create Admin Account
             </Button>
           </form>
 
@@ -196,14 +198,24 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-text-muted">
               Already have an account?{' '}
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 className="text-primary hover:text-red-400 font-medium transition-colors"
               >
                 Sign in here
               </Link>
             </p>
           </div>
+        </div>
+
+        {/* Back to Customer Registration */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/register"
+            className="text-text-muted hover:text-primary transition-colors"
+          >
+            ← Register as a customer instead
+          </Link>
         </div>
 
         {/* Footer */}

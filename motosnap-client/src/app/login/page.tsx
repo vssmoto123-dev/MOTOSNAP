@@ -105,23 +105,6 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            {/* Quick Fill Demo Users */}
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-              <p className="text-sm font-medium text-text mb-3">Quick Login (Demo Users):</p>
-              <div className="flex flex-wrap gap-2">
-                {quickFillOptions.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => handleQuickFill(option.email, option.password)}
-                    className="text-xs px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <Input
               label="Email Address"
               name="email"

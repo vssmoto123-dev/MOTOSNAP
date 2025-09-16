@@ -5,12 +5,24 @@ import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/lib/api';
 import { UserStats } from '@/types/admin';
 import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import MechanicRegistrationModal from '@/components/MechanicRegistrationModal';
 
 export default function AdminOverview() {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMechanicModalOpen, setIsMechanicModalOpen] = useState(false);
+
+  const refreshStats = async () => {
+    try {
+      const userStats = await apiClient.getUserStats();
+      setStats(userStats);
+    } catch (err) {
+      console.error('Failed to refresh stats:', err);
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -213,9 +225,32 @@ export default function AdminOverview() {
                 <p className="text-sm text-gray-500">View and approve customer orders</p>
               </div>
             </Link>
+
+            <button
+              onClick={() => setIsMechanicModalOpen(true)}
+              className="relative rounded-lg border border-green-300 bg-green-50 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full text-left"
+            >
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-green-900">Register Mechanic</p>
+                <p className="text-sm text-green-700">Create new mechanic account</p>
+              </div>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mechanic Registration Modal */}
+      <MechanicRegistrationModal
+        isOpen={isMechanicModalOpen}
+        onClose={() => setIsMechanicModalOpen(false)}
+        onSuccess={refreshStats}
+      />
     </div>
   );
 }

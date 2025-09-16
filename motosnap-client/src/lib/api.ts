@@ -248,11 +248,22 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    
+
     if (response.accessToken) {
       this.setTokens(response.accessToken, response.refreshToken);
     }
-    
+
+    return response;
+  }
+
+  // Admin registration - creates user without logging them in
+  async adminRegister(data: RegisterRequest): Promise<{ user: User; message: string }> {
+    const response = await this.request<{ user: User; message: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    // Don't set tokens - admin stays logged in
     return response;
   }
 
