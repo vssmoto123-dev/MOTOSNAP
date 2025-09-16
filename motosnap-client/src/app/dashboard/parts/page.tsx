@@ -99,20 +99,20 @@ export default function PartsPage() {
     setAddingToCart(part.id);
     try {
       const { hasVariations, variations } = parseVariationData(part);
-      
+
       if (hasVariations) {
         // Check if all required variations are selected
         const selectedVariations = selectedVariationsByPart[part.id] || {};
         const requiredVariations = variations.filter(v => v.required);
-        const missingRequired = requiredVariations.filter(v => 
+        const missingRequired = requiredVariations.filter(v =>
           !selectedVariations[v.id] || !selectedVariations[v.id].trim()
         );
-        
+
         if (missingRequired.length > 0) {
           setError(`Please select required variations: ${missingRequired.map(v => v.name).join(', ')}`);
           return;
         }
-        
+
         // Add to cart with variations
         await apiClient.addToCart({
           inventoryId: part.id,
@@ -126,10 +126,10 @@ export default function PartsPage() {
           quantity: quantity
         });
       }
-      
+
       setError(null);
       // Show success message
-      const variationText = hasVariations && selectedVariationsByPart[part.id] ? 
+      const variationText = hasVariations && selectedVariationsByPart[part.id] ?
         Object.entries(selectedVariationsByPart[part.id])
           .filter(([_, value]) => value)
           .map(([varId, value]) => {
@@ -137,9 +137,9 @@ export default function PartsPage() {
             return `${variation?.name || varId}: ${value}`;
           })
           .join(', ') : '';
-      
+
       alert(`Added ${part.partName}${variationText ? ` (${variationText})` : ''} to cart!`);
-      
+
     } catch (err: any) {
       console.error('Failed to add to cart:', err);
       setError(err?.message || 'Failed to add item to cart');
