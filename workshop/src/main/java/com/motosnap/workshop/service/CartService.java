@@ -61,12 +61,12 @@ public class CartService {
             }
             
             // Validate selected variations against product's variation definitions
-            if (!inventoryService.validateVariationSelection(inventory.getId(), request.getSelectedVariations())) {
+            if (!inventoryService.validateVariationSelectionLegacy(inventory.getId(), request.getSelectedVariations())) {
                 throw new RuntimeException("Invalid variation selection");
             }
-            
+
             // Check variation-specific stock availability
-            if (!inventoryService.checkVariationStockAvailability(inventory.getId(), request.getSelectedVariations(), request.getQuantity())) {
+            if (!inventoryService.checkVariationStockAvailabilityLegacy(inventory.getId(), request.getSelectedVariations(), request.getQuantity())) {
                 throw new RuntimeException("Insufficient stock for selected variation");
             }
         } else {
@@ -89,7 +89,7 @@ public class CartService {
             
             // Re-check stock availability for updated quantity
             if (inventory.hasVariations()) {
-                if (!inventoryService.checkVariationStockAvailability(inventory.getId(), request.getSelectedVariations(), newQuantity)) {
+                if (!inventoryService.checkVariationStockAvailabilityLegacy(inventory.getId(), request.getSelectedVariations(), newQuantity)) {
                     throw new RuntimeException("Insufficient stock for selected variation. Cannot add more items.");
                 }
             } else {
@@ -162,7 +162,7 @@ public class CartService {
         // Check if there's enough inventory (variation-aware)
         Inventory inventory = cartItem.getInventory();
         if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
-            if (!inventoryService.checkVariationStockAvailability(inventory.getId(), cartItem.getSelectedVariationsMap(), newQuantity)) {
+            if (!inventoryService.checkVariationStockAvailabilityLegacy(inventory.getId(), cartItem.getSelectedVariationsMap(), newQuantity)) {
                 throw new RuntimeException("Insufficient stock for selected variation");
             }
         } else {

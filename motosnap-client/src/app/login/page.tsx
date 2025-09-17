@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,8 +19,19 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
+
+  // Handle role-based redirect after successful login
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'CUSTOMER') {
+        router.push('/dashboard/parts');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [user, router]);
 
   const quickFillOptions = [
     { label: 'Admin User', email: 'admin@motosnap.com', password: 'Admin123!' },
@@ -72,7 +83,7 @@ export default function LoginPage() {
 
     try {
       await login(formData);
-      router.push('/dashboard');
+      // Redirect is handled by useEffect based on user role
     } catch (error: unknown) {
       const errorMessage = (error && typeof error === 'object' && 'error' in error) 
         ? (error as { error: string }).error 

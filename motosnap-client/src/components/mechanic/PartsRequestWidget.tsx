@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { apiClient } from '@/lib/api';
-import { VariationDefinition, SelectedVariations } from '@/types/variations';
+import { VariationDefinition, SelectedVariations, VariationUtils } from '@/types/variations';
 
 interface PartsRequest {
   id: number;
@@ -125,18 +125,24 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
     return '';
   };
 
+  // Handle variation selection
+  const handleVariationSelection = (variationId: string, value: string) => {
+    const newSelectedVariations = VariationUtils.setValue(selectedVariations, variationId, value);
+    setSelectedVariations(newSelectedVariations);
+  };
+
   // Handle part selection change
   const handlePartSelection = (partId: string) => {
     setSelectedPartId(partId);
     setSelectedVariations({});
-    
+
     if (partId) {
       const selectedPart = inventory.find(part => part.id.toString() === partId);
       if (selectedPart) {
         const { hasVariations, variations } = parseVariationData(selectedPart);
         setVariationDefinitions(variations);
         setShowVariations(hasVariations);
-        
+
         if (!hasVariations) {
           setSelectedVariations({});
         }
@@ -213,13 +219,9 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
     // Validation for variations
     if (showVariations && variationDefinitions.length > 0) {
       // Check if all required variations are selected
-      const requiredVariations = variationDefinitions.filter(v => v.required);
-      const missingRequired = requiredVariations.filter(v => 
-        !selectedVariations[v.id] || !selectedVariations[v.id].trim()
-      );
-      
-      if (missingRequired.length > 0) {
-        setError(`Please select required variations: ${missingRequired.map(v => v.name).join(', ')}`);
+      const validation = VariationUtils.validateRequiredVariations(selectedVariations, variationDefinitions);
+      if (!validation.valid) {
+        setError(`Please select required variations: ${validation.missing.join(', ')}`);
         return;
       }
 
@@ -244,13 +246,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
       // Build variation display string
       let variationDisplayString = '';
       if (showVariations && Object.keys(selectedVariations).length > 0) {
-        variationDisplayString = Object.entries(selectedVariations)
-          .filter(([_, value]) => value)
-          .map(([varId, value]) => {
-            const variation = variationDefinitions.find(v => v.id === varId);
-            return `${variation?.name || varId}: ${value}`;
-          })
-          .join(', ');
+        variationDisplayString = VariationUtils.formatForDisplay(selectedVariations, variationDefinitions);
       }
 
       await apiClient.createPartsRequest(bookingId, {
@@ -382,10 +378,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
                 {variation.type === 'dropdown' && (
                   <select
                     value={selectedVariations[variation.id] || ''}
-                    onChange={(e) => setSelectedVariations(prev => ({
-                      ...prev,
-                      [variation.id]: e.target.value
-                    }))}
+                    onChange={(e) => handleVariationSelection(variation.id, e.target.value)}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                     disabled={loading}
                   >
@@ -395,7 +388,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
                     ))}
                   </select>
                 )}
-                
+
                 {variation.type === 'radio' && (
                   <div className="space-y-1">
                     {variation.values.filter(val => val.trim()).map((value) => (
@@ -404,11 +397,8 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
                           type="radio"
                           name={`variation_${variation.id}`}
                           value={value}
-                          checked={selectedVariations[variation.id] === value}
-                          onChange={(e) => setSelectedVariations(prev => ({
-                            ...prev,
-                            [variation.id]: e.target.value
-                          }))}
+                          checked={VariationUtils.getSelectedValue(selectedVariations, variation.id) === value}
+                          onChange={(e) => handleVariationSelection(variation.id, e.target.value)}
                           className="text-blue-600"
                           disabled={loading}
                         />
@@ -426,14 +416,7 @@ export const PartsRequestWidget: React.FC<PartsRequestWidgetProps> = ({ bookingI
             <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
               <strong className="text-blue-900">Selected:</strong>{' '}
               <span className="text-blue-800">
-                {Object.entries(selectedVariations)
-                  .filter(([_, value]) => value)
-                  .map(([varId, value]) => {
-                    const variation = variationDefinitions.find(v => v.id === varId);
-                    return `${variation?.name || varId}: ${value}`;
-                  })
-                  .join(', ')
-                }
+                {VariationUtils.formatForDisplay(selectedVariations, variationDefinitions)}
               </span>
             </div>
           )}

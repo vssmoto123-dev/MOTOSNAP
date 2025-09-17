@@ -12,6 +12,26 @@ import { VariationBuilder } from '@/components/admin/VariationBuilder';
 import { VariationStockAllocator } from '@/components/admin/VariationStockAllocator';
 import { Checkbox } from '@/components/ui/checkbox';
 
+// Motorcycle parts categories
+const MOTORCYCLE_CATEGORIES = [
+  'Engine Parts',
+  'Transmission & Drivetrain',
+  'Suspension & Handling',
+  'Brakes & Brake Systems',
+  'Wheels & Tires',
+  'Electrical & Lighting',
+  'Body & Fairings',
+  'Exhaust Systems',
+  'Fuel Systems',
+  'Cooling Systems',
+  'Controls & Levers',
+  'Maintenance & Lubricants',
+  'Accessories & Apparel',
+  'Batteries & Charging',
+  'Filters & Air Intake',
+  'Bolts & Hardware'
+] as const;
+
 interface InventoryFormData extends InventoryRequest {
   id?: number;
   imageFile?: File | null;
@@ -221,7 +241,38 @@ export default function InventoryManagement() {
       fetchInventory();
     } catch (err: unknown) {
       console.error('Submit failed:', err);
-      const errorMsg = err && typeof err === 'object' && 'error' in err ? (err as {error: string}).error : 'Failed to save item';
+      let errorMsg = 'Failed to save item';
+
+      if (err && typeof err === 'object') {
+        // Handle different error response formats
+        if ('error' in err) {
+          errorMsg = (err as {error: string}).error;
+        } else if ('message' in err) {
+          errorMsg = (err as {message: string}).message;
+        } else if ('response' in err) {
+          const response = (err as {response: any}).response;
+          if (response && response.data && response.data.message) {
+            errorMsg = response.data.message;
+          } else if (response && response.data && response.data.error) {
+            errorMsg = response.data.error;
+          }
+        }
+
+        // Check for network errors
+        if ('status' in err) {
+          const status = (err as {status: number}).status;
+          if (status === 0) {
+            errorMsg = 'Network error - unable to connect to server';
+          } else if (status >= 500) {
+            errorMsg = 'Server error - please try again later';
+          } else if (status === 400) {
+            errorMsg = 'Invalid data - please check your inputs';
+          } else if (status === 403) {
+            errorMsg = 'Permission denied - you may not have admin rights';
+          }
+        }
+      }
+
       setError(errorMsg);
     }
   };
@@ -524,12 +575,21 @@ export default function InventoryManagement() {
                             )}
                           </div>
                           <div>
-                            <Input
-                              label="Category"
-                              type="text"
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Category
+                            </label>
+                            <select
                               value={formData.category}
                               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            />
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                            >
+                              <option value="">Select a category</option>
+                              {MOTORCYCLE_CATEGORIES.map((category) => (
+                                <option key={category} value={category}>
+                                  {category}
+                                </option>
+                              ))}
+                            </select>
                             {validationErrors.category && (
                               <p className="mt-1 text-sm text-red-600">{validationErrors.category}</p>
                             )}

@@ -77,13 +77,13 @@ export default function CartPage() {
     try {
       // Check variation stock if item has selected variations
       if (cartItem.selectedVariations) {
-        const stockCheck = await apiClient.checkVariationStock(cartItem.inventory.id, {
+        const stockCheck = await apiClient.checkVariationStockPublic(cartItem.inventory.id, {
           selectedVariations: cartItem.selectedVariations,
-          requestedQuantity: newQuantity
+          quantity: newQuantity
         });
-        
+
         if (!stockCheck.available) {
-          alert(`Only ${stockCheck.availableQuantity || 0} units available for this variation`);
+          alert(stockCheck.message || 'Insufficient stock for this variation');
           return;
         }
       }
@@ -96,30 +96,129 @@ export default function CartPage() {
     }
   };
 
+  // Parse variation stock data from inventory item (similar to part-detail page)
+  const parseVariationStockDataFromItem = (inventory: any): Record<string, number> => {
+    try {
+      if (!inventory.variationStock) {
+        return {};
+      }
+
+      let stockData: Record<string, number> = {};
+
+      if (typeof inventory.variationStock === 'string') {
+        const parsed = JSON.parse(inventory.variationStock);
+        if (parsed && typeof parsed === 'object') {
+          // Handle different possible structures
+          if (parsed.allocations && typeof parsed.allocations === 'object') {
+            stockData = parsed.allocations;
+          } else if (parsed.allocation && typeof parsed.allocation === 'object') {
+            stockData = parsed.allocation;
+          } else {
+            // Assume it's a direct key-value mapping
+            stockData = parsed;
+          }
+        }
+      } else if (typeof inventory.variationStock === 'object' && inventory.variationStock !== null) {
+        // Handle direct object
+        const stockObj = inventory.variationStock as Record<string, unknown>;
+        if (stockObj.allocations && typeof stockObj.allocations === 'object') {
+          stockData = stockObj.allocations as Record<string, number>;
+        } else if (stockObj.allocation && typeof stockObj.allocation === 'object') {
+          stockData = stockObj.allocation as Record<string, number>;
+        } else {
+          stockData = inventory.variationStock as Record<string, number>;
+        }
+      }
+
+      // Convert all values to numbers and filter out invalid ones
+      const result: Record<string, number> = {};
+      Object.entries(stockData).forEach(([key, value]) => {
+        const numValue = typeof value === 'number' ? value : parseInt(String(value), 10);
+        if (!isNaN(numValue) && numValue >= 0) {
+          result[key] = numValue;
+        }
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Failed to parse variation stock data:', error);
+      return {};
+    }
+  };
+
   const proceedToCheckout = async () => {
-    if (!cart || cart.cartItems.length === 0) return;
+    if (!cart || cart.cartItems.length === 0) {
+      alert('Your cart is empty');
+      return;
+    }
+
+    console.log('🛒 Proceeding to checkout with cart:', cart);
 
     try {
       setOrderLoading(true);
       
-      // Validate all cart items with variations before creating order
+      // Client-side stock validation for items with variations
+      // Note: We can't use the API check-variation-stock endpoint (403 Forbidden - admin only)
+      // So we'll use a conservative approach like in the part-detail page
       for (const item of cart.cartItems) {
         if (item.selectedVariations) {
-          const stockCheck = await apiClient.checkVariationStock(item.inventory.id, {
-            selectedVariations: item.selectedVariations,
-            requestedQuantity: item.quantity
-          });
-          
-          if (!stockCheck.available) {
-            alert(`Insufficient stock for ${item.inventory.partName}. Only ${stockCheck.availableQuantity || 0} units available for selected variation.`);
-            setOrderLoading(false);
-            return;
+          console.log(`🔍 Validating variation stock for ${item.inventory.partName}:`, item.selectedVariations);
+
+          // Parse variation stock data from the item (client-side approach)
+          try {
+            const variationStockData = parseVariationStockDataFromItem(item.inventory);
+
+            if (Object.keys(variationStockData).length > 0) {
+              // Build variation key for the current selection
+              const variationKey = apiClient.buildVariationKey(item.selectedVariations);
+
+              if (variationKey && variationStockData[variationKey] !== undefined) {
+                const availableStock = variationStockData[variationKey];
+                console.log(`📊 Found variation stock for ${item.inventory.partName}: ${availableStock} units`);
+
+                if (item.quantity > availableStock) {
+                  alert(`Insufficient stock for ${item.inventory.partName}. Only ${availableStock} units available for selected variation. Please update your cart.`);
+                  setOrderLoading(false);
+                  return;
+                }
+              } else {
+                console.log(`📊 No specific stock found for variation key: ${variationKey}, using conservative approach`);
+                // Fallback to conservative limit for variation products
+                const conservativeMax = Math.min(10, item.inventory.qty);
+                if (item.quantity > conservativeMax) {
+                  alert(`Limited stock available for ${item.inventory.partName}. Maximum ${conservativeMax} units allowed.`);
+                  setOrderLoading(false);
+                  return;
+                }
+              }
+            } else {
+              console.log(`📊 No variation stock data available for ${item.inventory.partName}, using conservative approach`);
+              // Fallback to conservative limit if no variation stock data
+              const conservativeMax = Math.min(10, item.inventory.qty);
+              if (item.quantity > conservativeMax) {
+                alert(`Limited stock available for ${item.inventory.partName}. Maximum ${conservativeMax} units allowed.`);
+                setOrderLoading(false);
+                return;
+              }
+            }
+          } catch (error) {
+            console.error(`Error validating stock for ${item.inventory.partName}:`, error);
+            // If client-side validation fails, proceed with order creation
+            // Backend will handle the final validation
+            console.log(`⚠️ Proceeding with order despite validation error for ${item.inventory.partName}`);
           }
         }
       }
-      
+
+      console.log('🚀 All stock validations passed. Creating order...');
+      console.log('📋 Cart state:', {
+        cartId: cart?.id,
+        itemCount: cart?.cartItems?.length,
+        totalAmount: cart?.totalAmount
+      });
+
       const order = await apiClient.createOrder();
-      
+
       // Store order data temporarily for the success page
       console.log('🔄 Storing order data for ID:', order.id);
       console.log('🔄 Order data to store:', order);
@@ -129,8 +228,41 @@ export default function CartPage() {
       // Navigate to the static success page
       router.push(`/dashboard/order-success?orderId=${order.id}`);
     } catch (err) {
-      alert('Failed to create order');
       console.error('Error creating order:', err);
+
+      // Enhanced error handling
+      let errorMessage = 'Failed to create order';
+
+      if (err && typeof err === 'object') {
+        const errorObj = err as Record<string, unknown>;
+
+        // Try to extract error details
+        if (errorObj.error && typeof errorObj.error === 'string') {
+          errorMessage = errorObj.error;
+        } else if (errorObj.message && typeof errorObj.message === 'string') {
+          errorMessage = errorObj.message;
+        } else if (errorObj.status && typeof errorObj.status === 'number') {
+          errorMessage = `Server error ${errorObj.status}: ${errorObj.statusText || 'Unknown error'}`;
+        }
+
+        // Log detailed error information
+        console.error('Detailed error information:', {
+          error: errorObj.error,
+          message: errorObj.message,
+          status: errorObj.status,
+          statusText: errorObj.statusText,
+          data: errorObj.data,
+          config: errorObj.config,
+          stack: errorObj.stack
+        });
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+        console.error('Error stack:', err.stack);
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
+      alert(errorMessage);
     } finally {
       setOrderLoading(false);
     }

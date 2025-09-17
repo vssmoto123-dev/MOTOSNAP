@@ -27,6 +27,7 @@ import {
   VariationStockSummary,
   SelectedVariations
 } from '@/types/variations';
+import { VariationUtils } from '@/types/variations';
 import {
   CartItemRequest,
   CartResponse
@@ -481,9 +482,17 @@ class ApiClient {
     });
   }
 
-  // Check stock availability for specific variation
+  // Check stock availability for specific variation (Admin only)
   async checkVariationStock(inventoryId: number, request: VariationStockCheckRequest): Promise<VariationStockCheckResponse> {
     return this.request<VariationStockCheckResponse>(`/inventory/${inventoryId}/check-variation-stock`, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Check stock availability for specific variation (Public - for customers)
+  async checkVariationStockPublic(inventoryId: number, request: VariationStockCheckRequest): Promise<VariationStockCheckResponse> {
+    return this.request<VariationStockCheckResponse>(`/inventory/${inventoryId}/check-variation-stock-public`, {
       method: 'POST',
       body: JSON.stringify(request),
     });
@@ -956,11 +965,11 @@ class ApiClient {
   // ===============================================================================
 
   // Helper method to build variation key from selected variations (matches backend logic)
-  buildVariationKey(selectedVariations: SelectedVariations): string {
+  buildVariationKey(selectedVariations: SelectedVariations, variationDefinitions?: any[]): string {
     if (!selectedVariations || Object.keys(selectedVariations).length === 0) {
       return '';
     }
-    
+
     // Sort by key to ensure consistent ordering (matches backend)
     return Object.entries(selectedVariations)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -969,13 +978,13 @@ class ApiClient {
   }
 
   // Helper method to parse variation key back to map
-  parseVariationKey(variationKey: string): SelectedVariations {
+  parseVariationKey(variationKey: string, variationDefinitions?: any[]): SelectedVariations {
     const result: SelectedVariations = {};
-    
+
     if (!variationKey || variationKey.trim() === '') {
       return result;
     }
-    
+
     const pairs = variationKey.split(',');
     for (const pair of pairs) {
       const [key, value] = pair.split(':', 2);
@@ -983,19 +992,24 @@ class ApiClient {
         result[key] = value;
       }
     }
-    
+
     return result;
   }
 
-  // Helper method to format variation selection for display
+  // Helper method to format variation selection for display (legacy - use VariationUtils instead)
   formatVariationsForDisplay(selectedVariations: SelectedVariations): string {
     if (!selectedVariations || Object.keys(selectedVariations).length === 0) {
       return '';
     }
-    
+
     return Object.entries(selectedVariations)
       .map(([key, value]) => `${key}: ${value}`)
       .join(', ');
+  }
+
+  // Enhanced method to format variations with definitions
+  formatVariationsForDisplayWithDefinitions(selectedVariations: SelectedVariations, variationDefinitions: any[]): string {
+    return VariationUtils.formatForDisplay(selectedVariations, variationDefinitions);
   }
 
 }

@@ -1,20 +1,56 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
+import { apiClient, getImageBaseUrl } from '@/lib/api';
+
+interface InventoryItem {
+  id: number;
+  partName: string;
+  partCode: string;
+  description?: string;
+  qty: number;
+  unitPrice: number;
+  category?: string;
+  brand?: string;
+  active: boolean;
+  imageUrl?: string;
+}
 
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [products, setProducts] = useState<InventoryItem[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   useEffect(() => {
-    // Redirect to dashboard if already authenticated
+    // Redirect based on user role if already authenticated
     if (user && !loading) {
-      router.push('/dashboard');
+      if (user.role === 'CUSTOMER') {
+        router.push('/dashboard/parts');
+      } else {
+        router.push('/dashboard');
+      }
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    // Fetch products for display
+    const fetchProducts = async () => {
+      try {
+        const data = await apiClient.getParts();
+        setProducts(data.slice(0, 6)); // Show first 6 products
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   if (loading) {
     return (
@@ -123,6 +159,119 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Products Showcase Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        {productsLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className={`bg-surface rounded-2xl border border-border shadow-lg overflow-hidden transition-all duration-300 group ${
+                  user ? 'hover:shadow-xl cursor-pointer' : 'cursor-not-allowed opacity-75'
+                }`}
+                onClick={() => {
+                  if (user) {
+                    router.push('/dashboard/parts');
+                  }
+                }}
+              >
+                {/* Product Image */}
+                <div className="relative h-48 bg-muted/30">
+                  {product.imageUrl ? (
+                    <img
+                      src={`${getImageBaseUrl()}${product.imageUrl}`}
+                      alt={product.partName}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-4xl font-bold text-text opacity-20">
+                        {product.partName.substring(0, 2).toUpperCase()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stock Badge */}
+                  <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold ${
+                    product.qty > 0
+                      ? product.qty > 10
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {product.qty > 0 ? `${product.qty} in stock` : 'Out of stock'}
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <div className="p-6">
+                  {/* Brand */}
+                  {product.brand && (
+                    <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                      {product.brand}
+                    </div>
+                  )}
+
+                  {/* Product Name */}
+                  <h3 className="text-lg font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {product.partName}
+                  </h3>
+
+                  {/* Part Code */}
+                  <p className="text-text-muted text-sm mb-4">Part #: {product.partCode}</p>
+
+                  {/* Description */}
+                  {product.description && (
+                    <p className="text-text-muted text-sm mb-4 line-clamp-2">{product.description}</p>
+                  )}
+
+                  {/* Price */}
+                  <div className="text-2xl font-bold text-text mb-4">
+                    ${typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
+                  </div>
+
+                  {/* Login Prompt for non-authenticated users */}
+                  {!user && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="text-center text-white p-4">
+                        <div className="text-lg font-semibold mb-2">Login to View Details</div>
+                        <div className="text-sm mb-4">Sign in to browse our complete product catalog</div>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push('/login');
+                            }}
+                            size="sm"
+                            className="bg-primary text-white hover:bg-primary/90"
+                          >
+                            Login
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push('/register');
+                            }}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Register
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* CTA Section */}

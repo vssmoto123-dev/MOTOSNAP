@@ -176,58 +176,6 @@ function DashboardContent() {
                   </div>
                 )}
 
-                {/* Quick Stats */}
-                <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg">
-                  <h3 className="text-lg font-semibold text-text mb-4">Quick Stats</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Active Services</span>
-                      <span className="text-xl font-bold text-text">12</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Pending Orders</span>
-                      <span className="text-xl font-bold text-text">4</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Low Stock Items</span>
-                      <span className="text-xl font-bold text-warning">3</span>
-                    </div>
-                    {user?.role === 'ADMIN' && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-text-muted">Parts Requests</span>
-                        <span className="text-xl font-bold text-orange-600">New</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg">
-                  <h3 className="text-lg font-semibold text-text mb-4">Recent Activity</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-success rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm text-text">Service completed</p>
-                        <p className="text-xs text-text-muted">2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm text-text">New booking received</p>
-                        <p className="text-xs text-text-muted">4 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-warning rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm text-text">Low stock alert</p>
-                        <p className="text-xs text-text-muted">6 hours ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </main>
@@ -433,30 +381,7 @@ function DashboardContent() {
                   </div>
                 )}
 
-                {/* Quick Stats */}
-                <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg">
-                  <h3 className="text-lg font-semibold text-text mb-4">Quick Stats</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Active Services</span>
-                      <span className="text-xl font-bold text-text">12</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Pending Orders</span>
-                      <span className="text-xl font-bold text-text">4</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-text-muted">Low Stock Items</span>
-                      <span className="text-xl font-bold text-warning">3</span>
-                    </div>
-                    {user?.role === 'ADMIN' && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-text-muted">Parts Requests</span>
-                        <span className="text-xl font-bold text-orange-600">New</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                
 
                 {/* Recent Activity */}
                 <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg">

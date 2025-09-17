@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,8 +23,19 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const router = useRouter();
+
+  // Handle role-based redirect after successful registration
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'CUSTOMER') {
+        router.push('/dashboard/parts');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [user, router]);
 
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -83,7 +94,7 @@ export default function RegisterPage() {
 
     try {
       await register(formData);
-      router.push('/dashboard');
+      // Redirect is handled by useEffect based on user role
     } catch (error: unknown) {
       const errorMessage = (error && typeof error === 'object' && 'error' in error) 
         ? (error as { error: string }).error 

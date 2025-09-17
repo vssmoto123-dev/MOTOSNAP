@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -340,27 +341,26 @@ public class Inventory {
     }
     
     // Build variation key from selected variations map
-    public static String buildVariationKey(Map<String, String> selectedVariations) {
+    public static String buildVariationKey(Map<String, Object> selectedVariations) {
         if (selectedVariations == null || selectedVariations.isEmpty()) {
             return "";
         }
-        
+
         // Sort by key to ensure consistent ordering
         return selectedVariations.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
-            .map(entry -> entry.getKey() + ":" + entry.getValue())
-            .reduce((a, b) -> a + "," + b)
-            .orElse("");
+            .map(entry -> entry.getKey() + ":" + entry.getValue().toString())
+            .collect(Collectors.joining(","));
     }
     
     // Parse variation key back to map
-    public static Map<String, String> parseVariationKey(String variationKey) {
-        Map<String, String> result = new HashMap<>();
-        
+    public static Map<String, Object> parseVariationKey(String variationKey) {
+        Map<String, Object> result = new HashMap<>();
+
         if (variationKey == null || variationKey.trim().isEmpty()) {
             return result;
         }
-        
+
         String[] pairs = variationKey.split(",");
         for (String pair : pairs) {
             String[] keyValue = pair.split(":", 2);
@@ -368,7 +368,26 @@ public class Inventory {
                 result.put(keyValue[0], keyValue[1]);
             }
         }
-        
+
+        return result;
+    }
+
+    // Legacy method for backward compatibility
+    public static String buildVariationKeyLegacy(Map<String, String> selectedVariations) {
+        Map<String, Object> converted = new HashMap<>();
+        if (selectedVariations != null) {
+            converted.putAll(selectedVariations);
+        }
+        return buildVariationKey(converted);
+    }
+
+    // Legacy method for backward compatibility
+    public static Map<String, String> parseVariationKeyLegacy(String variationKey) {
+        Map<String, Object> parsed = parseVariationKey(variationKey);
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : parsed.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().toString());
+        }
         return result;
     }
     

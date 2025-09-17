@@ -361,7 +361,7 @@ public class InventoryController {
             @PathVariable Long id,
             @RequestBody Map<String, String> selectedVariations) {
         try {
-            boolean isValid = inventoryService.validateVariationSelection(id, selectedVariations);
+            boolean isValid = inventoryService.validateVariationSelectionLegacy(id, selectedVariations);
             
             return ResponseEntity.ok(Map.of(
                 "valid", isValid,
@@ -396,8 +396,44 @@ public class InventoryController {
                     .body(Map.of("error", "selectedVariations and quantity are required"));
             }
             
-            boolean available = inventoryService.checkVariationStockAvailability(id, selectedVariations, quantity);
+            boolean available = inventoryService.checkVariationStockAvailabilityLegacy(id, selectedVariations, quantity);
             
+            return ResponseEntity.ok(Map.of(
+                "available", available,
+                "message", available ? "Stock is available" : "Insufficient stock for this variation"
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to check variation stock"));
+        }
+    }
+
+    /**
+     * Check stock availability for specific variation (Public - for customers)
+     */
+    @PostMapping("/{id}/check-variation-stock-public")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> checkVariationStockPublic(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, String> selectedVariations = (Map<String, String>) request.get("selectedVariations");
+            Integer quantity = (Integer) request.get("quantity");
+
+            if (selectedVariations == null || quantity == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "selectedVariations and quantity are required"));
+            }
+
+            boolean available = inventoryService.checkVariationStockAvailabilityLegacy(id, selectedVariations, quantity);
+
             return ResponseEntity.ok(Map.of(
                 "available", available,
                 "message", available ? "Stock is available" : "Insufficient stock for this variation"

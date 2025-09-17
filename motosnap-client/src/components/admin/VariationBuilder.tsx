@@ -213,7 +213,6 @@ export function VariationBuilder({
                     >
                       <option value="dropdown">Dropdown</option>
                       <option value="radio">Radio Buttons</option>
-                      <option value="checkbox">Checkboxes</option>
                     </select>
                   </div>
 

@@ -15,11 +15,14 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.AbstractMap;
+import java.util.stream.Collectors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -452,76 +455,108 @@ public class InventoryService {
     }
     
     // Validate variation selection against inventory
-    public boolean validateVariationSelection(Long inventoryId, Map<String, String> selectedVariations) {
+    public boolean validateVariationSelection(Long inventoryId, Map<String, Object> selectedVariations) {
         Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
             .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
-        
+
         if (!inventory.hasVariations()) {
             return selectedVariations == null || selectedVariations.isEmpty();
         }
-        
+
         if (selectedVariations == null || selectedVariations.isEmpty()) {
             return false; // Varied products must have variations selected
         }
-        
+
         Map<String, Object> variationDefs = inventory.getVariationDefinitions();
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> options = (List<Map<String, Object>>) variationDefs.get("options");
-        
+
         if (options == null) {
             return false;
         }
-        
+
         // Check each selected variation against definitions
         for (Map<String, Object> option : options) {
             String optionId = (String) option.get("id");
             Boolean required = (Boolean) option.get("required");
             @SuppressWarnings("unchecked")
             List<String> validValues = (List<String>) option.get("values");
-            
-            String selectedValue = selectedVariations.get(optionId);
-            
+            String variationType = (String) option.get("type");
+
+            Object selectedValueObj = selectedVariations.get(optionId);
+
             // Check required variations
-            if (required != null && required && selectedValue == null) {
+            if (required != null && required && selectedValueObj == null) {
                 return false;
             }
-            
+
             // Check valid values
-            if (selectedValue != null && validValues != null && !validValues.contains(selectedValue)) {
-                return false;
+            if (selectedValueObj != null && validValues != null) {
+                // For dropdown and radio, selectedValueObj should be a String
+                String selectedValue = selectedValueObj.toString();
+                if (!validValues.contains(selectedValue)) {
+                    return false;
+                }
             }
         }
-        
+
         return true;
+    }
+
+    // Legacy method for backward compatibility
+    public boolean validateVariationSelectionLegacy(Long inventoryId, Map<String, String> selectedVariations) {
+        Map<String, Object> converted = new HashMap<>();
+        if (selectedVariations != null) {
+            converted.putAll(selectedVariations);
+        }
+        return validateVariationSelection(inventoryId, converted);
     }
     
     // Check stock availability for specific variation
-    public boolean checkVariationStockAvailability(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+    public boolean checkVariationStockAvailability(Long inventoryId, Map<String, Object> selectedVariations, Integer quantity) {
         Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
             .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
-        
+
         if (!inventory.hasVariations()) {
             return inventory.getQty() >= quantity;
         }
-        
+
         String variationKey = Inventory.buildVariationKey(selectedVariations);
         Integer availableStock = inventory.getAvailableStockForVariation(variationKey);
-        
+
         return availableStock >= quantity;
     }
-    
+
     // Deduct stock for specific variation (used during order processing)
-    public void deductVariationStock(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+    public void deductVariationStock(Long inventoryId, Map<String, Object> selectedVariations, Integer quantity) {
         Inventory inventory = inventoryRepository.findByIdAndNotDeleted(inventoryId)
             .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryId));
-        
+
         if (!inventory.hasVariations()) {
             inventory.deductStock(quantity);
         } else {
             String variationKey = Inventory.buildVariationKey(selectedVariations);
             inventory.deductVariationStock(variationKey, quantity);
         }
-        
+
         inventoryRepository.save(inventory);
+    }
+
+    // Legacy method for backward compatibility
+    public boolean checkVariationStockAvailabilityLegacy(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+        Map<String, Object> converted = new HashMap<>();
+        if (selectedVariations != null) {
+            converted.putAll(selectedVariations);
+        }
+        return checkVariationStockAvailability(inventoryId, converted, quantity);
+    }
+
+    // Legacy method for backward compatibility
+    public void deductVariationStockLegacy(Long inventoryId, Map<String, String> selectedVariations, Integer quantity) {
+        Map<String, Object> converted = new HashMap<>();
+        if (selectedVariations != null) {
+            converted.putAll(selectedVariations);
+        }
+        deductVariationStock(inventoryId, converted, quantity);
     }
 }

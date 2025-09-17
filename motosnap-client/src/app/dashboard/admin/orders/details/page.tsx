@@ -315,11 +315,11 @@ export default function AdminOrderDetailsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Created:</span>
-                <span className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
+                <span className="text-sm text-black">{new Date(order.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Updated:</span>
-                <span className="text-sm">{new Date(order.updatedAt).toLocaleDateString()}</span>
+                <span className="text-sm text-black">{new Date(order.updatedAt).toLocaleDateString()}</span>
               </div>
             </div>
 

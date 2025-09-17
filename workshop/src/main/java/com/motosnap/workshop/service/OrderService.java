@@ -68,9 +68,9 @@ public class OrderService {
             
             if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
                 // Check variation-specific stock
-                if (!inventoryService.checkVariationStockAvailability(
-                    inventory.getId(), 
-                    cartItem.getSelectedVariationsMap(), 
+                if (!inventoryService.checkVariationStockAvailabilityLegacy(
+                    inventory.getId(),
+                    cartItem.getSelectedVariationsMap(),
                     cartItem.getQuantity()
                 )) {
                     throw new RuntimeException("Insufficient stock for item: " + inventory.getPartName() + 
@@ -111,9 +111,9 @@ public class OrderService {
             // Deduct from inventory using variation-aware deduction
             Inventory inventory = cartItem.getInventory();
             if (inventory.hasVariations() && cartItem.hasVariationSelection()) {
-                inventoryService.deductVariationStock(
-                    inventory.getId(), 
-                    cartItem.getSelectedVariationsMap(), 
+                inventoryService.deductVariationStockLegacy(
+                    inventory.getId(),
+                    cartItem.getSelectedVariationsMap(),
                     cartItem.getQuantity()
                 );
             } else {

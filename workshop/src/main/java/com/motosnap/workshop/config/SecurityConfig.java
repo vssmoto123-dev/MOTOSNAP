@@ -43,8 +43,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register", "/api/auth/login", 
                                 "/api/auth/refresh").permitAll()
                 
+                // Public inventory endpoints (for customers)
+                .requestMatchers("/api/inventory/*/check-variation-stock-public").authenticated()
+
                 // Admin only endpoints
-                .requestMatchers("/api/admin/**", "/api/users/**", 
+                .requestMatchers("/api/admin/**", "/api/users/**",
                                 "/api/inventory/**", "/api/services/**").hasRole("ADMIN")
                 
                 // Booking management endpoints (Admin and Mechanic)

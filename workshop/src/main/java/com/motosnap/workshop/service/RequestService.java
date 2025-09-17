@@ -57,7 +57,7 @@ public class RequestService {
             }
             
             // Check variation-specific stock availability
-            String variationKey = Inventory.buildVariationKey(dto.getSelectedVariations());
+            String variationKey = Inventory.buildVariationKeyLegacy(dto.getSelectedVariations());
             Integer availableStock = part.getAvailableStockForVariation(variationKey);
             if (availableStock < dto.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for selected variation. Available: " + availableStock + ", Requested: " + dto.getQuantity());
