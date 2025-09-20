@@ -86,7 +86,7 @@ public class SecurityConfig {
 
                 // Public endpoints
                 .requestMatchers("/api/auth/register", "/api/auth/login",
-                                "/api/auth/refresh").permitAll()
+                                "/api/auth/refresh", "/api/auth/cors-debug").permitAll()
                 
                 // Public inventory endpoints (for customers)
                 .requestMatchers("/api/inventory/*/check-variation-stock-public").authenticated()

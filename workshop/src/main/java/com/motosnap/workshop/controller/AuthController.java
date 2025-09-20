@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -152,6 +153,29 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("{\"error\":\"Invalid email or password\"}");
         }
+    }
+
+    @GetMapping("/cors-debug")
+    public ResponseEntity<?> corsDebug(HttpServletRequest request) {
+        // Return all request headers to debug CORS
+        StringBuilder headers = new StringBuilder();
+        request.getHeaderNames().asIterator()
+            .forEachRemaining(name ->
+                headers.append(name).append(": ").append(request.getHeader(name)).append("\n")
+            );
+
+        String debugInfo = String.format(
+            "Method: %s\nOrigin: %s\nHeaders:\n%s",
+            request.getMethod(),
+            request.getHeader("Origin"),
+            headers.toString()
+        );
+
+        return ResponseEntity.ok()
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+            .header("Access-Control-Allow-Headers", "*")
+            .body(debugInfo);
     }
 
     @PostMapping("/refresh")
