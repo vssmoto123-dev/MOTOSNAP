@@ -199,22 +199,28 @@ public class OrderController {
     public ResponseEntity<Resource> getReceiptFile(@PathVariable Long orderId, Authentication authentication) {
         try {
             System.out.println("DEBUG: Admin requesting receipt for order " + orderId + " - user: " + authentication.getName());
-            
-            // Get the receipt file path
+
+            // Get the receipt file name
             String receiptFileName = orderService.getReceiptFileName(orderId);
             if (receiptFileName == null) {
+                System.out.println("DEBUG: No receipt found for order " + orderId);
                 return ResponseEntity.notFound().build();
             }
 
-            Path filePath = Paths.get(fileUploadProperties.getUploadDir()).resolve(receiptFileName);
+            // Construct the correct file path
+            Path filePath = Paths.get(fileUploadProperties.getUploadDir()).resolve(receiptFileName).normalize();
+            System.out.println("DEBUG: Looking for receipt file at: " + filePath);
+
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
+                System.out.println("DEBUG: Receipt file found and readable");
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
                         .header("Content-Disposition", "inline; filename=\"" + receiptFileName + "\"")
                         .body(resource);
             } else {
+                System.out.println("DEBUG: Receipt file not found or not readable at: " + filePath);
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {

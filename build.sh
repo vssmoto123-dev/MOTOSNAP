@@ -1,21 +1,9 @@
 #!/bin/bash
-# Build script for Render.com deployment
+# Build script for backend-only deployment on Render.com
 
-echo "Building MOTOSNAP for production..."
+echo "Building MOTOSNAP backend..."
 
-# Build frontend
-cd motosnap-client
-echo "Installing frontend dependencies..."
-npm ci --production=false
-echo "Building frontend..."
-npm run build
-
-# Copy built frontend to backend static resources
-echo "Copying frontend build to backend..."
-rm -rf ../workshop/src/main/resources/static/*
-cp -r out/* ../workshop/src/main/resources/static/
-
-cd ../workshop
+cd workshop
 echo "Building backend..."
 chmod +x mvnw
 
@@ -27,4 +15,4 @@ fi
 # Build with explicit Java version
 ./mvnw clean package -DskipTests -Djava.version=17
 
-echo "Build completed successfully!"
+echo "Backend build completed successfully!"

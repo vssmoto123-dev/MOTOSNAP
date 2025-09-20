@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: motosnap
+    name: motosnap-backend
     runtime: docker
     plan: free
     env: production
@@ -21,4 +21,10 @@ services:
         value: "create-drop"
       - key: JAVA_OPTS
         value: "-Xmx400m -Xms200m"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://your-vercel-app.vercel.app,http://localhost:3000"
+      - key: CORS_ALLOWED_METHODS
+        value: "GET,POST,PUT,DELETE,OPTIONS"
+      - key: CORS_ALLOWED_HEADERS
+        value: "*"
     healthCheckPath: /actuator/health
