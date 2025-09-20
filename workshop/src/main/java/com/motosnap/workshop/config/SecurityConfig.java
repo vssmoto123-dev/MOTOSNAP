@@ -30,7 +30,7 @@ public class SecurityConfig {
     @Value("${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
     private String allowedMethods;
 
-    @Value("${CORS_ALLOWED_HEADERS:Authorization,Content-Type,X-Requested-With,Accept,Origin}")
+    @Value("${CORS_ALLOWED_HEADERS:Authorization,Content-Type,X-Requested-With,Accept,Origin,Cache-Control,Pragma,Expires,If-Modified-Since,User-Agent}")
     private String allowedHeaders;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
@@ -58,7 +58,11 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
 
         // Parse allowed headers from environment variable
-        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+        if ("*".equals(allowedHeaders.trim())) {
+            configuration.setAllowedHeaders(Arrays.asList("*"));
+        } else {
+            configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+        }
 
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L); // Cache preflight for 1 hour
