@@ -26,5 +26,5 @@ services:
       - key: CORS_ALLOWED_METHODS
         value: "GET,POST,PUT,DELETE,OPTIONS"
       - key: CORS_ALLOWED_HEADERS
-        value: "*"
+        value: "Authorization,Content-Type,X-Requested-With,Accept,Origin,Cache-Control,Pragma,Expires,If-Modified-Since,User-Agent"
     healthCheckPath: /actuator/health
