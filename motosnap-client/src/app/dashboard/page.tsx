@@ -41,9 +41,7 @@ function DashboardContent() {
         return [
           'Manage Inventory',
           'User Management',
-          'Service Configuration',
-          'Reports & Analytics',
-          'System Settings'
+          'Service Configuration'
         ];
       case 'MECHANIC':
         return [

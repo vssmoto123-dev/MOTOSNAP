@@ -11,11 +11,13 @@ export default function Header() {
   const { user } = useAuth();
 
   // Don't show header on authentication pages, admin dashboards, or for mechanics
-  const hideHeader = pathname === '/login' ||
-                    pathname === '/register' ||
+  const hideHeader = pathname.startsWith('/login') ||
+                    pathname.startsWith('/register') ||
+                    pathname.startsWith('/staff/register') ||
                     pathname.startsWith('/dashboard/admin') ||
                     pathname.startsWith('/dashboard/mechanic') ||
                     (user && user.role === 'MECHANIC') ||
+                    (user && user.role === 'ADMIN' && pathname === '/dashboard/') ||
                     (!user && pathname.startsWith('/dashboard'));
 
   // Debug logging (remove in production)
@@ -25,11 +27,13 @@ export default function Header() {
     isAuthenticated: !!user,
     hideHeader,
     reasons: [
-      pathname === '/login' && 'login page',
-      pathname === '/register' && 'register page',
+      pathname.startsWith('/login') && 'login page',
+      pathname.startsWith('/register') && 'register page',
+      pathname.startsWith('/staff/register') && 'staff registration page',
       pathname.startsWith('/dashboard/admin') && 'admin route',
       pathname.startsWith('/dashboard/mechanic') && 'mechanic route',
       user?.role === 'MECHANIC' && 'mechanic role',
+      user?.role === 'ADMIN' && pathname === '/dashboard/' && 'admin on main dashboard',
       !user && pathname.startsWith('/dashboard') && 'unauthenticated dashboard'
     ].filter(Boolean)
   });

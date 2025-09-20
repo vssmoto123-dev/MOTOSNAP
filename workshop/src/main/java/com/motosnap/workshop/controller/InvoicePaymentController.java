@@ -224,26 +224,33 @@ public class InvoicePaymentController {
     public ResponseEntity<Resource> getInvoiceReceiptFile(@PathVariable Long paymentId) {
         try {
             System.out.println("DEBUG: Getting receipt file for payment ID: " + paymentId);
-            
+
             InvoicePayment payment = invoicePaymentService.getPaymentById(paymentId);
-            
+
             if (payment.getReceipt() == null || payment.getReceipt().getFileUrl() == null) {
+                System.out.println("DEBUG: No receipt found for payment ID: " + paymentId);
                 return ResponseEntity.notFound().build();
             }
 
             String filename = payment.getReceipt().getFileUrl();
             Path filePath = Paths.get(fileUploadProperties.getUploadDir()).resolve(filename).normalize();
+            System.out.println("DEBUG: Looking for invoice receipt file at: " + filePath);
+
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists()) {
+            if (resource.exists() && resource.isReadable()) {
+                System.out.println("DEBUG: Invoice receipt file found and readable");
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .header("Content-Disposition", "inline; filename=\"" + filename + "\"")
                         .body(resource);
             } else {
+                System.out.println("DEBUG: Invoice receipt file not found or not readable at: " + filePath);
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
             System.err.println("ERROR: Failed to get receipt file - " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

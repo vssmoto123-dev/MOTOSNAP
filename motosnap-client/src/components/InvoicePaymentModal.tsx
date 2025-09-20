@@ -43,11 +43,8 @@ export default function InvoicePaymentModal({
       const status = await apiClient.getInvoicePaymentStatus(invoice.id);
       console.log('DEBUG: Payment status:', status);
       setPaymentStatus(status);
-      
-      if (status.status === 'NO_PAYMENT_INITIATED') {
-        // Auto-initiate payment
-        await initiatePayment();
-      }
+
+      // Don't auto-initiate payment - let the user do it manually
     } catch (err: any) {
       console.error('Failed to check payment status:', err);
       setError(err.message || 'Failed to check payment status');
@@ -233,6 +230,16 @@ export default function InvoicePaymentModal({
 
               {/* Payment Actions */}
               <div className="flex justify-end space-x-3 mb-6">
+                {!paymentStatus || paymentStatus.status === 'NO_PAYMENT_INITIATED' ? (
+                  <Button
+                    onClick={initiatePayment}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {loading ? 'Processing...' : 'Pay Invoice'}
+                  </Button>
+                ) : null}
+
                 {canUploadReceipt() && !showReceiptUpload && (
                   <Button
                     onClick={() => setShowReceiptUpload(true)}
@@ -241,7 +248,7 @@ export default function InvoicePaymentModal({
                     Upload Payment Receipt
                   </Button>
                 )}
-                
+
                 <Button onClick={onClose} variant="secondary">
                   Close
                 </Button>

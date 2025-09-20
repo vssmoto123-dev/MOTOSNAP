@@ -53,7 +53,24 @@ public class InvoicePaymentService {
 
         // Create new invoice payment
         InvoicePayment invoicePayment = new InvoicePayment(invoice);
-        return invoicePaymentRepository.save(invoicePayment);
+
+        try {
+            return invoicePaymentRepository.save(invoicePayment);
+        } catch (DataIntegrityViolationException e) {
+            System.out.println("DEBUG: Constraint violation while creating payment for invoice " + invoiceId +
+                             ", checking if payment was created by another request...");
+
+            // If constraint violation occurs, check if payment was created by another request
+            Optional<InvoicePayment> retryPayment = invoicePaymentRepository.findByInvoice(invoice);
+            if (retryPayment.isPresent()) {
+                System.out.println("DEBUG: Found existing payment after constraint violation: " + retryPayment.get().getId());
+                return retryPayment.get();
+            }
+
+            // If still no payment found, rethrow the exception
+            System.err.println("ERROR: Constraint violation occurred and no existing payment found for invoice " + invoiceId);
+            throw new RuntimeException("Failed to create payment record. Please try again.");
+        }
     }
 
     public void uploadReceipt(Long invoiceId, MultipartFile file, BigDecimal amount, String notes, User user) {
