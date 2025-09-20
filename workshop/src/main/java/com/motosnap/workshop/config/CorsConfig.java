@@ -17,7 +17,7 @@ public class CorsConfig {
     @Value("${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
     private String allowedMethods;
 
-    @Value("${CORS_ALLOWED_HEADERS:Authorization,Content-Type,X-Requested-With}")
+    @Value("${CORS_ALLOWED_HEADERS:Authorization,Content-Type,X-Requested-With,Accept,Origin}")
     private String allowedHeaders;
 
     @Bean
