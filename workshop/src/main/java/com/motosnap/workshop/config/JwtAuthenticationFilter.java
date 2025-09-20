@@ -26,11 +26,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
-        
-        // Bypass JWT validation for the refresh token endpoint
-        if (request.getRequestURI().equals("/api/auth/refresh")) {
+
+        // Bypass JWT validation for OPTIONS requests (CORS preflight) and refresh token endpoint
+        if ("OPTIONS".equals(request.getMethod()) || request.getRequestURI().equals("/api/auth/refresh")) {
             filterChain.doFilter(request, response);
             return;
         }
