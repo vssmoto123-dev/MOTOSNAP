@@ -311,9 +311,9 @@ export default function AdminOrdersPage() {
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Reject Order #{showRejectModal}</h3>
+            <h3 className="text-lg font-semibold mb-4 text-black">Reject Order #{showRejectModal}</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Reason for rejection (optional):</label>
+              <label className="block text-sm font-medium mb-2 text-black">Reason for rejection (optional):</label>
               <textarea
                 rows={3}
                 value={rejectReason}

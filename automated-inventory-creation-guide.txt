@@ -1,0 +1,377 @@
+# Automated Bulk Inventory Creation with Images
+=================================================
+
+This guide shows how to automate creation of 10 inventory items with images in Postman.
+
+## Approach 1: Pre-upload Images (Recommended)
+===========================================
+
+### Step 1: Prepare Test Images
+---------------------------
+1. Create 10 test images with these names:
+   - test-product-1.jpg
+   - test-product-2.jpg
+   - ...
+   - test-product-10.jpg
+
+2. Place them in a known folder on your computer
+
+### Step 2: Upload All Images First
+-------------------------------
+
+### Collection Setup:
+1. Create collection: "Bulk Inventory Creation"
+2. Add requests in this order:
+   - Login
+   - Upload Image 1
+   - Upload Image 2
+   - ...
+   - Upload Image 10
+   - Create Inventory 1
+   - Create Inventory 2
+   - ...
+   - Create Inventory 10
+
+### Image Upload Requests (Create 10 of these):
+==============================================
+
+### Request 2: Upload Image 1
+- **Method**: POST
+- **URL**: {{base_url}}/inventory/upload-image
+- **Headers**: Authorization: Bearer {{access_token}}
+- **Body**: form-data
+  - Key: `file`
+  - Type: File
+  - Value: test-product-1.jpg
+
+### Tests Tab:
+```javascript
+pm.test("Image 1 uploaded successfully", function () {
+    pm.response.to.have.status(200);
+    const jsonData = pm.response.json();
+    pm.environment.set("image_url_1", jsonData.imageUrl);
+    console.log("✅ Image 1 URL:", jsonData.imageUrl);
+});
+```
+
+### Request 3: Upload Image 2
+- **Method**: POST
+- **URL**: {{base_url}}/inventory/upload-image
+- **Headers**: Authorization: Bearer {{access_token}}
+- **Body**: form-data
+  - Key: `file`
+  - Type: File
+  - Value: test-product-2.jpg
+
+### Tests Tab:
+```javascript
+pm.test("Image 2 uploaded successfully", function () {
+    pm.response.to.have.status(200);
+    const jsonData = pm.response.json();
+    pm.environment.set("image_url_2", jsonData.imageUrl);
+    console.log("✅ Image 2 URL:", jsonData.imageUrl);
+});
+```
+
+*Repeat for images 3-10*
+
+### Step 3: Create Inventory Items
+--------------------------------
+
+### Request 12: Create Inventory Item 1
+=====================================
+- **Method**: POST
+- **URL**: {{base_url}}/inventory
+- **Headers**:
+  - Content-Type: application/json
+  - Authorization: Bearer {{access_token}}
+
+### Body:
+```json
+{
+  "partName": "Premium Motorcycle Jacket {{$timestamp}}",
+  "partCode": "JACKET-{{$randomInt 1000, 9999}}",
+  "description": "High-quality leather motorcycle jacket with armor protection",
+  "qty": 25,
+  "unitPrice": 299.99,
+  "minStockLevel": 5,
+  "category": "Protective Gear",
+  "brand": "RideGear Pro",
+  "imageUrl": "{{image_url_1}}",
+  "variations": [
+    {
+      "id": "var_size",
+      "name": "Size",
+      "type": "dropdown",
+      "values": ["S", "M", "L", "XL", "XXL"],
+      "required": true
+    },
+    {
+      "id": "var_color",
+      "name": "Color",
+      "type": "dropdown",
+      "values": ["Black", "Brown", "Red"],
+      "required": true
+    }
+  ],
+  "variationStock": {
+    "var_color:Black,var_size:S": 3,
+    "var_color:Black,var_size:M": 5,
+    "var_color:Black,var_size:L": 4,
+    "var_color:Black,var_size:XL": 3,
+    "var_color:Black,var_size:XXL": 2,
+    "var_color:Brown,var_size:S": 2,
+    "var_color:Brown,var_size:M": 4,
+    "var_color:Brown,var_size:L": 3,
+    "var_color:Brown,var_size:XL": 2,
+    "var_color:Brown,var_size:XXL": 1,
+    "var_color:Red,var_size:S": 2,
+    "var_color:Red,var_size:M": 3,
+    "var_color:Red,var_size:L": 2,
+    "var_color:Red,var_size:XL": 1,
+    "var_color:Red,var_size:XXL": 1
+  }
+}
+```
+
+### Tests Tab:
+```javascript
+pm.test("Inventory item 1 created successfully", function () {
+    pm.response.to.have.status(200);
+    const jsonData = pm.response.json();
+    pm.environment.set("inventory_id_1", jsonData.id);
+    console.log("✅ Inventory item 1 ID:", jsonData.id);
+});
+```
+
+### Request 13: Create Inventory Item 2
+=====================================
+- **Method**: POST
+- **URL**: {{base_url}}/inventory
+- **Headers**:
+  - Content-Type: application/json
+  - Authorization: Bearer {{access_token}}
+
+### Body:
+```json
+{
+  "partName": "Racing Helmet {{$timestamp}}",
+  "partCode": "HELMET-{{$randomInt 1000, 9999}}",
+  "description": "Professional racing helmet with advanced safety features",
+  "qty": 15,
+  "unitPrice": 449.99,
+  "minStockLevel": 3,
+  "category": "Helmets",
+  "brand": "SpeedPro",
+  "imageUrl": "{{image_url_2}}",
+  "variations": [
+    {
+      "id": "var_size",
+      "name": "Size",
+      "type": "dropdown",
+      "values": ["S", "M", "L", "XL"],
+      "required": true
+    },
+    {
+      "id": "var_color",
+      "name": "Color",
+      "type": "dropdown",
+      "values": ["Black", "White", "Red", "Blue"],
+      "required": true
+    }
+  ],
+  "variationStock": {
+    "var_color:Black,var_size:S": 1,
+    "var_color:Black,var_size:M": 2,
+    "var_color:Black,var_size:L": 2,
+    "var_color:Black,var_size:XL": 1,
+    "var_color:White,var_size:S": 1,
+    "var_color:White,var_size:M": 2,
+    "var_color:White,var_size:L": 1,
+    "var_color:White,var_size:XL": 1,
+    "var_color:Red,var_size:S": 1,
+    "var_color:Red,var_size:M": 1,
+    "var_color:Red,var_size:L": 1,
+    "var_color:Red,var_size:XL": 0,
+    "var_color:Blue,var_size:S": 1,
+    "var_color:Blue,var_size:M": 1,
+    "var_color:Blue,var_size:L": 0,
+    "var_color:Blue,var_size:XL": 0
+  }
+}
+```
+
+### Tests Tab:
+```javascript
+pm.test("Inventory item 2 created successfully", function () {
+    pm.response.to.have.status(200);
+    const jsonData = pm.response.json();
+    pm.environment.set("inventory_id_2", jsonData.id);
+    console.log("✅ Inventory item 2 ID:", jsonData.id);
+});
+```
+
+*Continue with items 3-10, each using different image URLs*
+
+## Approach 2: Use Existing Images (Alternative)
+==============================================
+
+If your backend already has images stored, you can reference them directly:
+
+### Request Body Example:
+```json
+{
+  "partName": "Test Product",
+  "imageUrl": "/images/motorcycle-helmet.jpg",
+  // ... other fields
+}
+```
+
+## Approach 3: Automated Image Upload with Postman Scripts (Advanced)
+=====================================================================
+
+### Pre-request Script for Dynamic Image Selection:
+```javascript
+// Select image based on request iteration
+const requestNumber = pm.info.iteration || 1;
+const imageNumber = (requestNumber - 1) % 10 + 1; // Cycle through 1-10
+
+// Set image file path (this would need to be configured in Postman settings)
+pm.environment.set("current_image_file", `test-product-${imageNumber}.jpg`);
+pm.environment.set("current_image_url", `/images/test-product-${imageNumber}.jpg`);
+```
+
+### Collection Runner Setup:
+1. Set iterations to 10
+2. Use the pre-request script to cycle through images
+3. Each iteration uses a different image
+
+## Environment Variables Setup
+==========================
+
+Create these environment variables:
+```
+base_url = http://localhost:8080/api
+access_token =
+image_url_1 =
+image_url_2 =
+image_url_3 =
+image_url_4 =
+image_url_5 =
+image_url_6 =
+image_url_7 =
+image_url_8 =
+image_url_9 =
+image_url_10 =
+inventory_id_1 =
+inventory_id_2 =
+inventory_id_3 =
+inventory_id_4 =
+inventory_id_5 =
+inventory_id_6 =
+inventory_id_7 =
+inventory_id_8 =
+inventory_id_9 =
+inventory_id_10 =
+```
+
+## Collection Structure
+===================
+
+1. **Login Request** - Get authentication token
+2. **Upload Image 1** - Upload first test image
+3. **Upload Image 2** - Upload second test image
+4. ...
+5. **Upload Image 10** - Upload tenth test image
+6. **Create Inventory 1** - Create first product with image 1
+7. **Create Inventory 2** - Create second product with image 2
+8. ...
+9. **Create Inventory 10** - Create tenth product with image 10
+
+## Running the Automation
+======================
+
+1. **Prepare Images**: Have 10 test images ready
+2. **Setup Environment**: Configure all environment variables
+3. **Create Collection**: Add all 21 requests (login + 10 uploads + 10 creates)
+4. **Run Collection**: Use Collection Runner with:
+   - Iterations: 1
+   - Delay: 500ms between requests
+5. **Verify Results**: Check all items created successfully
+
+## Sample Product Templates
+==========================
+
+### Product 3: Motorcycle Gloves
+```json
+{
+  "partName": "Racing Gloves {{$timestamp}}",
+  "partCode": "GLOVES-{{$randomInt 1000, 9999}}",
+  "description": "Professional racing gloves with knuckle protection",
+  "qty": 30,
+  "unitPrice": 89.99,
+  "minStockLevel": 5,
+  "category": "Hand Protection",
+  "brand": "RaceGear",
+  "imageUrl": "{{image_url_3}}",
+  "variations": [
+    {
+      "id": "var_size",
+      "name": "Size",
+      "type": "dropdown",
+      "values": ["S", "M", "L", "XL"],
+      "required": true
+    },
+    {
+      "id": "var_color",
+      "name": "Color",
+      "type": "dropdown",
+      "values": ["Black", "White", "Red"],
+      "required": true
+    }
+  ]
+}
+```
+
+### Product 4: Motorcycle Boots
+```json
+{
+  "partName": "Touring Boots {{$timestamp}}",
+  "partCode": "BOOTS-{{$randomInt 1000, 9999}}",
+  "description": "Comfortable touring boots with ankle protection",
+  "qty": 20,
+  "unitPrice": 199.99,
+  "minStockLevel": 3,
+  "category": "Footwear",
+  "brand": "TourPro",
+  "imageUrl": "{{image_url_4}}",
+  "variations": [
+    {
+      "id": "var_size",
+      "name": "Size",
+      "type": "dropdown",
+      "values": ["8", "9", "10", "11", "12"],
+      "required": true
+    },
+    {
+      "id": "var_color",
+      "name": "Color",
+      "type": "dropdown",
+      "values": ["Black", "Brown"],
+      "required": true
+    }
+  ]
+}
+```
+
+## Summary
+==========
+
+This approach allows you to:
+1. ✅ Upload 10 images automatically
+2. ✅ Create 10 inventory items with variations
+3. ✅ Assign specific images to each product
+4. ✅ Track all created items with environment variables
+5. ✅ Run entire workflow with one click
+
+The key is to upload images first, store their URLs in environment variables, then reference those URLs when creating inventory items.

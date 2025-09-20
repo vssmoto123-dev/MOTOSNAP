@@ -1,0 +1,426 @@
+# MOTOSNAP API Testing Guide for Postman
+==============================================
+
+This guide explains how to automate API testing for the MOTOSNAP motorcycle parts inventory system using Postman.
+
+## Table of Contents
+------------------
+1. Environment Setup
+2. Authentication Flow
+3. Inventory Management Tests
+4. Collection Runner
+5. Advanced Automation
+
+## 1. Environment Setup
+-----------------------
+
+### Create Postman Environment:
+1. Open Postman → Click "Environments" → "+"
+2. Set environment name: "MOTOSNAP Testing"
+3. Add these variables:
+
+```
+base_url = http://localhost:8080/api
+access_token = [leave empty]
+refresh_token = [leave empty]
+created_item_id = [leave empty]
+admin_email = admin@email.com
+admin_password = [leave empty]
+```
+
+### Required Environment Variables:
+- `base_url`: Your API base URL (change for production)
+- `access_token`: JWT token (auto-populated)
+- `refresh_token`: Refresh token (auto-populated)
+- `created_item_id`: ID of created items (auto-populated)
+- `admin_email`: Admin email for login
+- `admin_password`: Admin password for login
+
+## 2. Authentication Flow
+-----------------------
+
+### Request 1: Admin Login
+=======================
+- **Method**: POST
+- **URL**: {{base_url}}/auth/login
+- **Headers**: Content-Type: application/json
+- **Body** (raw JSON):
+```json
+{
+    "email": "{{admin_email}}",
+    "password": "{{admin_password}}"
+}
+```
+
+### Tests Tab (Login Request):
+```javascript
+// Test successful login
+pm.test("Login successful", function () {
+    pm.response.to.have.status(200);
+    pm.expect(pm.response.json()).to.have.property('accessToken');
+});
+
+// Save tokens to environment variables
+const jsonData = pm.response.json();
+if (jsonData.accessToken) {
+    pm.environment.set("access_token", jsonData.accessToken);
+    pm.environment.set("refresh_token", jsonData.refreshToken);
+    console.log("✅ Access token saved to environment");
+} else {
+    console.log("❌ No access token in response");
+}
+
+// Log response for debugging
+console.log("Login Response:", JSON.stringify(jsonData, null, 2));
+```
+
+### Pre-request Script (Token Refresh Handler):
+```javascript
+// Check if token exists and is not expired
+const token = pm.environment.get("access_token");
+if (!token) {
+    console.log("❌ No access token found. Please run login request first.");
+}
+
+// Set Authorization header
+if (token) {
+    pm.request.headers.add({
+        key: 'Authorization',
+        value: `Bearer ${token}`
+    });
+}
+```
+
+## 3. Inventory Management Tests
+-------------------------------
+
+### Request 2: Create Inventory Item
+=================================
+- **Method**: POST
+- **URL**: {{base_url}}/inventory
+- **Headers**:
+  - Content-Type: application/json
+  - Authorization: Bearer {{access_token}}
+
+### Pre-request Script:
+```javascript
+// Set Authorization header with dynamic token
+const token = pm.environment.get("access_token");
+if (token) {
+    pm.request.headers.add({
+        key: 'Authorization',
+        value: `Bearer ${token}`
+    });
+} else {
+    console.log("❌ No access token found. Please run login request first.");
+}
+```
+
+### Body (raw JSON):
+```json
+{
+    "partName": "Test Product {{$timestamp}}",
+    "partCode": "TEST-{{$randomInt}}",
+    "description": "Automated test product created via Postman",
+    "qty": {{$randomInt 1, 100}},
+    "unitPrice": {{$randomInt 10, 500}}.{{$randomInt 0, 99}},
+    "minStockLevel": 5,
+    "category": "Test Category",
+    "brand": "Test Brand"
+}
+```
+
+### Tests Tab:
+```javascript
+// Test successful creation
+pm.test("Inventory item created successfully", function () {
+    pm.response.to.have.status(200);
+
+    const jsonData = pm.response.json();
+    console.log("Response:", JSON.stringify(jsonData, null, 2));
+
+    // Validate required fields
+    pm.expect(jsonData).to.have.property('id');
+    pm.expect(jsonData).to.have.property('partName');
+    pm.expect(jsonData).to.have.property('partCode');
+    pm.expect(jsonData).to.have.property('qty');
+    pm.expect(jsonData).to.have.property('unitPrice');
+    pm.expect(jsonData).to.have.property('minStockLevel');
+
+    // Validate data types
+    pm.expect(jsonData.id).to.be.a('number');
+    pm.expect(jsonData.qty).to.be.a('number');
+    pm.expect(jsonData.unitPrice).to.be.a('number');
+
+    // Save created item ID for future tests
+    if (jsonData.id) {
+        pm.environment.set("created_item_id", jsonData.id);
+        console.log("✅ Created item ID:", jsonData.id);
+    }
+});
+
+// Test response structure
+pm.test("Response has correct structure", function () {
+    const jsonData = pm.response.json();
+
+    // Check InventoryItem structure
+    const expectedFields = [
+        'id', 'partName', 'partCode', 'description', 'qty',
+        'unitPrice', 'minStockLevel', 'category', 'brand',
+        'active', 'createdAt', 'updatedAt', 'lowStock'
+    ];
+
+    expectedFields.forEach(field => {
+        pm.expect(jsonData).to.have.property(field);
+    });
+});
+```
+
+### Request 3: Get All Inventory
+===========================
+- **Method**: GET
+- **URL**: {{base_url}}/inventory
+- **Headers**: Authorization: Bearer {{access_token}}
+
+### Tests Tab:
+```javascript
+pm.test("Get all inventory items", function () {
+    pm.response.to.have.status(200);
+
+    const jsonData = pm.response.json();
+    pm.expect(jsonData).to.be.an('array');
+
+    if (jsonData.length > 0) {
+        const firstItem = jsonData[0];
+        pm.expect(firstItem).to.have.property('id');
+        pm.expect(firstItem).to.have.property('partName');
+        console.log(`✅ Found ${jsonData.length} inventory items`);
+    } else {
+        console.log("ℹ️ No inventory items found");
+    }
+});
+```
+
+### Request 4: Update Inventory Item
+==================================
+- **Method**: PUT
+- **URL**: {{base_url}}/inventory/{{created_item_id}}
+- **Headers**:
+  - Content-Type: application/json
+  - Authorization: Bearer {{access_token}}
+
+### Body (raw JSON):
+```json
+{
+    "partName": "Updated Test Product {{$timestamp}}",
+    "partCode": "UPDATED-{{$randomInt}}",
+    "description": "Updated automated test product",
+    "qty": {{$randomInt 50, 200}},
+    "unitPrice": {{$randomInt 20, 300}}.{{$randomInt 0, 99}},
+    "minStockLevel": 10,
+    "category": "Updated Category",
+    "brand": "Updated Brand"
+}
+```
+
+### Tests Tab:
+```javascript
+pm.test("Inventory item updated successfully", function () {
+    pm.response.to.have.status(200);
+
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.partName).to.include("Updated");
+    console.log("✅ Item updated successfully");
+});
+```
+
+### Request 5: Delete Inventory Item
+==================================
+- **Method**: DELETE
+- **URL**: {{base_url}}/inventory/{{created_item_id}}
+- **Headers**: Authorization: Bearer {{access_token}}
+
+### Tests Tab:
+```javascript
+pm.test("Inventory item deleted successfully", function () {
+    pm.response.to.have.status(200);
+    console.log("✅ Item deleted successfully");
+});
+
+// Verify deletion by trying to get the item
+pm.test("Verify item deletion", function () {
+    const itemId = pm.environment.get("created_item_id");
+    if (itemId) {
+        pm.sendRequest({
+            url: `${pm.environment.get('base_url')}/inventory/${itemId}`,
+            method: 'GET',
+            header: {
+                'Authorization': `Bearer ${pm.environment.get('access_token')}`
+            }
+        }, function (err, res) {
+            if (res.code === 404) {
+                console.log("✅ Item verification: Successfully deleted (404)");
+            } else if (res.code === 200) {
+                console.log("❌ Item verification: Item still exists");
+            }
+        });
+    }
+});
+```
+
+## 4. Collection Runner
+----------------------
+
+### Create Collection:
+1. Create new collection: "MOTOSNAP API Tests"
+2. Add all 5 requests in this order:
+   - Admin Login
+   - Create Inventory Item
+   - Get All Inventory
+   - Update Inventory Item
+   - Delete Inventory Item
+
+### Run Collection:
+1. Open the collection
+2. Click "Run" button (runner icon)
+3. Select your "MOTOSNAP Testing" environment
+4. Configure options:
+   - Iterations: 1
+   - Delay: 1000ms (between requests)
+5. Click "Run MOTOSNAP API Tests"
+
+### Expected Output:
+```
+✅ Login successful
+✅ Inventory item created successfully
+✅ Get all inventory items
+✅ Inventory item updated successfully
+✅ Inventory item deleted successfully
+```
+
+## 5. Advanced Automation
+------------------------
+
+### Error Handling Tests:
+```javascript
+// Add to any test for better error reporting
+pm.test("Handle API errors", function () {
+    if (pm.response.code >= 400) {
+        const errorData = pm.response.json();
+        console.log("❌ Error Response:", JSON.stringify(errorData, null, 2));
+
+        if (pm.response.code === 401) {
+            console.log("🔄 Token expired, consider refreshing");
+        }
+
+        if (pm.response.code === 403) {
+            console.log("🚫 Forbidden: Check permissions");
+        }
+    }
+});
+```
+
+### Data Validation Tests:
+```javascript
+// Add to create/update requests
+pm.test("Data validation", function () {
+    const jsonData = pm.response.json();
+
+    // Validate numeric ranges
+    pm.expect(jsonData.qty).to.be.at.least(0);
+    pm.expect(jsonData.unitPrice).to.be.greaterThan(0);
+    pm.expect(jsonData.minStockLevel).to.be.at.least(0);
+
+    // Validate string lengths
+    pm.expect(jsonData.partName.length).to.be.at.least(2);
+    pm.expect(jsonData.partName.length).to.be.at.most(100);
+    pm.expect(jsonData.partCode.length).to.be.at.least(2);
+    pm.expect(jsonData.partCode.length).to.be.at.most(50);
+});
+```
+
+### Performance Testing:
+```javascript
+// Add to any request
+pm.test("Response time is acceptable", function () {
+    pm.expect(pm.response.responseTime).to.be.below(2000);
+});
+
+pm.test("Response size is reasonable", function () {
+    const responseSize = pm.response.responseSize;
+    console.log(`Response size: ${responseSize} bytes`);
+    pm.expect(responseSize).to.be.below(100000); // 100KB
+});
+```
+
+## 6. Troubleshooting
+-------------------
+
+### Common Issues:
+
+1. **401 Unauthorized**:
+   - Check that login request was successful
+   - Verify token is saved to environment
+   - Check token expiration (usually 1 hour)
+
+2. **403 Forbidden**:
+   - Verify user has ADMIN role
+   - Check API permissions
+
+3. **404 Not Found**:
+   - Verify {{created_item_id}} exists in environment
+   - Check API endpoint URLs
+
+4. **Validation Errors**:
+   - Check required fields are present
+   - Verify data types and formats
+   - Check string length limits
+
+5. **CORS Issues**:
+   - Ensure backend allows your Postman origin
+   - Check CORS headers in response
+
+### Debug Tips:
+- Use `console.log()` statements in tests
+- Check Postman Console (View → Show Postman Console)
+- Verify environment variables are set correctly
+- Test individual requests before running full collection
+
+## 7. Production Considerations
+-----------------------------
+
+### For Production Testing:
+1. Update `base_url` to production endpoint
+2. Use real admin credentials
+3. Remove or modify test data creation
+4. Add rate limiting between requests
+5. Use proper test environment (not production data)
+
+### Security Best Practices:
+1. Never commit credentials to version control
+2. Use Postman secrets for sensitive data
+3. Rotate test credentials regularly
+4. Clean up test data after testing
+5. Use read-only operations when possible
+
+### Test Data Management:
+1. Use unique identifiers ({{$timestamp}}, {{$randomInt}})
+2. Clean up created test data
+3. Avoid using production data for testing
+4. Use separate test database if available
+
+---
+
+## Summary
+==========
+
+This guide provides a complete automated testing workflow for the MOTOSNAP inventory API. The collection covers:
+
+1. ✅ Authentication (login)
+2. ✅ CRUD operations (Create, Read, Update, Delete)
+3. ✅ Data validation
+4. ✅ Error handling
+5. ✅ Performance monitoring
+6. ✅ Cleanup and verification
+
+Run the collection to automatically test the entire inventory management workflow!

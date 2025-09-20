@@ -6,6 +6,8 @@ import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { InventoryItem } from '@/types/admin';
 import { VariationDefinition, SelectedVariations, VariationUtils } from '@/types/variations';
 import PartsGrid from '@/components/PartsGrid';
+import Toast from '@/components/ui/Toast';
+import { Button } from '@/components/ui/Button';
 
 function ProductDetailContent() {
   const searchParams = useSearchParams();
@@ -21,6 +23,7 @@ function ProductDetailContent() {
   const [relatedProducts, setRelatedProducts] = useState<InventoryItem[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState(0);
+  const [toast, setToast] = useState({ message: '', type: 'success' as const, isVisible: false });
 
   // Helper function to parse variation data
   const parseVariationData = (item: InventoryItem): { hasVariations: boolean; variations: VariationDefinition[] } => {
@@ -243,7 +246,7 @@ function ProductDetailContent() {
       }
 
       // Success!
-      alert(`Added ${product.partName} to cart!`);
+      setToast({ message: `Added ${product.partName} to cart!`, type: 'success', isVisible: true });
 
       // Reset form for variation products
       if (hasVariations) {
@@ -273,6 +276,7 @@ function ProductDetailContent() {
 
       console.error('Failed to add to cart:', err);
       setError(errorMessage);
+      setToast({ message: errorMessage, type: 'error', isVisible: true });
     } finally {
       setAddingToCart(false);
     }
@@ -381,6 +385,13 @@ function ProductDetailContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
       {/* Header */}
       <div className="bg-surface border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -559,23 +570,19 @@ function ProductDetailContent() {
             </div>
 
             {/* Add to Cart Button */}
-            <button
+            <Button
               onClick={handleAddToCart}
               disabled={maxQuantity === 0 || addingToCart || (hasVariations && Object.keys(selectedVariations).length === 0)}
-              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                maxQuantity > 0 && !addingToCart && (!hasVariations || Object.keys(selectedVariations).length > 0)
-                  ? 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg active:scale-95'
-                  : 'bg-muted text-text-muted cursor-not-allowed'
-              }`}
+              loading={addingToCart}
+              className="w-full py-4 px-6 text-lg rounded-xl bg-primary text-white hover:bg-primary/90 hover:shadow-lg active:scale-95"
+              size="lg"
             >
-              {addingToCart
-                ? 'Adding to Cart...'
-                : maxQuantity === 0
+              {maxQuantity === 0
                 ? 'Out of Stock'
                 : hasVariations && Object.keys(selectedVariations).length === 0
                 ? 'Select Options First'
                 : 'Add to Cart'}
-            </button>
+            </Button>
 
             {/* Description */}
             {product.description && (

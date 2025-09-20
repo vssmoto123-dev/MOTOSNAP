@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import Toast from '@/components/ui/Toast';
 
 interface Service {
   id: number;
@@ -51,6 +52,7 @@ export default function ServicesPage() {
     notes: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' as const, isVisible: false });
 
   useEffect(() => {
     fetchServices();
@@ -141,14 +143,18 @@ export default function ServicesPage() {
       const response = await apiClient.createBooking(bookingData);
       
       console.log('Booking created successfully:', response);
-      
-      alert(`Booking request submitted successfully!\n\nBooking ID: ${response.id}\nService: ${selectedService?.name}\nScheduled: ${new Date(bookingForm.scheduledDateTime).toLocaleString()}\nEstimated Price: $${selectedService?.basePrice}.`);
+
+      setToast({
+        message: `Booking request submitted successfully! Booking ID: ${response.id}`,
+        type: 'success',
+        isVisible: true
+      });
       closeBookingModal();
       
     } catch (err: any) {
       console.error('Failed to submit booking:', err);
       const errorMessage = err?.error || 'Failed to submit booking. Please try again.';
-      alert(`Error: ${errorMessage}`);
+      setToast({ message: errorMessage, type: 'error', isVisible: true });
     } finally {
       setBookingLoading(false);
     }
@@ -548,6 +554,14 @@ export default function ServicesPage() {
           </div>
         )}
       </div>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   );
 }

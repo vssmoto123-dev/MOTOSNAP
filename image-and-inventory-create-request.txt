@@ -1,0 +1,437 @@
+# Complete Image + Inventory Creation Workflow
+==============================================
+
+This workflow creates inventory items with fresh image uploads using 2 requests.
+
+## Overview
+==========
+Request 1: Upload Image → Get Image URL
+Request 2: Create Inventory → Use Image URL
+
+---
+
+## Request 1: Upload Image
+========================
+
+### Basic Information
+- **Method**: POST
+- **URL**: {{base_url}}/inventory/upload-image
+- **Description**: Upload a new product image and get the URL for inventory creation
+
+### Headers
+--------
+Authorization: Bearer {{access_token}}
+[Note: Do NOT add Content-Type header for multipart uploads]
+
+### Body
+-----
+**Type**: form-data
+
+| Key  | Type | Value                | Description |
+|------|------|----------------------|-------------|
+| file | File | [Select your image] | Image file to upload |
+
+### Supported Image Formats
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- GIF (.gif)
+- WebP (.webp)
+
+### File Requirements
+- Maximum size: 2MB
+- Recommended dimensions: 800x600px or higher
+- Square images work best for product displays
+
+### Tests Tab (JavaScript)
+------------------------
+```javascript
+// Test successful upload
+pm.test("Image uploaded successfully", function () {
+    pm.response.to.have.status(200);
+
+    const jsonData = pm.response.json();
+    console.log("Upload Response:", JSON.stringify(jsonData, null, 2));
+
+    // Verify response structure
+    pm.expect(jsonData).to.have.property('imageUrl');
+    pm.expect(jsonData.imageUrl).to.be.a('string');
+    pm.expect(jsonData.imageUrl).to.match(/^\/images\/.+\.(jpg|jpeg|png|gif|webp)$/i);
+
+    // Save image URL to environment for inventory creation
+    pm.environment.set("uploaded_image_url", jsonData.imageUrl);
+    console.log("✅ Image URL saved:", jsonData.imageUrl);
+});
+
+// Test response time
+pm.test("Upload completed within acceptable time", function () {
+    pm.expect(pm.response.responseTime).to.be.below(10000); // 10 seconds
+});
+
+// Test file size validation
+pm.test("File size is acceptable", function () {
+    const responseSize = pm.response.responseSize;
+    console.log("Response size:", responseSize, "bytes");
+    pm.expect(responseSize).to.be.below(2000000); // 2MB
+});
+
+// Error handling
+if (pm.response.code >= 400) {
+    const errorData = pm.response.json();
+    console.log("❌ Upload Error:", JSON.stringify(errorData, null, 2));
+
+    pm.test("Handle upload errors gracefully", function () {
+        pm.expect(pm.response.code).to.not.be.oneOf([500, 502, 503]);
+    });
+}
+```
+
+### Expected Success Response
+--------------------------
+```json
+{
+    "imageUrl": "/images/products/unique-filename.jpg",
+    "message": "Image uploaded successfully"
+}
+```
+
+### Possible Error Responses
+-------------------------
+```json
+// 400 Bad Request - Invalid file type
+{
+    "error": "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed."
+}
+
+// 400 Bad Request - File too large
+{
+    "error": "File size exceeds maximum limit of 2MB."
+}
+
+// 401 Unauthorized - Invalid token
+{
+    "error": "Invalid or expired token"
+}
+
+// 500 Server Error - Upload failed
+{
+    "error": "Failed to upload image"
+}
+```
+
+---
+
+## Request 2: Create Inventory with Image
+=======================================
+
+### Basic Information
+- **Method**: POST
+- **URL**: {{base_url}}/inventory
+- **Description**: Create a new inventory item using the uploaded image URL
+
+### Headers
+--------
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+### Pre-request Script (JavaScript)
+----------------------------
+```javascript
+// Ensure we have an image URL from the upload request
+const imageUrl = pm.environment.get("uploaded_image_url");
+if (!imageUrl) {
+    console.log("⚠️ No image URL found. Using default image or running without image.");
+    // You can set a default image URL here if needed
+    // pm.environment.set("uploaded_image_url", "/images/default-product.jpg");
+}
+
+// Generate unique test data
+const timestamp = Date.now();
+const randomId = Math.floor(Math.random() * 10000);
+
+pm.environment.set("test_timestamp", timestamp);
+pm.environment.set("test_product_id", randomId);
+pm.environment.set("test_product_name", `Premium Test Product ${timestamp}`);
+pm.environment.set("test_product_code", `TEST-${randomId}`);
+
+console.log("🔧 Generated test data:", {
+    timestamp: timestamp,
+    productId: randomId,
+    productName: pm.environment.get("test_product_name"),
+    productCode: pm.environment.get("test_product_code")
+});
+
+// Set Authorization header
+const token = pm.environment.get("access_token");
+if (token) {
+    pm.request.headers.add({
+        key: 'Authorization',
+        value: `Bearer ${token}`
+    });
+} else {
+    console.log("❌ No access token found!");
+}
+```
+
+### Body (Raw JSON)
+-----------------
+```json
+{
+  "partName": "Premium Test Product {{$timestamp}}",
+  "partCode": "TEST-{{$randomInt 1000, 9999}}",
+  "description": "High-quality motorcycle accessory with premium features and durable construction",
+  "qty": 50,
+  "unitPrice": 129.99,
+  "minStockLevel": 10,
+  "category": "Accessories",
+  "brand": "TestBrand Pro",
+  "imageUrl": "{{uploaded_image_url}}",
+  "variations": [
+    {
+      "id": "var_size",
+      "name": "Size",
+      "type": "dropdown",
+      "values": ["Small", "Medium", "Large", "X-Large"],
+      "required": true
+    },
+    {
+      "id": "var_color",
+      "name": "Color",
+      "type": "dropdown",
+      "values": ["Black", "White", "Red", "Blue"],
+      "required": true
+    }
+  ],
+  "variationStock": {
+    "var_color:Black,var_size:Small": 5,
+    "var_color:Black,var_size:Medium": 8,
+    "var_color:Black,var_size:Large": 6,
+    "var_color:Black,var_size:X-Large": 3,
+    "var_color:White,var_size:Small": 4,
+    "var_color:White,var_size:Medium": 7,
+    "var_color:White,var_size:Large": 5,
+    "var_color:White,var_size:X-Large": 2,
+    "var_color:Red,var_size:Small": 3,
+    "var_color:Red,var_size:Medium": 6,
+    "var_color:Red,var_size:Large": 4,
+    "var_color:Red,var_size:X-Large": 1,
+    "var_color:Blue,var_size:Small": 2,
+    "var_color:Blue,var_size:Medium": 5,
+    "var_color:Blue,var_size:Large": 3,
+    "var_color:Blue,var_size:X-Large": 0
+  }
+}
+```
+
+### Tests Tab (JavaScript)
+------------------------
+```javascript
+// Test successful creation
+pm.test("Inventory item created successfully", function () {
+    pm.response.to.have.status(200);
+
+    const jsonData = pm.response.json();
+    console.log("Creation Response:", JSON.stringify(jsonData, null, 2));
+
+    // Validate required fields
+    const requiredFields = ['id', 'partName', 'partCode', 'qty', 'unitPrice', 'minStockLevel'];
+    requiredFields.forEach(field => {
+        pm.expect(jsonData).to.have.property(field);
+    });
+
+    // Validate data types
+    pm.expect(jsonData.id).to.be.a('number');
+    pm.expect(jsonData.qty).to.be.a('number');
+    pm.expect(jsonData.unitPrice).to.be.a('number');
+    pm.expect(jsonData.minStockLevel).to.be.a('number');
+
+    // Save created item ID for future reference
+    pm.environment.set("created_inventory_id", jsonData.id);
+    console.log("✅ Created inventory item ID:", jsonData.id);
+});
+
+// Test image URL integration
+pm.test("Image URL properly integrated", function () {
+    const jsonData = pm.response.json();
+    const uploadedUrl = pm.environment.get("uploaded_image_url");
+
+    if (uploadedUrl) {
+        pm.expect(jsonData.imageUrl).to.equal(uploadedUrl);
+        console.log("✅ Image URL matches upload:", jsonData.imageUrl);
+    } else {
+        console.log("ℹ️ No image URL was set (optional field)");
+    }
+});
+
+// Test variations structure
+pm.test("Product variations properly configured", function () {
+    const jsonData = pm.response.json();
+
+    // Parse variations (could be string or object)
+    let variations = jsonData.variations;
+    if (typeof variations === 'string') {
+        variations = JSON.parse(variations);
+    }
+
+    if (variations && variations.options) {
+        pm.expect(variations.hasVariations).to.be.true;
+        pm.expect(variations.options).to.be.an('array');
+        pm.expect(variations.options.length).to.equal(2); // Size and Color
+
+        // Verify each variation has required properties
+        variations.options.forEach((variation, index) => {
+            pm.expect(variation).to.have.property('id');
+            pm.expect(variation).to.have.property('name');
+            pm.expect(variation).to.have.property('values');
+            pm.expect(variation.values.length).to.be.greaterThan(0);
+
+            console.log(`✅ Variation ${index + 1}: ${variation.name} (${variation.values.length} options)`);
+        });
+    }
+});
+
+// Test stock allocation
+pm.test("Stock allocation is valid", function () {
+    const jsonData = pm.response.json();
+
+    // Parse variation stock
+    let stockData = jsonData.variationStock;
+    if (typeof stockData === 'string') {
+        stockData = JSON.parse(stockData);
+    }
+
+    if (stockData) {
+        const totalAllocated = Object.values(stockData).reduce((sum, qty) => sum + qty, 0);
+        const totalAvailable = jsonData.qty;
+
+        pm.expect(totalAllocated).to.be.at.most(totalAvailable);
+        pm.expect(totalAllocated).to.be.greaterThan(0);
+
+        // Check for negative stock
+        const hasNegativeStock = Object.values(stockData).some(qty => qty < 0);
+        pm.expect(hasNegativeStock).to.be.false;
+
+        console.log(`✅ Stock allocation: ${totalAllocated}/${totalAvailable} units`);
+    }
+});
+
+// Test data validation
+pm.test("Data validation passed", function () {
+    const jsonData = pm.response.json();
+
+    // Numeric validations
+    pm.expect(jsonData.qty).to.be.at.least(0);
+    pm.expect(jsonData.unitPrice).to.be.greaterThan(0);
+    pm.expect(jsonData.minStockLevel).to.be.at.least(0);
+
+    // String length validations
+    pm.expect(jsonData.partName.length).to.be.at.least(2);
+    pm.expect(jsonData.partName.length).to.be.at.most(100);
+    pm.expect(jsonData.partCode.length).to.be.at.least(2);
+    pm.expect(jsonData.partCode.length).to.be.at.most(50);
+
+    console.log("✅ All data validation checks passed");
+});
+
+// Test response time
+pm.test("Creation completed within acceptable time", function () {
+    pm.expect(pm.response.responseTime).to.be.below(5000); // 5 seconds
+});
+
+// Error handling
+if (pm.response.code >= 400) {
+    const errorData = pm.response.json();
+    console.log("❌ Creation Error:", JSON.stringify(errorData, null, 2));
+
+    pm.test("Handle creation errors gracefully", function () {
+        pm.expect(pm.response.code).to.not.be.oneOf([500, 502, 503]);
+    });
+}
+
+// Success summary
+if (pm.response.code === 200) {
+    console.log("🎉 SUCCESS: Inventory item created with image!");
+    console.log("📋 Summary:");
+    console.log("   - Item ID:", pm.environment.get("created_inventory_id"));
+    console.log("   - Product Name:", jsonData.partName);
+    console.log("   - Product Code:", jsonData.partCode);
+    console.log("   - Image URL:", jsonData.imageUrl);
+    console.log("   - Total Stock:", jsonData.qty);
+    console.log("   - Price: $" + jsonData.unitPrice);
+}
+```
+
+### Expected Success Response
+--------------------------
+```json
+{
+    "id": 123,
+    "partName": "Premium Test Product 1234567890",
+    "partCode": "TEST-5678",
+    "description": "High-quality motorcycle accessory with premium features",
+    "qty": 50,
+    "unitPrice": 129.99,
+    "minStockLevel": 10,
+    "category": "Accessories",
+    "brand": "TestBrand Pro",
+    "imageUrl": "/images/products/unique-filename.jpg",
+    "active": true,
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "lowStock": false,
+    "variations": "{\"hasVariations\":true,\"options\":[{\"id\":\"var_size\",\"name\":\"Size\",\"type\":\"dropdown\",\"values\":[\"Small\",\"Medium\",\"Large\",\"X-Large\"],\"required\":true},{\"id\":\"var_color\",\"name\":\"Color\",\"type\":\"dropdown\",\"values\":[\"Black\",\"White\",\"Red\",\"Blue\"],\"required\":true}]}",
+    "variationStock": "{\"var_color:Black,var_size:Small\":5,\"var_color:Black,var_size:Medium\":8,...}"
+}
+```
+
+---
+
+## Environment Variables Required
+=============================
+
+Set these variables in your Postman environment:
+
+```
+base_url = http://localhost:8080/api
+access_token = [leave empty - will be populated by login]
+uploaded_image_url = [leave empty - will be populated by upload]
+created_inventory_id = [leave empty - will be populated by creation]
+admin_email = your-admin@email.com
+admin_password = your-admin-password
+```
+
+## Complete Workflow
+=================
+
+1. **Run Login Request** (if not already authenticated)
+2. **Run Image Upload Request** → saves image URL to environment
+3. **Run Inventory Creation Request** → uses saved image URL
+4. **Verify Results** in Postman Console and Tests tab
+
+## Troubleshooting
+===============
+
+### Common Issues:
+1. **401 Unauthorized** → Check login and access token
+2. **400 Bad Request** → Check image format/size or data validation
+3. **Image URL not saved** → Check upload success response
+4. **Variations not working** → Check variation stock allocation
+
+### Debug Tips:
+- Use Postman Console (View → Show Postman Console)
+- Check environment variables after each request
+- Verify image file meets requirements
+- Test requests individually before running as workflow
+
+---
+
+## Summary
+==========
+
+This 2-request workflow allows you to:
+✅ Upload fresh product images
+✅ Create inventory items with variations
+✅ Track all data with environment variables
+✅ Validate every step of the process
+✅ Handle errors gracefully
+
+Run the requests in sequence for complete automation!

@@ -2,11 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Alert } from '@/components/ui/Alert';
+import { apiClient } from '@/lib/api';
 import { RegisterRequest } from '@/types/auth';
 
 export default function AdminRegisterPage() {
@@ -21,9 +17,6 @@ export default function AdminRegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-
-  const { register } = useAuth();
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,8 +46,6 @@ export default function AdminRegisterPage() {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters long';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, number and special character';
     }
 
     if (!confirmPassword) {
@@ -65,8 +56,6 @@ export default function AdminRegisterPage() {
 
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required for admin accounts';
-    } else if (!/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);
@@ -82,13 +71,13 @@ export default function AdminRegisterPage() {
     setApiError('');
 
     try {
-      await register(formData);
-      router.push('/dashboard');
-    } catch (error: unknown) {
-      const errorMessage = (error && typeof error === 'object' && 'error' in error)
-        ? (error as { error: string }).error
-        : 'Registration failed. Please try again.';
-      setApiError(errorMessage);
+      // Use API client to register admin
+      const response = await apiClient.register(formData);
+
+      // Redirect to login page on success
+      window.location.href = '/login';
+    } catch (error: any) {
+      setApiError(error.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -109,89 +98,121 @@ export default function AdminRegisterPage() {
 
         {/* Registration Form */}
         <div className="bg-surface p-8 rounded-2xl border border-border shadow-xl">
+          {apiError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {apiError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            {apiError && (
-              <Alert variant="error" title="Registration Failed">
-                {apiError}
-              </Alert>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
+                style={{ color: 'black' }}
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
+            </div>
 
-            <Input
-              label="Full Name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              error={errors.name}
-              placeholder="Enter your full name"
-              required
-              autoComplete="name"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="your@email.com"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
+                style={{ color: 'black' }}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+            </div>
 
-            <Input
-              label="Email Address"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              placeholder="your@email.com"
-              required
-              autoComplete="email"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="+60 12-345 6789"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
+                style={{ color: 'black' }}
+              />
+              <p className="mt-1 text-sm text-gray-500">Required for admin account</p>
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
+            </div>
 
-            <Input
-              label="Phone Number"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              error={errors.phone}
-              placeholder="+60 12-345 6789"
-              required
-              autoComplete="tel"
-              helperText="Required for admin account"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a strong password"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
+                style={{ color: 'black' }}
+              />
+              <p className="mt-1 text-sm text-gray-500">Must be at least 8 characters long</p>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
+            </div>
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder="Create a strong password"
-              required
-              autoComplete="new-password"
-              helperText="Must contain uppercase, lowercase, number and special character"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (errors.confirmPassword) {
+                    setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                  }
+                }}
+                placeholder="Confirm your password"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
+                style={{ color: 'black' }}
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              )}
+            </div>
 
-            <Input
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                if (errors.confirmPassword) {
-                  setErrors(prev => ({ ...prev, confirmPassword: '' }));
-                }
-              }}
-              error={errors.confirmPassword}
-              placeholder="Confirm your password"
-              required
-              autoComplete="new-password"
-            />
-
-            <Button
+            <button
               type="submit"
-              loading={loading}
-              className="w-full"
-              size="lg"
-              variant="secondary"
+              disabled={loading}
+              className="w-full bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 font-semibold py-4 px-6 text-base rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Admin Account
-            </Button>
+              {loading ? 'Creating Account...' : 'Create Admin Account'}
+            </button>
           </form>
 
           {/* Sign In Link */}

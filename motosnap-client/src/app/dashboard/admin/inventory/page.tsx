@@ -358,7 +358,7 @@ export default function InventoryManagement() {
       brand: item.brand || '',
       imageUrl: item.imageUrl,
       imageFile: null,
-      imagePreview: item.imageUrl ? `http://localhost:8080${item.imageUrl}` : undefined,
+      imagePreview: item.imageUrl ? `${getImageBaseUrl()}${item.imageUrl}` : undefined,
       hasVariations,
       variations,
       variationStockAllocations,
