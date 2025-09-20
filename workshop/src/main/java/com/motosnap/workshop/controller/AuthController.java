@@ -157,6 +157,7 @@ public class AuthController {
 
     @GetMapping("/cors-debug")
     public ResponseEntity<?> corsDebug(HttpServletRequest request) {
+        // Force redeploy - 2025-09-20 debugging
         // Return all request headers to debug CORS
         StringBuilder headers = new StringBuilder();
         request.getHeaderNames().asIterator()

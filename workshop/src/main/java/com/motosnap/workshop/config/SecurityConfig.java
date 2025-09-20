@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Arrays;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -74,6 +75,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -87,31 +93,32 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/api/auth/register", "/api/auth/login",
                                 "/api/auth/refresh", "/api/auth/cors-debug").permitAll()
-                
+
                 // Public inventory endpoints (for customers)
                 .requestMatchers("/api/inventory/*/check-variation-stock-public").authenticated()
 
                 // Admin only endpoints
                 .requestMatchers("/api/admin/**", "/api/users/**",
                                 "/api/inventory/**", "/api/services/**").hasRole("ADMIN")
-                
+
                 // Booking management endpoints (Admin and Mechanic)
                 .requestMatchers("/api/bookings/*/status", "/api/bookings/*/assign").hasAnyRole("ADMIN", "MECHANIC")
-                
+
                 // Mechanic-only endpoints
                 .requestMatchers("/api/requests/**").hasRole("MECHANIC")
-                
+
                 // Customer endpoints
                 .requestMatchers("/api/me/**", "/api/bookings/create").hasRole("CUSTOMER")
-                
+
                 // Shared endpoints (authenticated users)
                 .requestMatchers("/api/bookings", "/api/profile").authenticated()
-                
+
                 // Allow all other requests for now (will be restricted as we build features)
                 .anyRequest().permitAll()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        
+            .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthFilter, CorsFilter.class);
+
         return http.build();
     }
 }
