@@ -1,22 +1,4 @@
-# Multi-stage build for MOTOSNAP
-# Stage 1: Build Frontend (Next.js)
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /app/frontend
-
-# Copy frontend package files
-COPY motosnap-client/package*.json ./
-
-# Install dependencies (including dev dependencies needed for build)
-RUN npm ci
-
-# Copy frontend source
-COPY motosnap-client/ ./
-
-# Build frontend
-RUN npm run build
-
-# Stage 2: Build Backend (Spring Boot with Maven)
+# Single-stage build for MOTOSNAP Backend (Spring Boot with Maven)
 FROM eclipse-temurin:17-jdk AS backend-builder
 
 WORKDIR /app
@@ -34,13 +16,10 @@ RUN ./mvnw dependency:go-offline -B
 # Copy backend source
 COPY workshop/src ./src
 
-# Copy built frontend from previous stage to static resources
-COPY --from=frontend-builder /app/frontend/out ./src/main/resources/static/
-
 # Build the application
 RUN ./mvnw clean package -DskipTests -B
 
-# Stage 3: Runtime (JRE for production)
+# Stage 2: Runtime (JRE for production)
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
 # Create app user for security
