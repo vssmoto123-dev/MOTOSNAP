@@ -22,7 +22,7 @@ services:
       - key: JAVA_OPTS
         value: "-Xmx400m -Xms200m"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://*.vercel.app,http://localhost:3000"
+        value: "https://*.vercel.app,http://localhost:3000,https://motosnap-client-2z8cappxr-vssmotos-projects.vercel.app"
       - key: CORS_ALLOWED_METHODS
         value: "GET,POST,PUT,DELETE,OPTIONS"
       - key: CORS_ALLOWED_HEADERS
