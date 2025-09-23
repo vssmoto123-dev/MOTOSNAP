@@ -42,9 +42,12 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Allow all OPTIONS requests globally for CORS preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+
                 // Public endpoints
                 .requestMatchers("/api/auth/register", "/api/auth/login",
-                                "/api/auth/refresh", "/api/auth/cors-debug", "/api/parts/**").permitAll()
+                                "/api/auth/refresh", "/api/auth/cors-debug", "/api/parts/**", "/api/test-deployment").permitAll()
 
                 // Public inventory endpoints (for customers)
                 .requestMatchers("/api/inventory/*/check-variation-stock-public").authenticated()
