@@ -179,6 +179,11 @@ public class AuthController {
             .body(debugInfo);
     }
 
+    @GetMapping("/test-deployment")
+    public ResponseEntity<String> testDeployment() {
+        return ResponseEntity.ok("CORS Fix Deployed - " + java.time.LocalDateTime.now());
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestHeader("Authorization") String authHeader) {
         try {
