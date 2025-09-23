@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -181,7 +182,13 @@ public class AuthController {
 
     @GetMapping("/test-deployment")
     public ResponseEntity<String> testDeployment() {
-        return ResponseEntity.ok("CORS Fix Deployed - " + java.time.LocalDateTime.now());
+        return ResponseEntity.ok("ULTRA-SIMPLE CORS Deployed - " + java.time.LocalDateTime.now() + " - Version 2.0");
+    }
+
+    @GetMapping("/simple-test")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<String> simpleTest() {
+        return ResponseEntity.ok("SIMPLE TEST WORKS!");
     }
 
     @PostMapping("/refresh")
