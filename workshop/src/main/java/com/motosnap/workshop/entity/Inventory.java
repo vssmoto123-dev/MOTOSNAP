@@ -64,10 +64,10 @@ public class Inventory {
     @Column(length = 500)
     private String imageUrl;
     
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String variations;
-    
-    @Column(columnDefinition = "JSON")
+
+    @Column(columnDefinition = "TEXT")
     private String variationStock;
     
     @CreationTimestamp

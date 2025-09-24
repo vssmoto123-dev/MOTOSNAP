@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Always use static export for this deployment
-  output: 'export',
+  // Enable server-side rendering for dynamic content
+  output: undefined,
   basePath: '',
   assetPrefix: '',
-  trailingSlash: true,  // Important for static export routing
+  trailingSlash: false,  // Not needed for SSR
   images: {
-    unoptimized: true,  // Required for static export
+    unoptimized: true,  // Keep for now, can be optimized later
   },
   // Skip type checking and linting during build for faster builds
   typescript: {

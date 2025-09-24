@@ -3,6 +3,27 @@
 ## Overview
 This guide provides step-by-step instructions for deploying MOTOSNAP (Motorcycle Workshop Management System) to Vercel using the Vercel CLI. MOTOSNAP is a Next.js application with custom authentication, role-based dashboards, and integration with a Spring Boot backend.
 
+## 🚀 Recent Deployment Experience
+This guide has been **battle-tested** with a real MOTOSNAP deployment (September 2025). The deployment was successful with the following key observations:
+
+### ✅ What Worked:
+- **Static export**: 31 pages generated successfully
+- **Build time**: ~36 seconds on Vercel
+- **Upload size**: ~456KB compressed
+- **Environment variables**: Set correctly via CLI
+- **URL**: `https://motosnap-client-2z8cappxr-vssmotos-projects.vercel.app`
+
+### ⚠️ Issues Encountered & Resolved:
+1. **vercel.json conflicts**: Removed `builds` and `functions` properties
+2. **Framework detection**: Removed `framework: "nextjs"` for static export
+3. **Vercel protection**: Default password protection enabled
+4. **Routes manifest**: Fixed by proper static export configuration
+
+### 📋 Key Requirements for Success:
+- **Critical**: `NEXT_PUBLIC_API_URL` environment variable
+- **Configuration**: Minimal `vercel.json` for static export
+- **Access**: Configure Vercel protection settings post-deployment
+
 ## Prerequisites
 - Node.js 18+ installed locally
 - Vercel account (free tier is sufficient)
@@ -147,17 +168,17 @@ vercel --prod --yes
 ```
 
 ### 7.2 Deployment process:
-1. **Upload**: Vercel uploads your project files
+1. **Upload**: Vercel uploads your project files (typically 400KB-500KB for MOTOSNAP)
 2. **Build**: Runs `npm install` and `npm run build`
-3. **Static Export**: Generates static files in `out` directory
+3. **Static Export**: Generates static files in `out` directory (31 pages for MOTOSNAP)
 4. **Deploy**: Deploys static files to production environment
-5. **URL**: Provides deployment URL
+5. **URL**: Provides deployment URL with format: `https://motosnap-client-[hash]-[username].vercel.app`
 
 ### 7.3 Expected output:
 ```
 Vercel CLI X.X.X
 Retrieving project…
-Deploying motosnap-client
+Deploying vssmotos-projects/motosnap-client
 Uploading [====================] (100%)
 Inspect: https://vercel.com/your-username/motosnap-client/deployment-id
 Production: https://motosnap-client-random-hash.vercel.app
@@ -166,27 +187,113 @@ Building
 Completing
 ```
 
-## Step 8: Redeploy with Environment Variables
+### 7.4 Common Deployment Errors and Solutions
 
-### 8.1 Redeploy to apply environment variables
+#### Error 1: "The `functions` property cannot be used in conjunction with the `builds` property"
+**Symptoms:** Deployment fails with configuration error
+**Cause:** `vercel.json` contains both `builds` and `functions` properties which conflict
+**Solution:**
+```bash
+# Edit vercel.json and remove conflicting properties
+# For static export, use minimal configuration:
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "installCommand": "npm install"
+}
+```
+
+#### Error 2: "The file '/vercel/path0/out/routes-manifest.json' couldn't be found"
+**Symptoms:** Deployment fails after build process
+**Cause:** Vercel expects standard Next.js structure when using `framework: "nextjs"`
+**Solution:** Remove `framework: "nextjs"` from `vercel.json` for static export:
+```bash
+# Update vercel.json to remove framework specification
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "installCommand": "npm install"
+}
+```
+
+#### Error 3: Authentication Required Page
+**Symptoms:** Deployed site shows "Authentication Required" instead of your app
+**Cause:** Vercel's password protection is enabled by default for new projects
+**Solution:**
+1. Go to Vercel Dashboard → Your Project → Settings → Protection
+2. Turn off "Password Protection" OR set a specific password
+3. Redeploy if needed
+
+## Step 8: Verify Successful Deployment
+
+### 8.1 Check deployment status
+```bash
+vercel ls
+# Look for ● Ready status under Production
+```
+
+### 8.2 Expected successful deployment characteristics:
+- **Status**: ● Ready (not ● Error)
+- **Environment**: Production
+- **Build Time**: ~30-40 seconds for MOTOSNAP
+- **Upload Size**: ~400-500KB
+- **URL Format**: `https://motosnap-client-[hash]-[username].vercel.app`
+
+### 8.3 Verify deployment accessibility
+```bash
+# Test if the site responds (may show auth screen if protected)
+curl -I https://your-deployment-url.vercel.app
+# Should return 200 OK or 302 redirect
+```
+
+## Step 9: Configure Vercel Protection Settings
+
+### 9.1 Access Vercel Dashboard
+1. Go to [vercel.com](https://vercel.com)
+2. Navigate to your deployed project
+3. Go to **Settings** → **Protection**
+
+### 9.2 Configure Access Control
+**Option 1: Disable Protection (Public Access)**
+- Toggle off "Password Protection"
+- Site becomes immediately accessible
+
+**Option 2: Set Password Protection**
+- Set a specific password
+- Users must enter password to access the site
+
+**Option 3: Vercel Authentication (SSO)**
+- Require Vercel account authentication
+- Suitable for internal/team applications
+
+### 9.3 Verify accessibility after configuration
+```bash
+# Test accessing the site
+curl https://your-deployment-url.vercel.app
+# Should now show MOTOSNAP content instead of auth screen
+```
+
+## Step 10: Redeploy with Environment Variables (If Needed)
+
+### 10.1 Redeploy to apply environment variables
 ```bash
 vercel --prod --yes
 ```
 
-### 8.2 Monitor deployment
+### 10.2 Monitor deployment
 ```bash
 # Watch deployment progress
 vercel logs your-project-name.vercel.app
 ```
 
-## Step 9: Verify Deployment
+## Step 11: Verify Deployment
 
-### 9.1 Visit your deployed app
+### 11.1 Visit your deployed app
 - Open the provided URL in your browser
 - Test all features and functionality
 - Check for any console errors
 
-### 9.2 Test MOTOSNAP-Specific Features:
+### 11.2 Test MOTOSNAP-Specific Features:
 
 #### Authentication Testing
 1. **Registration**: Create a new user account
@@ -203,61 +310,61 @@ vercel logs your-project-name.vercel.app
 - Verify backend connectivity
 - Test CRUD operations across all modules
 
-### 9.3 Check deployment status
+### 11.3 Check deployment status
 ```bash
 vercel ls
 # Shows all deployments with status
 ```
 
-## Step 10: Deployment Management
+## Step 12: Deployment Management
 
-### 10.1 View deployment history
+### 12.1 View deployment history
 ```bash
 vercel ls
 ```
 
-### 10.2 View deployment logs
+### 12.2 View deployment logs
 ```bash
 vercel logs your-deployment-url.vercel.app
 ```
 
-### 10.3 Rollback to previous deployment
+### 12.3 Rollback to previous deployment
 ```bash
 vercel rollback your-deployment-url.vercel.app
 ```
 
-### 10.4 Remove deployment
+### 12.4 Remove deployment
 ```bash
 vercel remove your-deployment-url.vercel.app
 ```
 
-## Step 11: Custom Domain (Optional)
+## Step 13: Custom Domain (Optional)
 
-### 11.1 Add custom domain
+### 13.1 Add custom domain
 ```bash
 vercel domains add your-custom-domain.com
 ```
 
-### 11.2 Verify domain configuration
+### 13.2 Verify domain configuration
 ```bash
 vercel domains ls
 ```
 
-## Step 12: Git-Based Deployment (Optional but Recommended)
+## Step 14: Git-Based Deployment (Optional but Recommended)
 
-### 12.1 Push your code to GitHub
+### 14.1 Push your code to GitHub
 ```bash
 git add .
 git commit -m "Deployment ready - MOTOSNAP frontend"
 git push origin main
 ```
 
-### 12.2 Connect to GitHub via Vercel CLI
+### 14.2 Connect to GitHub via Vercel CLI
 ```bash
 vercel git connect
 ```
 
-### 12.3 Enable auto-deployment
+### 14.3 Enable auto-deployment
 - Go to Vercel dashboard
 - Navigate to your project
 - Go to Settings → Git
@@ -306,7 +413,29 @@ vercel --with-cache         # Use build cache
 
 ## MOTOSNAP-Specific Troubleshooting
 
-### Issue 1: API Connection Errors
+### Issue 1: vercel.json Configuration Conflicts
+**Symptoms:** Deployment fails with "cannot be used in conjunction with" errors
+**Cause:** Original template had conflicting `builds` and `functions` properties
+**Solution:**
+```bash
+# Use this minimal vercel.json for static export:
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "installCommand": "npm install"
+}
+```
+
+### Issue 2: Routes Manifest Missing Error
+**Symptoms:** "The file '/vercel/path0/out/routes-manifest.json' couldn't be found"
+**Cause:** Vercel framework detection conflicts with static export configuration
+**Solution:**
+```bash
+# Remove framework specification from vercel.json
+# Do NOT include "framework": "nextjs" for static export projects
+```
+
+### Issue 3: API Connection Errors
 **Symptoms:** "Failed to fetch" errors, cannot connect to backend
 **Solution:**
 ```bash
@@ -340,7 +469,24 @@ vercel env ls production
 # Ensure backend is accessible from the deployed URL
 ```
 
-### Issue 4: Role-Based Access Not Working
+### Issue 4: Authentication Required Page After Deployment
+**Symptoms:** Deployed site shows Vercel authentication screen instead of MOTOSNAP
+**Cause:** Vercel enables password protection by default for new projects
+**Solution:**
+```bash
+# Option 1: Disable protection in Vercel Dashboard
+# 1. Go to vercel.com → your project → Settings → Protection
+# 2. Turn off "Password Protection"
+
+# Option 2: Set a specific password
+# 1. Go to vercel.com → your project → Settings → Protection
+# 2. Set a password for access control
+
+# Option 3: Use authentication bypass for testing
+# Visit the deployment URL with bypass token
+```
+
+### Issue 5: Role-Based Access Not Working
 **Symptoms:** Users seeing wrong dashboard, header visibility issues
 **Solution:**
 This should be automatically handled by the updated header logic. If issues persist:
@@ -350,7 +496,7 @@ This should be automatically handled by the updated header logic. If issues pers
 # Verify user role is being returned correctly from API
 ```
 
-### Issue 5: Images Not Loading
+### Issue 6: Images Not Loading
 **Symptoms:** Static images not displaying correctly
 **Solution:**
 MOTOSNAP uses static export with unoptimized images. This is expected behavior:
@@ -360,7 +506,7 @@ ls -la public/
 # Check image paths in deployed application
 ```
 
-### Issue 6: General Vercel CLI Issues
+### Issue 7: General Vercel CLI Issues
 
 #### "Command not found: vercel"
 **Solution:**
