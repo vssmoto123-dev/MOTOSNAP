@@ -47,7 +47,7 @@ public class Request {
     @JsonBackReference("booking-requests")
     private Booking booking;
     
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String selectedVariations;
     
     @CreationTimestamp

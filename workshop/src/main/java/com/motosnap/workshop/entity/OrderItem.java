@@ -36,7 +36,7 @@ public class OrderItem {
     @JoinColumn(name = "part_id", nullable = false)
     private Inventory part;
     
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String selectedVariations;
     
     // Constructor for creating new order items
