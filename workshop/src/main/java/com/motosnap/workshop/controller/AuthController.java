@@ -182,7 +182,11 @@ public class AuthController {
 
     @GetMapping("/test-deployment")
     public ResponseEntity<String> testDeployment() {
-        return ResponseEntity.ok("ULTRA-SIMPLE CORS Deployed - " + java.time.LocalDateTime.now() + " - Version 2.0");
+        return ResponseEntity.ok()
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+            .header("Access-Control-Allow-Headers", "*")
+            .body("ULTRA-SIMPLE CORS Deployed - " + java.time.LocalDateTime.now() + " - Version 2.0");
     }
 
     @GetMapping("/simple-test")
