@@ -17,7 +17,7 @@ export default function Header() {
                     pathname.startsWith('/dashboard/admin') ||
                     pathname.startsWith('/dashboard/mechanic') ||
                     (user && user.role === 'MECHANIC') ||
-                    (user && user.role === 'ADMIN' && pathname === '/dashboard/') ||
+                    (user && user.role === 'ADMIN' && (pathname === '/dashboard' || pathname === '/dashboard/')) ||
                     (!user && pathname.startsWith('/dashboard'));
 
   // Debug logging (remove in production)

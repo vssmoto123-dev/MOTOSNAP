@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable server-side rendering for dynamic content
-  output: undefined,
+  // Use static export for Vercel deployment
+  output: 'export',
   basePath: '',
   assetPrefix: '',
-  trailingSlash: false,  // Not needed for SSR
+  trailingSlash: true,  // Required for static export routing
   images: {
-    unoptimized: true,  // Keep for now, can be optimized later
+    unoptimized: true,  // Required for static export
   },
   // Skip type checking and linting during build for faster builds
   typescript: {
