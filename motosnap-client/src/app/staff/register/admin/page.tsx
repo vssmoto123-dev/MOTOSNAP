@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Input } from '@/components/ui/Input';
 import { apiClient } from '@/lib/api';
 import { RegisterRequest } from '@/types/auth';
 
@@ -163,7 +164,8 @@ export default function AdminRegisterPage() {
               )}
             </div>
 
-            <Input
+            <div>
+              <Input
                 label="Password"
                 name="password"
                 type="password"
@@ -179,7 +181,8 @@ export default function AdminRegisterPage() {
               )}
             </div>
 
-            <Input
+            <div>
+              <Input
                 label="Confirm Password"
                 type="password"
                 value={confirmPassword}
@@ -196,6 +199,7 @@ export default function AdminRegisterPage() {
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
+            </div>
 
             <button
               type="submit"
