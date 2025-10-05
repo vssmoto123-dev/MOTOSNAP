@@ -672,10 +672,39 @@ class ApiClient {
   }
 
   async addVehicle(data: any): Promise<any> {
-    return this.request<any>('/me/vehicles', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    console.log('🚗 Adding vehicle data:', data);
+
+    try {
+      const result = await this.request<any>('/me/vehicles', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+
+      console.log('✅ Vehicle added successfully:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ API Error adding vehicle:', error);
+
+      // Enhanced error details
+      if (error.response) {
+        console.error('📡 Response details:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data
+        });
+      }
+
+      if (error.request) {
+        console.error('📡 Request details:', {
+          method: error.request?.method,
+          url: error.request?.url,
+          headers: error.request?.headers
+        });
+      }
+
+      throw error;
+    }
   }
 
   // Customer - Shopping Cart

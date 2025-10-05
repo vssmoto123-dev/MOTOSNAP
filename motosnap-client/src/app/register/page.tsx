@@ -174,6 +174,7 @@ export default function RegisterPage() {
               required
               autoComplete="new-password"
               helperText="Must contain uppercase, lowercase, number and special character"
+              showPasswordToggle={true}
             />
 
             <Input
@@ -191,6 +192,7 @@ export default function RegisterPage() {
               placeholder="Confirm your password"
               required
               autoComplete="new-password"
+              showPasswordToggle={true}
             />
 
             <Button

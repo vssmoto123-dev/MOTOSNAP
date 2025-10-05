@@ -285,6 +285,7 @@ export default function MechanicRegistrationModal({ isOpen, onClose, onSuccess }
                     required
                     autoComplete="new-password"
                     helperText="Must contain uppercase, lowercase, number and special character"
+                    showPasswordToggle={true}
                   />
                 </div>
 
@@ -303,6 +304,7 @@ export default function MechanicRegistrationModal({ isOpen, onClose, onSuccess }
                   placeholder="Confirm the password"
                   required
                   autoComplete="new-password"
+                  showPasswordToggle={true}
                 />
 
                 <div className="flex space-x-3 pt-4">

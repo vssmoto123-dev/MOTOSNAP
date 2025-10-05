@@ -38,6 +38,7 @@ function OrderSuccessContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceiptUpload, setShowReceiptUpload] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   const [receiptForm, setReceiptForm] = useState({
     receiptFile: null as File | null,
@@ -96,32 +97,37 @@ function OrderSuccessContent() {
 
   const handleReceiptUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!order || !receiptForm.receiptFile) return;
+
+    setUploading(true);
 
     try {
       await apiClient.uploadReceipt(
-        order.id, 
-        receiptForm.receiptFile, 
-        parseFloat(receiptForm.receiptAmount), 
+        order.id,
+        receiptForm.receiptFile,
+        parseFloat(receiptForm.receiptAmount),
         receiptForm.notes
       );
-      
+
       setShowReceiptUpload(false);
       setReceiptForm({
         receiptFile: null,
         receiptAmount: '',
         notes: ''
       });
-      
+
       alert('Receipt uploaded successfully!');
-      
+
       // Update order status
       setOrder(prev => prev ? {...prev, hasReceipt: true, status: 'PAYMENT_SUBMITTED'} : null);
-      
-    } catch (err) {
-      alert('Failed to upload receipt');
+
+    } catch (err: any) {
+      const errorMessage = err?.error || err?.message || 'Failed to upload receipt';
+      alert(errorMessage);
       console.error('Error uploading receipt:', err);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -503,7 +509,7 @@ function OrderSuccessContent() {
                   <div className="text-center space-y-3">
                     <div className="bg-surface rounded-xl p-3 shadow-sm border border-border">
                       <p className="text-sm text-text-muted">DuitNow Account</p>
-                      <p className="font-mono font-semibold text-lg text-text">EZCAB 0224</p>
+                      <p className="font-mono font-semibold text-lg text-text">MOTOSNAP SDN BHD</p>
                     </div>
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
                       <p className="text-sm text-primary">Order Total</p>
@@ -528,11 +534,12 @@ function OrderSuccessContent() {
                   type="file"
                   required
                   accept="image/*"
+                  disabled={uploading}
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setReceiptForm({...receiptForm, receiptFile: file});
                   }}
-                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-muted file:text-text hover:file:bg-muted/80"
+                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-muted file:text-text hover:file:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 {receiptForm.receiptFile && (
                   <p className="text-sm text-text-muted mt-1">Selected: {receiptForm.receiptFile.name}</p>
@@ -545,9 +552,10 @@ function OrderSuccessContent() {
                   required
                   step="0.01"
                   placeholder="0.00"
+                  disabled={uploading}
                   value={receiptForm.receiptAmount}
                   onChange={(e) => setReceiptForm({...receiptForm, receiptAmount: e.target.value})}
-                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text"
+                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
@@ -555,22 +563,35 @@ function OrderSuccessContent() {
                 <textarea
                   rows={3}
                   placeholder="Additional notes about the payment..."
+                  disabled={uploading}
                   value={receiptForm.notes}
                   onChange={(e) => setReceiptForm({...receiptForm, notes: e.target.value})}
-                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text resize-none"
+                  className="w-full px-3 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors text-text resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
                   <div className="flex gap-3 pt-4">
                     <button
                       type="submit"
-                      className="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-primary/90 font-semibold transition-colors"
+                      disabled={uploading}
+                      className="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-primary/90 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Upload Receipt
+                      {uploading ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Uploading...
+                        </>
+                      ) : (
+                        'Upload Receipt'
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowReceiptUpload(false)}
-                      className="flex-1 bg-muted text-text py-3 rounded-lg hover:bg-muted/80 font-medium transition-colors"
+                      disabled={uploading}
+                      className="flex-1 bg-muted text-text py-3 rounded-lg hover:bg-muted/80 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>

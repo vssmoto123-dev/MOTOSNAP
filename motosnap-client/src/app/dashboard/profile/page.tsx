@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { CustomerLayout } from '@/components/layout/CustomerLayout';
 
 interface Vehicle {
   id: number;
@@ -25,13 +27,14 @@ interface UserProfile {
   vehicles: Vehicle[];
 }
 
-export default function ProfilePage() {
+function ProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [isAddingVehicle, setIsAddingVehicle] = useState(false);
   
   const [vehicleForm, setVehicleForm] = useState({
     plateNo: '',
@@ -62,8 +65,13 @@ export default function ProfilePage() {
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsAddingVehicle(true);
+
     try {
-      await apiClient.addVehicle(vehicleForm);
+      console.log('🚗 Adding vehicle:', vehicleForm);
+      const result = await apiClient.addVehicle(vehicleForm);
+      console.log('✅ Vehicle added successfully:', result);
+
       setShowAddVehicle(false);
       setVehicleForm({
         plateNo: '',
@@ -74,15 +82,43 @@ export default function ProfilePage() {
         engineCapacity: ''
       });
       fetchProfile(); // Refresh profile to show new vehicle
-    } catch (err) {
-      alert('Failed to add vehicle');
-      console.error('Error adding vehicle:', err);
+    } catch (err: any) {
+      console.error('❌ Error adding vehicle:', err);
+
+      // Extract meaningful error message
+      let errorMessage = 'Failed to add vehicle';
+
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
+      // Show specific error messages
+      if (err.response?.status === 400) {
+        errorMessage = 'Invalid vehicle data. Please check all required fields.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Session expired. Please log in again.';
+      } else if (err.response?.status === 409) {
+        errorMessage = 'A vehicle with this plate number already exists.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+
+      alert(errorMessage);
+      setError(errorMessage);
+    } finally {
+      setIsAddingVehicle(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -91,13 +127,13 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           {/* Header Section */}
           <div className="mb-8">
@@ -133,7 +169,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
@@ -156,19 +192,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <CustomerLayout>
       <div className="container mx-auto px-6 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center text-primary hover:text-primary/80 transition-colors mb-6"
-          >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
           <div>
             <h1 className="text-4xl font-bold text-text mb-3">My Profile</h1>
             <p className="text-text-muted text-lg">Manage your account and vehicle information</p>
@@ -446,9 +473,20 @@ export default function ProfilePage() {
                     <div className="flex gap-4 pt-2">
                       <button
                         type="submit"
-                        className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
+                        disabled={isAddingVehicle}
+                        className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       >
-                        Add Vehicle
+                        {isAddingVehicle ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Adding...
+                          </>
+                        ) : (
+                          'Add Vehicle'
+                        )}
                       </button>
                       <button
                         type="button"
@@ -465,6 +503,14 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
-    </div>
+    </CustomerLayout>
+  );
+}
+
+export default function ProfilePageWrapper() {
+  return (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
   );
 }

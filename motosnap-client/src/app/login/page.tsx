@@ -139,6 +139,7 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 required
                 autoComplete="current-password"
+                showPasswordToggle={true}
               />
               <div className="flex justify-end">
                 <Link 

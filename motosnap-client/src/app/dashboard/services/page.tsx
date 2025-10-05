@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { CustomerLayout } from '@/components/layout/CustomerLayout';
 import Toast from '@/components/ui/Toast';
 
 interface Service {
@@ -33,7 +35,7 @@ interface BookingForm {
   notes: string;
 }
 
-export default function ServicesPage() {
+function ServicesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
@@ -200,7 +202,7 @@ export default function ServicesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -209,25 +211,16 @@ export default function ServicesPage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           {/* Header Section */}
           <div className="mb-8">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center text-primary hover:text-primary/80 transition-colors mb-6"
-            >
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="font-medium">Back to Dashboard</span>
-            </button>
             <div>
               <h1 className="text-4xl font-bold text-text mb-3">Book Services</h1>
               <p className="text-text-muted text-lg">Professional motorcycle maintenance and repair services</p>
@@ -251,24 +244,15 @@ export default function ServicesPage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center text-primary hover:text-primary/80 transition-colors mb-6"
-          >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
+  <CustomerLayout>
+    <div className="container mx-auto px-6 py-8">
+      {/* Header Section */}
+      <div className="mb-8">
           <div>
             <h1 className="text-4xl font-bold text-text mb-3">Book Services</h1>
             <p className="text-text-muted text-lg">Professional motorcycle maintenance and repair services</p>
@@ -562,6 +546,14 @@ export default function ServicesPage() {
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
       />
-    </div>
+  </CustomerLayout>
+  );
+}
+
+export default function ServicesPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <ServicesPage />
+    </ProtectedRoute>
   );
 }

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient, getImageBaseUrl } from '@/lib/api';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { CustomerLayout } from '@/components/layout/CustomerLayout';
 
 interface OrderItem {
   id: number;
@@ -30,7 +32,7 @@ interface Order {
   hasReceipt: boolean;
 }
 
-export default function OrdersPage() {
+function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,7 +162,7 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -169,13 +171,13 @@ export default function OrdersPage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <CustomerLayout>
         <div className="container mx-auto px-6 py-8">
           {/* Header Section */}
           <div className="mb-8">
@@ -211,12 +213,12 @@ export default function OrdersPage() {
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <CustomerLayout>
       <div className="container mx-auto px-6 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -353,6 +355,14 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
-    </div>
+    </CustomerLayout>
+  );
+}
+
+export default function OrdersPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <OrdersPage />
+    </ProtectedRoute>
   );
 }

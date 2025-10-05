@@ -8,6 +8,7 @@ import com.motosnap.workshop.entity.RequestStatus;
 import com.motosnap.workshop.repository.BookingRepository;
 import com.motosnap.workshop.repository.InvoiceRepository;
 import com.motosnap.workshop.repository.RequestRepository;
+import com.motosnap.workshop.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,9 @@ public class InvoiceService {
 
     @Autowired
     private RequestRepository requestRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Generate invoice for a completed booking
@@ -64,6 +68,10 @@ public class InvoiceService {
         );
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
+
+        // Send invoice generation email
+        emailService.sendInvoiceGeneration(savedInvoice, booking.getUser());
+
         return new InvoiceResponse(savedInvoice);
     }
 

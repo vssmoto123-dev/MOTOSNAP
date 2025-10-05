@@ -6,6 +6,7 @@ import com.motosnap.workshop.dto.BookingStatusUpdateRequest;
 import com.motosnap.workshop.dto.InvoiceResponse;
 import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
+import com.motosnap.workshop.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class BookingService {
     @Autowired
     @Lazy
     private InvoiceService invoiceService;
+
+    @Autowired
+    private EmailService emailService;
 
     public BookingResponse createBooking(String userEmail, BookingRequest request) {
         User user = userRepository.findByEmail(userEmail)
@@ -66,6 +70,11 @@ public class BookingService {
         );
 
         booking = bookingRepository.save(booking);
+
+        // Send new booking alert to admins
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        emailService.sendNewBookingAlert(booking, admins);
+
         return convertToBookingResponse(booking);
     }
 
@@ -160,6 +169,17 @@ public class BookingService {
         }
 
         booking = bookingRepository.save(booking);
+
+        // Send email notifications for status changes
+        if (oldStatus != booking.getStatus()) {
+            emailService.sendBookingStatusUpdate(booking, booking.getUser(), oldStatus.name(), booking.getStatus().name());
+
+            // Send booking confirmation when status changes to CONFIRMED
+            if (booking.getStatus() == BookingStatus.CONFIRMED && oldStatus == BookingStatus.PENDING) {
+                emailService.sendBookingConfirmation(booking, booking.getUser());
+            }
+        }
+
         return convertToBookingResponse(booking);
     }
 
@@ -186,6 +206,10 @@ public class BookingService {
 
         booking.setAssignedMechanic(mechanic);
         booking = bookingRepository.save(booking);
+
+        // Send mechanic assignment email
+        emailService.sendMechanicAssignment(booking, mechanic);
+
         return convertToBookingResponse(booking);
     }
 

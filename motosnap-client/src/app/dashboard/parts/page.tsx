@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient, getImageBaseUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { CustomerLayout } from '@/components/layout/CustomerLayout';
 import DebugPanel from '@/components/DebugPanel';
 import { VariationDefinition, SelectedVariations } from '@/types/variations';
 
@@ -22,7 +24,7 @@ interface InventoryItem {
   variationStock?: string | {allocations: Record<string, number>, unallocated: number};
 }
 
-export default function PartsPage() {
+function PartsPage() {
   const router = useRouter();
   const [parts, setParts] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,33 +234,37 @@ export default function PartsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <div className="text-lg text-text">Loading parts catalog...</div>
+      <CustomerLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="text-lg text-text">Loading parts catalog...</div>
+          </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="text-red-500 text-lg mb-4">{error}</div>
-          <button
-            onClick={fetchParts}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            Try Again
-          </button>
+      <CustomerLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="text-red-500 text-lg mb-4">{error}</div>
+            <button
+              onClick={fetchParts}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <CustomerLayout>
       {/* Header Section */}
       <div className="bg-surface border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -463,6 +469,14 @@ export default function PartsPage() {
           </div>
         )}
       </div>
-    </div>
+    </CustomerLayout>
+  );
+}
+
+export default function PartsPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <PartsPage />
+    </ProtectedRoute>
   );
 }

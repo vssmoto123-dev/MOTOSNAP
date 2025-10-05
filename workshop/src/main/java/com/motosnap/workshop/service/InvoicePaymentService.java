@@ -3,6 +3,7 @@ package com.motosnap.workshop.service;
 import com.motosnap.workshop.entity.*;
 import com.motosnap.workshop.repository.*;
 import com.motosnap.workshop.dto.InvoicePaymentResponseDTO;
+import com.motosnap.workshop.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,9 @@ public class InvoicePaymentService {
     @Autowired
     @Lazy
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private EmailService emailService;
 
     public InvoicePayment initiatePayment(Long invoiceId, User user) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
@@ -118,6 +122,10 @@ public class InvoicePaymentService {
 
             System.out.println("DEBUG: Receipt uploaded successfully for invoice payment ID: " + invoicePayment.getId());
 
+            // Send payment receipt alert to admins
+            List<User> admins = userRepository.findByRole(Role.ADMIN);
+            emailService.sendPaymentReceiptAlert(invoicePayment, admins);
+
         } catch (Exception e) {
             System.err.println("ERROR: Failed to upload receipt - " + e.getMessage());
             throw new RuntimeException("Failed to upload receipt: " + e.getMessage());
@@ -147,6 +155,9 @@ public class InvoicePaymentService {
         invoiceReceiptRepository.save(receipt);
 
         System.out.println("DEBUG: Invoice payment approved by admin: " + admin.getEmail() + " for payment ID: " + paymentId);
+
+        // Send payment confirmation email
+        emailService.sendPaymentConfirmation(invoicePayment, invoicePayment.getInvoice().getBooking().getUser());
     }
 
     /**

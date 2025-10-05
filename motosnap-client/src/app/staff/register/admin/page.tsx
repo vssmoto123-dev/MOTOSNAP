@@ -163,19 +163,15 @@ export default function AdminRegisterPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
+            <Input
+                label="Password"
                 name="password"
+                type="password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Create a strong password"
                 required
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
-                style={{ color: 'black' }}
+                showPasswordToggle={true}
               />
               <p className="mt-1 text-sm text-gray-500">Must be at least 8 characters long</p>
               {errors.password && (
@@ -183,11 +179,8 @@ export default function AdminRegisterPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <input
+            <Input
+                label="Confirm Password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => {
@@ -198,13 +191,11 @@ export default function AdminRegisterPage() {
                 }}
                 placeholder="Confirm your password"
                 required
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-colors"
-                style={{ color: 'black' }}
+                showPasswordToggle={true}
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
-            </div>
 
             <button
               type="submit"

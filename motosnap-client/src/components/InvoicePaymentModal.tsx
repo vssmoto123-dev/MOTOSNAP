@@ -278,7 +278,7 @@ export default function InvoicePaymentModal({
                         <div className="text-center space-y-2">
                           <div className="bg-white rounded-lg p-3 shadow-sm">
                             <p className="text-sm text-gray-600">DuitNow Account</p>
-                            <p className="font-mono font-semibold text-lg text-gray-900">EZCAB 0224</p>
+                            <p className="font-mono font-semibold text-lg text-gray-900">MOTOSNAP SDN BHD</p>
                           </div>
                           <div className="bg-blue-50 rounded-lg p-3">
                             <p className="text-sm text-blue-600">Invoice Total</p>

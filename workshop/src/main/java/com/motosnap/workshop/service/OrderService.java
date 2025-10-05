@@ -7,6 +7,7 @@ import com.motosnap.workshop.entity.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.motosnap.workshop.repository.*;
+import com.motosnap.workshop.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,9 @@ public class OrderService {
     @Autowired
     @Lazy
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private EmailService emailService;
 
     public OrderResponse createOrderFromCart(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
@@ -129,6 +133,10 @@ public class OrderService {
         cartRepository.save(cart);
 
         order.setOrderItems(orderItems);
+
+        // Send order confirmation email
+        emailService.sendOrderConfirmation(order, user);
+
         return convertToOrderResponse(order);
     }
 
@@ -204,6 +212,10 @@ public class OrderService {
         
         System.out.println("DEBUG: Order status changed from " + previousStatus + " to " + order.getStatus() + " for order " + order.getId());
 
+        // Send new order alert to admins
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        emailService.sendNewOrderAlert(order, admins);
+
         return convertToOrderResponse(order);
     }
 
@@ -248,6 +260,9 @@ public class OrderService {
         receipt.setApprovedAt(java.time.LocalDateTime.now());
         receiptRepository.save(receipt);
 
+        // Send order status update email
+        emailService.sendOrderStatusUpdate(order, order.getUser(), "APPROVED");
+
         return convertToOrderResponse(order);
     }
 
@@ -282,6 +297,9 @@ public class OrderService {
             receipt.setAdminNotes(reason);
         }
         receiptRepository.save(receipt);
+
+        // Send order status update email
+        emailService.sendOrderStatusUpdate(order, order.getUser(), "REJECTED");
 
         return convertToOrderResponse(order);
     }

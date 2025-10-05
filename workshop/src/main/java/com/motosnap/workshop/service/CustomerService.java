@@ -6,6 +6,8 @@ import com.motosnap.workshop.entity.User;
 import com.motosnap.workshop.entity.Vehicle;
 import com.motosnap.workshop.repository.UserRepository;
 import com.motosnap.workshop.repository.VehicleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class CustomerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -35,24 +39,38 @@ public class CustomerService {
     }
 
     public Vehicle addVehicle(String userEmail, VehicleRequest vehicleRequest) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        logger.info("Adding vehicle for user: {} with plate: {}", userEmail, vehicleRequest.getPlateNo());
 
-        // Check if plate number already exists
-        if (vehicleRepository.findByPlateNo(vehicleRequest.getPlateNo()).isPresent()) {
-            throw new RuntimeException("Vehicle with plate number " + vehicleRequest.getPlateNo() + " already exists");
+        try {
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> {
+                        logger.error("User not found for email: {}", userEmail);
+                        return new RuntimeException("User not found");
+                    });
+
+            // Check if plate number already exists
+            if (vehicleRepository.findByPlateNo(vehicleRequest.getPlateNo()).isPresent()) {
+                logger.warn("Vehicle with plate number {} already exists", vehicleRequest.getPlateNo());
+                throw new RuntimeException("Vehicle with plate number " + vehicleRequest.getPlateNo() + " already exists");
+            }
+
+            Vehicle vehicle = new Vehicle();
+            vehicle.setPlateNo(vehicleRequest.getPlateNo());
+            vehicle.setModel(vehicleRequest.getModel());
+            vehicle.setBrand(vehicleRequest.getBrand());
+            vehicle.setYear(vehicleRequest.getYear());
+            vehicle.setColor(vehicleRequest.getColor());
+            vehicle.setEngineCapacity(vehicleRequest.getEngineCapacity());
+            vehicle.setUser(user);
+
+            Vehicle savedVehicle = vehicleRepository.save(vehicle);
+            logger.info("Successfully added vehicle with ID: {} for user: {}", savedVehicle.getId(), userEmail);
+            return savedVehicle;
+
+        } catch (Exception e) {
+            logger.error("Error adding vehicle for user {}: {}", userEmail, e.getMessage(), e);
+            throw e;
         }
-
-        Vehicle vehicle = new Vehicle();
-        vehicle.setPlateNo(vehicleRequest.getPlateNo());
-        vehicle.setModel(vehicleRequest.getModel());
-        vehicle.setBrand(vehicleRequest.getBrand());
-        vehicle.setYear(vehicleRequest.getYear());
-        vehicle.setColor(vehicleRequest.getColor());
-        vehicle.setEngineCapacity(vehicleRequest.getEngineCapacity());
-        vehicle.setUser(user);
-
-        return vehicleRepository.save(vehicle);
     }
 
     private UserProfileResponse convertToProfileResponse(User user) {

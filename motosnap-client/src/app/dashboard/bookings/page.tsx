@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { CustomerLayout } from '@/components/layout/CustomerLayout';
 import { BookingResponse, BookingStatus } from '@/types/booking';
 import { Invoice } from '@/types/invoice';
 import InvoicePreview from '@/components/InvoicePreview';
@@ -10,7 +12,7 @@ import InvoicePaymentModal from '@/components/InvoicePaymentModal';
 
 type TabType = 'all' | 'active' | 'pending' | 'completed';
 
-export default function BookingsPage() {
+function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,39 +216,44 @@ export default function BookingsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading your bookings...</p>
+      <CustomerLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading your bookings...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">{error}</div>
+      <CustomerLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">{error}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </CustomerLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <CustomerLayout>
+      <div className="container mx-auto px-4 py-8">
 
       {/* Main Panel */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -551,6 +558,15 @@ export default function BookingsPage() {
           onPaymentComplete={handlePaymentComplete}
         />
       )}
-    </div>
+      </div>
+    </CustomerLayout>
+  );
+}
+
+export default function BookingsPageWrapper() {
+  return (
+    <ProtectedRoute>
+      <BookingsPage />
+    </ProtectedRoute>
   );
 }
