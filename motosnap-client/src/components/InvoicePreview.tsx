@@ -201,7 +201,7 @@ export default function InvoicePreview({
                       <div className="text-sm text-gray-500">Base service cost</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="font-medium text-gray-900">${invoice.serviceAmount.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900">MYR {invoice.serviceAmount.toFixed(2)}</span>
                     </td>
                   </tr>
                   {invoice.partsAmount > 0 && (
@@ -211,7 +211,7 @@ export default function InvoicePreview({
                         <div className="text-sm text-gray-500">Parts used during service</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="font-medium text-gray-900">${invoice.partsAmount.toFixed(2)}</span>
+                        <span className="font-medium text-gray-900">MYR {invoice.partsAmount.toFixed(2)}</span>
                       </td>
                     </tr>
                   )}
@@ -248,7 +248,7 @@ export default function InvoicePreview({
                 <div className="bg-gray-900 text-white rounded-lg p-6">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total Amount:</span>
-                    <span className="text-2xl font-bold">${invoice.totalAmount.toFixed(2)}</span>
+                    <span className="text-2xl font-bold">MYR {invoice.totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

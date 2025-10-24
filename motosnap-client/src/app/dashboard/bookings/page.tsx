@@ -370,7 +370,7 @@ function BookingsPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Price:</span>
-                      <span className="text-gray-900">${booking.serviceBasePrice.toFixed(2)}</span>
+                      <span className="text-gray-900">MYR {booking.serviceBasePrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Duration:</span>
@@ -462,7 +462,7 @@ function BookingsPage() {
                       <p className="text-sm text-gray-600">Invoice #{booking.invoice.invoiceNumber}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-lg text-gray-900">${booking.invoice.totalAmount.toFixed(2)}</p>
+                      <p className="font-semibold text-lg text-gray-900">MYR {booking.invoice.totalAmount.toFixed(2)}</p>
                       <p className="text-xs text-gray-500">Total amount</p>
                     </div>
                   </div>

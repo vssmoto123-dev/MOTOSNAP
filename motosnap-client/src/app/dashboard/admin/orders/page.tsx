@@ -231,7 +231,7 @@ export default function AdminOrdersPage() {
                     </span>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">${order.totalAmount.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-gray-900">MYR {order.totalAmount.toFixed(2)}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
                     </p>
@@ -247,7 +247,7 @@ export default function AdminOrdersPage() {
                           {item.part.partName} (x{item.qty})
                         </span>
                         <span className="text-gray-900 font-medium">
-                          ${(item.qty * getPriceValue(item.price)).toFixed(2)}
+                          MYR {(item.qty * getPriceValue(item.price)).toFixed(2)}
                         </span>
                       </div>
                     ))}

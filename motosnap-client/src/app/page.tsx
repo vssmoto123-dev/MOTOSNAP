@@ -233,7 +233,7 @@ export default function HomePage() {
 
                   {/* Price */}
                   <div className="text-2xl font-bold text-text mb-4">
-                    ${typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
+                    MYR {typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
                   </div>
 
                   {/* Login Prompt for non-authenticated users */}

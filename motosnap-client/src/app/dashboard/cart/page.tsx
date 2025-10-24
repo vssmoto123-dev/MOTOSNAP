@@ -431,7 +431,7 @@ function CartPage() {
                         </div>
                       )}
                       
-                      <p className="text-text font-medium">${item.unitPrice.toFixed(2)} each</p>
+                      <p className="text-text font-medium">MYR {item.unitPrice.toFixed(2)} each</p>
                       
                       {/* Stock Status */}
                       <div className="text-xs text-text-muted mt-1">
@@ -474,7 +474,7 @@ function CartPage() {
 
                       {/* Subtotal and Remove */}
                       <div className="text-right">
-                        <p className="font-bold text-xl text-text mb-2">${getSubtotal(item).toFixed(2)}</p>
+                        <p className="font-bold text-xl text-text mb-2">MYR {getSubtotal(item).toFixed(2)}</p>
                         <button
                           onClick={() => removeFromCart(item.id)}
                           disabled={removingItemId === item.id}
@@ -503,7 +503,7 @@ function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-text">
                   <span>Items ({cart.totalItems})</span>
-                  <span>${cart.totalAmount.toFixed(2)}</span>
+                  <span>MYR {cart.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-text">
                   <span>Shipping</span>
@@ -512,7 +512,7 @@ function CartPage() {
                 <div className="border-t border-border pt-3">
                   <div className="flex justify-between font-bold text-lg text-text">
                     <span>Total</span>
-                    <span>${cart.totalAmount.toFixed(2)}</span>
+                    <span>MYR {cart.totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

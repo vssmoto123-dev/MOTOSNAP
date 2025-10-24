@@ -419,7 +419,7 @@ export default function AdminBookingsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         <div className="font-medium">{booking.serviceName}</div>
-                        <div className="text-gray-500">${booking.serviceBasePrice.toFixed(2)}</div>
+                        <div className="text-gray-500">MYR {booking.serviceBasePrice.toFixed(2)}</div>
                         <div className="text-gray-500">
                           {Math.floor(booking.serviceEstimatedDurationMinutes / 60)}h {booking.serviceEstimatedDurationMinutes % 60}m
                         </div>
@@ -610,7 +610,7 @@ export default function AdminBookingsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Base Price:</span>
-                          <span className="font-medium text-gray-900">${bookingDetails.serviceBasePrice.toFixed(2)}</span>
+                          <span className="font-medium text-gray-900">MYR {bookingDetails.serviceBasePrice.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Duration:</span>
@@ -692,7 +692,7 @@ export default function AdminBookingsPage() {
                               <div className="flex-1">
                                 <div className="font-medium text-gray-900">{request.partName}</div>
                                 <div className="text-sm text-gray-600">
-                                  Quantity: {request.quantity} | Price: ${(request.partPrice * request.quantity).toFixed(2)}
+                                  Quantity: {request.quantity} | Price: MYR {(request.partPrice * request.quantity).toFixed(2)}
                                 </div>
                                 {request.reason && (
                                   <div className="text-sm text-gray-500 mt-1">Reason: {request.reason}</div>
@@ -716,7 +716,7 @@ export default function AdminBookingsPage() {
                           <div className="flex justify-between items-center font-semibold">
                             <span className="text-gray-900">Total Parts Cost:</span>
                             <span className="text-gray-900">
-                              ${bookingDetails.partsRequests
+                              MYR {bookingDetails.partsRequests
                                 .filter((r: any) => r.status === 'APPROVED' || r.status === 'USED')
                                 .reduce((sum: number, r: any) => sum + (r.partPrice * r.quantity), 0)
                                 .toFixed(2)}
@@ -741,12 +741,12 @@ export default function AdminBookingsPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Base Service Cost:</span>
-                        <span className="font-medium text-black">${bookingDetails.serviceBasePrice.toFixed(2)}</span>
+                        <span className="font-medium text-black">MYR {bookingDetails.serviceBasePrice.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Additional Parts Cost:</span>
                         <span className="font-medium text-black">
-                          ${bookingDetails.partsRequests
+                          MYR {bookingDetails.partsRequests
                             ?.filter((r: any) => r.status === 'APPROVED' || r.status === 'USED')
                             .reduce((sum: number, r: any) => sum + (r.partPrice * r.quantity), 0)
                             .toFixed(2) || '0.00'}
@@ -756,8 +756,8 @@ export default function AdminBookingsPage() {
                         <div className="flex justify-between text-lg font-semibold">
                           <span className="text-gray-900">Total Service Cost:</span>
                           <span className="text-gray-900">
-                            ${(
-                              bookingDetails.serviceBasePrice + 
+                            MYR {(
+                              bookingDetails.serviceBasePrice +
                               (bookingDetails.partsRequests
                                 ?.filter((r: any) => r.status === 'APPROVED' || r.status === 'USED')
                                 .reduce((sum: number, r: any) => sum + (r.partPrice * r.quantity), 0) || 0)

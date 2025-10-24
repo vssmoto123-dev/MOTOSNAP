@@ -124,7 +124,7 @@ export default function PartsGrid({
                 {/* Price and Stock */}
                 <div className="flex justify-between items-center mb-4">
                   <div className="text-2xl font-bold text-text">
-                    ${typeof part.unitPrice === 'number' ? part.unitPrice.toFixed(2) : '0.00'}
+                    MYR {typeof part.unitPrice === 'number' ? part.unitPrice.toFixed(2) : '0.00'}
                   </div>
                   <div className={`text-sm font-medium ${
                     part.qty > 0

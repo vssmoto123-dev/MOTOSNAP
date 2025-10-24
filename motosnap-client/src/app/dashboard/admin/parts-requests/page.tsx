@@ -276,7 +276,7 @@ export default function AdminPartsRequestsPage() {
                         <div>
                           <p><span className="font-medium">Quantity:</span> {request.quantity}</p>
                           <p><span className="font-medium">Category:</span> {request.partCategory}</p>
-                          <p><span className="font-medium">Price:</span> ${request.partPrice.toFixed(2)}</p>
+                          <p><span className="font-medium">Price:</span> MYR {request.partPrice.toFixed(2)}</p>
                         </div>
                         <div>
                           <p><span className="font-medium">Mechanic:</span> {request.mechanicName}</p>

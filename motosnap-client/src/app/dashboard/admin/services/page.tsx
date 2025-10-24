@@ -243,7 +243,7 @@ export default function ServiceManagement() {
                   />
                 </div>
                 <Input
-                  label="Base Price ($)"
+                  label="Base Price (MYR)"
                   type="number"
                   step="0.01"
                   required
@@ -322,7 +322,7 @@ export default function ServiceManagement() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${service.basePrice.toFixed(2)}
+                      MYR {service.basePrice.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {service.estimatedDurationMinutes ? formatDuration(service.estimatedDurationMinutes) : '-'}

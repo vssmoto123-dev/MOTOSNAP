@@ -36,6 +36,12 @@ import {
   PartsRequestCreateDTO,
   PartsRequestResponseDTO
 } from '@/types/mechanic';
+import {
+  SalesReport,
+  PartsUsageReport,
+  MechanicPerformance,
+  DashboardData
+} from '@/types/reports';
 
 // Dynamic API URL detection for production/development
 const getApiBaseUrl = (): string => {
@@ -1039,6 +1045,30 @@ class ApiClient {
   // Enhanced method to format variations with definitions
   formatVariationsForDisplayWithDefinitions(selectedVariations: SelectedVariations, variationDefinitions: any[]): string {
     return VariationUtils.formatForDisplay(selectedVariations, variationDefinitions);
+  }
+
+  // ===============================================================================
+  // REPORTS API METHODS
+  // ===============================================================================
+
+  // Get sales report by period
+  async getSalesReport(period: 'daily' | 'weekly' | 'monthly', days: number = 30): Promise<SalesReport[]> {
+    return this.request<SalesReport[]>(`/reports/sales?period=${period}&days=${days}`);
+  }
+
+  // Get parts usage report
+  async getPartsUsageReport(days: number = 30): Promise<PartsUsageReport[]> {
+    return this.request<PartsUsageReport[]>(`/reports/parts-usage?days=${days}`);
+  }
+
+  // Get mechanic performance report
+  async getMechanicPerformanceReport(days: number = 30): Promise<MechanicPerformance[]> {
+    return this.request<MechanicPerformance[]>(`/reports/mechanic-performance?days=${days}`);
+  }
+
+  // Get comprehensive dashboard data
+  async getDashboardData(days: number = 30): Promise<DashboardData> {
+    return this.request<DashboardData>(`/reports/dashboard?days=${days}`);
   }
 
 }

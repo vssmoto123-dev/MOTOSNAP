@@ -226,6 +226,22 @@ export default function AdminOverview() {
               </div>
             </Link>
 
+            <Link
+              href="/dashboard/admin/reports"
+              className="relative rounded-lg border border-blue-300 bg-blue-50 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-blue-900">View Reports</p>
+                <p className="text-sm text-blue-700">Sales, parts usage, and performance analytics</p>
+              </div>
+            </Link>
+
             <button
               onClick={() => setIsMechanicModalOpen(true)}
               className="relative rounded-lg border border-green-300 bg-green-50 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full text-left"

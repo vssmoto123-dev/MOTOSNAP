@@ -445,7 +445,7 @@ function ProductDetailContent() {
             <div className="bg-surface rounded-2xl border border-border p-6">
               <div className="flex items-baseline justify-between mb-4">
                 <div className="text-4xl font-bold text-text">
-                  ${typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
+                  MYR {typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
                 </div>
                 {product.brand && (
                   <div className="text-sm font-semibold text-primary uppercase tracking-wide">
