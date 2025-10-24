@@ -124,7 +124,7 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 bg-background">
+      <div className="flex-1 bg-gray-50">
         {children}
       </div>
     </div>

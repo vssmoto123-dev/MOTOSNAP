@@ -2,38 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api';
+import { InvoicePayment } from '@/types/invoice';
 import { Button } from '@/components/ui/Button';
 
-interface InvoicePayment {
-  id: number;
-  status: 'PENDING' | 'PAYMENT_SUBMITTED' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
-  createdAt: string;
-  updatedAt: string;
-  invoice: {
-    id: number;
-    invoiceNumber: string;
-    totalAmount: number;
-    booking: {
-      id: number;
-      customerName: string;
-      serviceName: string;
-      vehiclePlateNo: string;
-      vehicleBrand: string;
-      vehicleModel: string;
-    };
-  };
-  receipt?: {
-    id: number;
-    amount: number;
-    fileUrl: string;
-    notes?: string;
-    adminNotes?: string;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    uploadedAt: string;
-  };
-}
-
-export default function InvoicePaymentsPage() {
+export default function AdminInvoicePaymentsPage() {
   const [payments, setPayments] = useState<InvoicePayment[]>([]);
   const [pendingPayments, setPendingPayments] = useState<InvoicePayment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +27,7 @@ export default function InvoicePaymentsPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (activeTab === 'pending') {
         const data = await apiClient.getPendingInvoicePayments();
         setPendingPayments(data);
@@ -100,37 +72,37 @@ export default function InvoicePaymentsPage() {
     }
   };
 
-  const openRejectModal = (payment: InvoicePayment) => {
-    setSelectedPayment(payment);
-    setShowRejectModal(true);
-    setRejectReason('');
-  };
-
   const viewReceipt = async (payment: InvoicePayment) => {
-    if (!payment.receipt?.fileUrl) return;
-    
     try {
       setReceiptLoading(true);
       setSelectedPayment(payment);
-      
-      const response = await fetch(apiClient.getInvoiceReceiptUrl(payment.id), {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (payment.receipt?.imageUrl) {
+        setReceiptImageUrl(payment.receipt.imageUrl);
+        setShowReceiptModal(true);
+      } else {
+        // Use the proper apiClient method for receipt URL
+        const receiptUrl = apiClient.getInvoiceReceiptUrl(payment.id);
+
+        // Fetch the receipt image with proper authentication
+        const response = await fetch(receiptUrl, {
+          headers: {
+            'Authorization': `Bearer ${apiClient.accessToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        setReceiptImageUrl(imageUrl);
+        setShowReceiptModal(true);
       }
-
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-      setReceiptImageUrl(imageUrl);
-      setShowReceiptModal(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch receipt:', err);
-      setError('Failed to load receipt image');
+      setError(err.message || 'Failed to load receipt image');
     } finally {
       setReceiptLoading(false);
     }
@@ -145,7 +117,13 @@ export default function InvoicePaymentsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const openRejectModal = (payment: InvoicePayment) => {
+    setSelectedPayment(payment);
+    setShowRejectModal(true);
+    setRejectReason('');
+  };
+
+  const getStatusColor = (status: string) => {
     const colors = {
       'PENDING': 'bg-yellow-100 text-yellow-800',
       'PAYMENT_SUBMITTED': 'bg-blue-100 text-blue-800',
@@ -281,40 +259,36 @@ export default function InvoicePaymentsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentData.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
+                  <tr key={payment.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {payment.invoice.invoiceNumber}
+                        #{payment.invoice.invoiceNumber}
                       </div>
                       <div className="text-sm text-gray-500">
-                        Invoice #{payment.invoice.id} | Booking #{payment.invoice.booking.id}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {payment.invoice.booking.customerName}
+                        {formatCurrency(payment.invoice.totalAmount)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {payment.invoice.booking.serviceName}
+                        <div className="font-medium">{payment.invoice.customerName}</div>
+                        <div className="text-gray-500">{payment.invoice.customerEmail}</div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {payment.invoice.booking.vehiclePlateNo} - {payment.invoice.booking.vehicleBrand} {payment.invoice.booking.vehicleModel}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">
+                        <div className="font-medium">{payment.invoice.serviceName}</div>
+                        <div className="text-gray-500">
+                          {payment.invoice.vehiclePlateNo} - {payment.invoice.vehicleBrand} {payment.invoice.vehicleModel}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm text-gray-900">
                         {formatCurrency(payment.invoice.totalAmount)}
                       </div>
-                      {payment.receipt && (
-                        <div className="text-sm text-gray-500">
-                          Receipt: {formatCurrency(payment.receipt.amount)}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(payment.status)}
+                      {getStatusColor(payment.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {payment.receipt ? formatDate(payment.receipt.uploadedAt) : '-'}
@@ -329,7 +303,7 @@ export default function InvoicePaymentsPage() {
                           {receiptLoading ? 'Loading...' : 'View Receipt'}
                         </button>
                       )}
-                      
+
                       {payment.status === 'PAYMENT_SUBMITTED' && (
                         <>
                           <Button
@@ -342,7 +316,6 @@ export default function InvoicePaymentsPage() {
                           <Button
                             onClick={() => openRejectModal(payment)}
                             disabled={actionLoading === payment.id}
-                            variant="secondary"
                             className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1"
                           >
                             Reject
@@ -378,98 +351,16 @@ export default function InvoicePaymentsPage() {
                 </button>
               </div>
             </div>
-
             <div className="p-6">
-              {selectedPayment.receipt && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Receipt Amount</label>
-                        <p className="mt-1 text-lg font-semibold text-gray-900">
-                          {formatCurrency(selectedPayment.receipt.amount)}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Invoice Amount</label>
-                        <p className="mt-1 text-lg text-gray-900">
-                          {formatCurrency(selectedPayment.invoice.totalAmount)}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Uploaded At</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {formatDate(selectedPayment.receipt.uploadedAt)}
-                        </p>
-                      </div>
-                      
-                      {selectedPayment.receipt.notes && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Customer Notes</label>
-                          <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded">
-                            {selectedPayment.receipt.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {selectedPayment.receipt.adminNotes && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Admin Notes</label>
-                          <p className="mt-1 text-sm text-gray-900 bg-yellow-50 p-3 rounded">
-                            {selectedPayment.receipt.adminNotes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Receipt Image</label>
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        {receiptImageUrl ? (
-                          <img
-                            src={receiptImageUrl}
-                            alt="Payment Receipt"
-                            className="w-full h-auto rounded"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-64 bg-gray-100 rounded">
-                            <div className="text-center">
-                              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <p className="mt-2 text-sm text-gray-500">Receipt image not available</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedPayment.status === 'PAYMENT_SUBMITTED' && (
-                    <div className="flex justify-end space-x-3 pt-6 border-t">
-                      <Button
-                        onClick={() => {
-                          handleReceiptModalClose();
-                          openRejectModal(selectedPayment);
-                        }}
-                        variant="secondary"
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        Reject Payment
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          handleReceiptModalClose();
-                          handleApprovePayment(selectedPayment.id);
-                        }}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Approve Payment
-                      </Button>
-                    </div>
-                  )}
+              {receiptImageUrl ? (
+                <img
+                  src={receiptImageUrl}
+                  alt="Payment Receipt"
+                  className="w-full h-auto rounded-lg"
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">No receipt image available</div>
                 </div>
               )}
             </div>
@@ -488,31 +379,29 @@ export default function InvoicePaymentsPage() {
               <p className="text-sm text-gray-600 mb-4">
                 Are you sure you want to reject this payment for invoice #{selectedPayment.invoice.invoiceNumber}?
               </p>
-              
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for rejection (optional)
+                  Reason for rejection
                 </label>
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Enter reason for rejection..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Please provide a reason for rejection..."
                 />
               </div>
-              
               <div className="flex justify-end space-x-3">
-                <Button
+                <button
                   onClick={() => {
                     setShowRejectModal(false);
                     setRejectReason('');
                     setSelectedPayment(null);
                   }}
-                  variant="secondary"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
                 >
                   Cancel
-                </Button>
+                </button>
                 <Button
                   onClick={() => handleRejectPayment(selectedPayment.id, rejectReason)}
                   disabled={actionLoading === selectedPayment.id}

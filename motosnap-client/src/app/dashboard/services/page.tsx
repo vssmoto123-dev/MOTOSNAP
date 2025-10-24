@@ -373,7 +373,7 @@ function ServicesPage() {
                         </svg>
                         <span className="text-text-muted font-medium">Base Price</span>
                       </div>
-                      <span className="text-2xl font-bold text-text">${service.basePrice.toFixed(2)}</span>
+                      <span className="text-2xl font-bold text-text">MYR {service.basePrice.toFixed(2)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -498,7 +498,7 @@ function ServicesPage() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-text-muted">Base Price:</span>
-                        <span className="text-text font-bold text-lg">${selectedService.basePrice.toFixed(2)}</span>
+                        <span className="text-text font-bold text-lg">MYR {selectedService.basePrice.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-text-muted">Est. Duration:</span>

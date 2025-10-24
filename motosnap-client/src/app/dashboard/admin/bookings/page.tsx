@@ -275,7 +275,7 @@ export default function AdminBookingsPage() {
       <div className="bg-white p-4 rounded-lg border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Search
             </label>
             <input
@@ -283,18 +283,18 @@ export default function AdminBookingsPage() {
               placeholder="Customer, plate, or service..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="">All Statuses</option>
               <option value="PENDING">Pending</option>
@@ -304,15 +304,15 @@ export default function AdminBookingsPage() {
               <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Mechanic
             </label>
             <select
               value={mechanicFilter}
               onChange={(e) => setMechanicFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="">All Mechanics</option>
               <option value="unassigned">Unassigned</option>
@@ -323,11 +323,11 @@ export default function AdminBookingsPage() {
               ))}
             </select>
           </div>
-          
+
           <div className="flex items-end">
             <Button
               onClick={fetchBookings}
-              className="w-full"
+              className="w-full text-xs py-1.5"
               variant="secondary"
             >
               Refresh
@@ -388,26 +388,26 @@ export default function AdminBookingsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-900">
                         <div className="font-medium">{formatLastModified(booking.updatedAt)}</div>
                         {new Date(booking.updatedAt).getTime() > Date.now() - 24 * 60 * 60 * 1000 && (
                           <div className="text-xs text-blue-600 font-medium">Recent</div>
                         )}
                       </div>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-900">
                         <div className="font-medium">#{booking.id}</div>
                         <div className="text-gray-500">
                           {formatDateTime(booking.scheduledDateTime)}
                         </div>
                       </div>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-900">
                         <div className="font-medium">{booking.customerName}</div>
                         <div className="text-gray-500">{booking.customerEmail}</div>
                         <div className="text-gray-500">
@@ -415,9 +415,9 @@ export default function AdminBookingsPage() {
                         </div>
                       </div>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-900">
                         <div className="font-medium">{booking.serviceName}</div>
                         <div className="text-gray-500">MYR {booking.serviceBasePrice.toFixed(2)}</div>
                         <div className="text-gray-500">
@@ -426,17 +426,17 @@ export default function AdminBookingsPage() {
                       </div>
                     </td>
                     
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex flex-col space-y-1">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
                           {booking.status.replace('_', ' ')}
                         </span>
-                        
+
                         {/* Invoice Status Badge */}
                         {booking.status === 'COMPLETED' && (
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            booking.hasInvoice 
-                              ? 'bg-green-100 text-green-700' 
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                            booking.hasInvoice
+                              ? 'bg-green-100 text-green-700'
                               : 'bg-orange-100 text-orange-700'
                           }`}>
                             {booking.hasInvoice ? '📄 Invoiced' : '⏳ Needs Invoice'}
@@ -444,9 +444,9 @@ export default function AdminBookingsPage() {
                         )}
                       </div>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-900">
                         {booking.assignedMechanicName ? (
                           <div className="flex items-center space-x-2">
                             <span className="font-medium">{booking.assignedMechanicName}</span>
@@ -480,7 +480,7 @@ export default function AdminBookingsPage() {
                                 handleMechanicAssignment(booking.id, mechanicId);
                               }
                             }}
-                            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="text-xs border border-gray-300 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={assigningBookingId === booking.id}
                             defaultValue=""
                           >
@@ -496,8 +496,8 @@ export default function AdminBookingsPage() {
                         )}
                       </div>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-2">
+
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium space-y-1">
                       {/* Status Update Buttons */}
                       <div className="flex flex-wrap gap-1">
                         {booking.status === 'PENDING' && (

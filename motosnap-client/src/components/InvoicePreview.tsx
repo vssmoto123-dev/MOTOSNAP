@@ -245,7 +245,7 @@ export default function InvoicePreview({
           <div className="border-t pt-6">
             <div className="flex justify-end">
               <div className="w-full max-w-xs">
-                <div className="bg-gray-900 text-white rounded-lg p-6">
+                <div className="bg-gray-100 text-gray-900 rounded-lg p-6 border border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total Amount:</span>
                     <span className="text-2xl font-bold">MYR {invoice.totalAmount.toFixed(2)}</span>
