@@ -80,13 +80,7 @@ export default function Header() {
             >
               Quick Link
             </button>
-            <button
-              onClick={() => handleNavigation('/contact')}
-              className="text-text hover:text-primary transition-colors font-medium"
-            >
-              Contact Us
-            </button>
-          </nav>
+            </nav>
 
           {/* Products Button */}
           <div className="flex items-center space-x-4">
@@ -131,13 +125,7 @@ export default function Header() {
             >
               Quick Link
             </button>
-            <button
-              onClick={() => handleNavigation('/contact')}
-              className="block w-full text-left px-3 py-2 text-text hover:text-primary hover:bg-muted rounded-md font-medium"
-            >
-              Contact Us
-            </button>
-          </div>
+            </div>
         </div>
       </div>
     </header>

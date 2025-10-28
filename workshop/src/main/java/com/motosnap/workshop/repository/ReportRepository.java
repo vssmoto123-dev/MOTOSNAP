@@ -98,22 +98,13 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
     // MECHANIC PERFORMANCE QUERIES
     // ===============================================================================
 
-    // Mechanic job completion stats (H2 compatible)
-    @Query(value = "SELECT u.id, u.name, u.email, " +
-                   "COUNT(b.id) as total_jobs, " +
-                   "SUM(CASE WHEN b.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_jobs, " +
-                   "AVG(CASE " +
-                   "    WHEN b.status = 'COMPLETED' AND b.completed_at IS NOT NULL " +
-                   "    AND b.completed_at >= b.scheduled_date_time " +
-                   "    THEN EXTRACT(EPOCH FROM (b.completed_at - b.scheduled_date_time))/3600 " +
-                   "    ELSE NULL " +
-                   "END) as avg_completion_hours " +
-                   "FROM bookings b " +
-                   "JOIN users u ON b.assigned_mechanic_id = u.id " +
-                   "WHERE b.scheduled_date_time >= :since " +
-                   "GROUP BY u.id, u.name, u.email " +
-                   "ORDER BY completed_jobs DESC", nativeQuery = true)
-    List<Object[]> getMechanicJobStats(@Param("since") LocalDateTime since);
+    // Mechanic job completion stats - database-agnostic version
+    @Query("SELECT b FROM Booking b " +
+           "WHERE b.scheduledDateTime >= :since " +
+           "AND b.status = 'COMPLETED' " +
+           "AND b.completedAt IS NOT NULL " +
+           "AND b.assignedMechanic IS NOT NULL")
+    List<Booking> getCompletedBookingsForTimeCalc(@Param("since") LocalDateTime since);
 
     // Mechanic revenue generation
     @Query(value = "SELECT u.id, u.name, u.email, " +

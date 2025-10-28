@@ -6,11 +6,14 @@ import com.motosnap.workshop.dto.reports.PartsUsageReportDTO;
 import com.motosnap.workshop.dto.reports.MechanicPerformanceDTO;
 import com.motosnap.workshop.dto.reports.DashboardDataDTO;
 import com.motosnap.workshop.dto.reports.DashboardSummaryDTO;
+import com.motosnap.workshop.entity.Booking;
+import com.motosnap.workshop.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.*;
@@ -63,16 +66,14 @@ public class ReportService {
     }
 
     /**
-     * Get mechanic performance report - returns typed DTOs
+     * Get mechanic performance report - returns typed DTOs (database-agnostic)
      */
     public List<MechanicPerformanceDTO> getMechanicPerformanceReport(int days) {
         LocalDateTime since = LocalDateTime.now().minusDays(days);
-        List<Object[]> rawData = reportRepository.getMechanicJobStats(since);
+        List<Booking> completedBookings = reportRepository.getCompletedBookingsForTimeCalc(since);
 
-        // Convert Object[] to typed DTOs following existing pattern
-        return rawData.stream()
-                .map(MechanicPerformanceDTO::new)
-                .collect(Collectors.toList());
+        // Calculate performance statistics in Java (database-agnostic)
+        return calculateMechanicPerformanceInJava(completedBookings);
     }
 
     /**
@@ -94,11 +95,13 @@ public class ReportService {
                     .map(PartsUsageReportDTO::new)
                     .toArray(PartsUsageReportDTO[]::new);
 
-            // Mechanic performance - convert to DTOs
-            List<Object[]> mechanicPerformanceRaw = reportRepository.getMechanicJobStats(since);
-            MechanicPerformanceDTO[] mechanicPerformance = mechanicPerformanceRaw.stream()
-                    .map(MechanicPerformanceDTO::new)
-                    .toArray(MechanicPerformanceDTO[]::new);
+            // Mechanic performance - database-agnostic calculation
+            List<MechanicPerformanceDTO> mechanicPerformanceList = calculateMechanicPerformanceInJava(
+                reportRepository.getCompletedBookingsForTimeCalc(since)
+            );
+            MechanicPerformanceDTO[] mechanicPerformance = mechanicPerformanceList.toArray(
+                new MechanicPerformanceDTO[0]
+            );
 
             // Additional breakdowns - convert to DTOs
             List<Object[]> partsByRevenueRaw = reportRepository.getMostUsedPartsByRevenue(since);
@@ -148,4 +151,57 @@ public class ReportService {
 
     // NOTE: Legacy formatting methods removed since we now use proper DTOs with built-in conversion
     // The DTOs (SalesReportDTO, PartsUsageReportDTO, MechanicPerformanceDTO) handle their own conversion
+
+    /**
+     * Calculate mechanic performance statistics in Java (database-agnostic)
+     */
+    private List<MechanicPerformanceDTO> calculateMechanicPerformanceInJava(List<Booking> completedBookings) {
+        // Group bookings by mechanic
+        Map<Long, List<Booking>> bookingsByMechanic = completedBookings.stream()
+                .collect(Collectors.groupingBy(b -> b.getAssignedMechanic().getId()));
+
+        List<MechanicPerformanceDTO> results = new ArrayList<>();
+
+        for (Map.Entry<Long, List<Booking>> entry : bookingsByMechanic.entrySet()) {
+            Long mechanicId = entry.getKey();
+            List<Booking> mechanicBookings = entry.getValue();
+
+            if (!mechanicBookings.isEmpty()) {
+                User mechanic = mechanicBookings.get(0).getAssignedMechanic();
+
+                // Calculate statistics in Java (database-agnostic)
+                long totalJobs = mechanicBookings.size();
+                long completedJobs = mechanicBookings.size(); // All are completed
+                double avgCompletionHours = calculateAverageCompletionHours(mechanicBookings);
+                double completionRate = (double) completedJobs / totalJobs * 100;
+
+                MechanicPerformanceDTO dto = new MechanicPerformanceDTO();
+                dto.setMechanicId(mechanicId);
+                dto.setMechanicName(mechanic.getName());
+                dto.setMechanicEmail(mechanic.getEmail());
+                dto.setTotalJobs(totalJobs);
+                dto.setCompletedJobs(completedJobs);
+                dto.setCompletionRate(BigDecimal.valueOf(completionRate));
+                dto.setAvgCompletionHours(avgCompletionHours);
+
+                results.add(dto);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Calculate average completion hours from a list of bookings (database-agnostic)
+     */
+    private double calculateAverageCompletionHours(List<Booking> bookings) {
+        return bookings.stream()
+                .filter(b -> b.getCompletedAt() != null && b.getScheduledDateTime() != null)
+                .mapToDouble(b -> {
+                    Duration duration = Duration.between(b.getScheduledDateTime(), b.getCompletedAt());
+                    return duration.toMinutes() / 60.0; // Convert to hours
+                })
+                .average()
+                .orElse(0.0);
+    }
 }
