@@ -24,34 +24,35 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
     // ===============================================================================
 
     // Daily revenue with NULL handling
-    @Query(value = "SELECT DATE(generated_at) as date, " +
+    @Query(value = "SELECT DATE(generated_at) as \"date\", " +
                    "COALESCE(SUM(total_amount), 0) as revenue, " +
                    "COALESCE(SUM(service_amount), 0) as service_revenue, " +
                    "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
                    "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
-                   "GROUP BY DATE(generated_at) ORDER BY date DESC", nativeQuery = true)
+                   "GROUP BY DATE(generated_at) ORDER BY \"date\" DESC", nativeQuery = true)
     List<Object[]> getDailyRevenue(@Param("since") LocalDateTime since);
 
-    // Weekly revenue with NULL handling
-    @Query(value = "SELECT YEARWEEK(generated_at) as week, " +
+    // Weekly revenue with NULL handling (H2 compatible)
+    @Query(value = "SELECT EXTRACT(WEEK FROM generated_at) as \"week\", EXTRACT(YEAR FROM generated_at) as \"year\", " +
                    "COALESCE(SUM(total_amount), 0) as revenue, " +
                    "COALESCE(SUM(service_amount), 0) as service_revenue, " +
                    "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
                    "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
-                   "GROUP BY YEARWEEK(generated_at) ORDER BY week DESC", nativeQuery = true)
+                   "GROUP BY EXTRACT(YEAR FROM generated_at), EXTRACT(WEEK FROM generated_at) " +
+                   "ORDER BY \"year\" DESC, \"week\" DESC", nativeQuery = true)
     List<Object[]> getWeeklyRevenue(@Param("since") LocalDateTime since);
 
-    // Monthly revenue with NULL handling (reuse existing query from InvoiceRepository)
-    @Query(value = "SELECT MONTH(generated_at) as month, YEAR(generated_at) as year, " +
+    // Monthly revenue with NULL handling (H2 compatible)
+    @Query(value = "SELECT EXTRACT(MONTH FROM generated_at) as \"month\", EXTRACT(YEAR FROM generated_at) as \"year\", " +
                    "COALESCE(SUM(total_amount), 0) as revenue, " +
                    "COALESCE(SUM(service_amount), 0) as service_revenue, " +
                    "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
                    "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
-                   "GROUP BY YEAR(generated_at), MONTH(generated_at) " +
-                   "ORDER BY year DESC, month DESC", nativeQuery = true)
+                   "GROUP BY EXTRACT(YEAR FROM generated_at), EXTRACT(MONTH FROM generated_at) " +
+                   "ORDER BY \"year\" DESC, \"month\" DESC", nativeQuery = true)
     List<Object[]> getMonthlyRevenue(@Param("since") LocalDateTime since);
 
     // ===============================================================================
@@ -97,14 +98,14 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
     // MECHANIC PERFORMANCE QUERIES
     // ===============================================================================
 
-    // Mechanic job completion stats
+    // Mechanic job completion stats (H2 compatible)
     @Query(value = "SELECT u.id, u.name, u.email, " +
                    "COUNT(b.id) as total_jobs, " +
                    "SUM(CASE WHEN b.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_jobs, " +
                    "AVG(CASE " +
                    "    WHEN b.status = 'COMPLETED' AND b.completed_at IS NOT NULL " +
                    "    AND b.completed_at >= b.scheduled_date_time " +
-                   "    THEN TIMESTAMPDIFF(HOUR, b.scheduled_date_time, b.completed_at) " +
+                   "    THEN EXTRACT(EPOCH FROM (b.completed_at - b.scheduled_date_time))/3600 " +
                    "    ELSE NULL " +
                    "END) as avg_completion_hours " +
                    "FROM bookings b " +

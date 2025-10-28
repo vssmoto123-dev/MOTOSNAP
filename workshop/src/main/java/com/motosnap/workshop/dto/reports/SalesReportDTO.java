@@ -51,12 +51,13 @@ public class SalesReportDTO {
                     break;
 
                 case "weekly":
-                    // Weekly: [week, revenue, serviceRevenue, partsRevenue, orderCount]
+                    // Weekly: [week, year, revenue, serviceRevenue, partsRevenue, orderCount] - Updated for H2
                     this.week = row[0] != null ? Integer.parseInt(row[0].toString()) : null;
-                    this.revenue = row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO;
-                    this.serviceRevenue = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
-                    this.partsRevenue = row[3] != null ? new BigDecimal(row[3].toString()) : BigDecimal.ZERO;
-                    this.orderCount = row[4] != null ? ((Number) row[4]).longValue() : 0L;
+                    this.year = row[1] != null ? Integer.parseInt(row[1].toString()) : null;
+                    this.revenue = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
+                    this.serviceRevenue = row[3] != null ? new BigDecimal(row[3].toString()) : BigDecimal.ZERO;
+                    this.partsRevenue = row[4] != null ? new BigDecimal(row[4].toString()) : BigDecimal.ZERO;
+                    this.orderCount = row[5] != null ? ((Number) row[5]).longValue() : 0L;
                     break;
 
                 case "monthly":
