@@ -23,24 +23,32 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
     // SALES REPORT QUERIES
     // ===============================================================================
 
-    // Daily revenue
-    @Query(value = "SELECT DATE(generated_at) as date, SUM(total_amount) as revenue, " +
-                   "SUM(service_amount) as service_revenue, SUM(parts_amount) as parts_revenue, COUNT(*) as order_count " +
+    // Daily revenue with NULL handling
+    @Query(value = "SELECT DATE(generated_at) as date, " +
+                   "COALESCE(SUM(total_amount), 0) as revenue, " +
+                   "COALESCE(SUM(service_amount), 0) as service_revenue, " +
+                   "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
+                   "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
                    "GROUP BY DATE(generated_at) ORDER BY date DESC", nativeQuery = true)
     List<Object[]> getDailyRevenue(@Param("since") LocalDateTime since);
 
-    // Weekly revenue
-    @Query(value = "SELECT YEARWEEK(generated_at) as week, SUM(total_amount) as revenue, " +
-                   "SUM(service_amount) as service_revenue, SUM(parts_amount) as parts_revenue, COUNT(*) as order_count " +
+    // Weekly revenue with NULL handling
+    @Query(value = "SELECT YEARWEEK(generated_at) as week, " +
+                   "COALESCE(SUM(total_amount), 0) as revenue, " +
+                   "COALESCE(SUM(service_amount), 0) as service_revenue, " +
+                   "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
+                   "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
                    "GROUP BY YEARWEEK(generated_at) ORDER BY week DESC", nativeQuery = true)
     List<Object[]> getWeeklyRevenue(@Param("since") LocalDateTime since);
 
-    // Monthly revenue (reuse existing query from InvoiceRepository)
+    // Monthly revenue with NULL handling (reuse existing query from InvoiceRepository)
     @Query(value = "SELECT MONTH(generated_at) as month, YEAR(generated_at) as year, " +
-                   "SUM(total_amount) as revenue, SUM(service_amount) as service_revenue, " +
-                   "SUM(parts_amount) as parts_revenue, COUNT(*) as order_count " +
+                   "COALESCE(SUM(total_amount), 0) as revenue, " +
+                   "COALESCE(SUM(service_amount), 0) as service_revenue, " +
+                   "COALESCE(SUM(parts_amount), 0) as parts_revenue, " +
+                   "COUNT(*) as order_count " +
                    "FROM invoices WHERE generated_at >= :since " +
                    "GROUP BY YEAR(generated_at), MONTH(generated_at) " +
                    "ORDER BY year DESC, month DESC", nativeQuery = true)
@@ -50,9 +58,10 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
     // PARTS USAGE QUERIES
     // ===============================================================================
 
-    // Most used parts by quantity
+    // Most used parts by quantity with NULL handling
     @Query(value = "SELECT i.id, i.part_name, i.part_code, i.brand, i.category, " +
-                   "SUM(oi.qty) as total_quantity, SUM(oi.qty * oi.price) as total_revenue " +
+                   "COALESCE(SUM(oi.qty), 0) as total_quantity, " +
+                   "COALESCE(SUM(oi.qty * oi.price), 0) as total_revenue " +
                    "FROM order_items oi " +
                    "JOIN inventory i ON oi.part_id = i.id " +
                    "JOIN orders o ON oi.order_id = o.id " +
@@ -61,9 +70,10 @@ public interface ReportRepository extends JpaRepository<Booking, Long> {
                    "ORDER BY total_quantity DESC LIMIT 20", nativeQuery = true)
     List<Object[]> getMostUsedPartsByQuantity(@Param("since") LocalDateTime since);
 
-    // Most used parts by revenue
+    // Most used parts by revenue with NULL handling
     @Query(value = "SELECT i.id, i.part_name, i.part_code, i.brand, i.category, " +
-                   "SUM(oi.qty) as total_quantity, SUM(oi.qty * oi.price) as total_revenue " +
+                   "COALESCE(SUM(oi.qty), 0) as total_quantity, " +
+                   "COALESCE(SUM(oi.qty * oi.price), 0) as total_revenue " +
                    "FROM order_items oi " +
                    "JOIN inventory i ON oi.part_id = i.id " +
                    "JOIN orders o ON oi.order_id = o.id " +

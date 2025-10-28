@@ -31,57 +31,10 @@ export default function ReportsManagement() {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const rawData = await apiClient.getDashboardData(reportDays);
+      // Backend now returns properly typed DTOs that match our TypeScript interfaces
+      const data: DashboardData = await apiClient.getDashboardData(reportDays);
 
-      // Process the raw data from backend arrays to match our TypeScript interfaces
-      const processedData: DashboardData = {
-        monthlySales: Array.isArray(rawData.monthlySales)
-          ? rawData.monthlySales.map((item: any) => ({
-              date: item[0] || null,
-              week: item[0] || null,
-              month: item[0] || 1,
-              year: item[1] || 2024,
-              revenue: Number(item[2]) || 0,
-              serviceRevenue: Number(item[3]) || 0,
-              partsRevenue: Number(item[4]) || 0,
-              orderCount: Number(item[5]) || 0
-            }))
-          : [],
-        mostUsedParts: Array.isArray(rawData.mostUsedParts)
-          ? rawData.mostUsedParts.map((item: any) => ({
-              partId: Number(item[0]) || 0,
-              partName: item[1] || 'Unknown',
-              partCode: item[2] || 'N/A',
-              brand: item[3] || null,
-              category: item[4] || null,
-              totalQuantity: Number(item[5]) || 0,
-              totalRevenue: Number(item[6]) || 0
-            }))
-          : [],
-        mechanicPerformance: Array.isArray(rawData.mechanicPerformance)
-          ? rawData.mechanicPerformance.map((item: any) => ({
-              mechanicId: Number(item[0]) || 0,
-              mechanicName: item[1] || 'Unknown',
-              mechanicEmail: item[2] || 'unknown@email.com',
-              totalJobs: Number(item[3]) || 0,
-              completedJobs: Number(item[4]) || 0,
-              avgCompletionHours: item[5] ? Number(item[5]) : null,
-              completionRate: item[3] > 0 ? (Number(item[4]) / Number(item[3])) * 100 : 0
-            }))
-          : [],
-        partsByRevenue: [],
-        partsByCategory: [],
-        mechanicRevenue: [],
-        mechanicPartsRequests: [],
-        summary: rawData.summary || {
-          totalRevenue: 0,
-          totalOrders: 0,
-          totalBookings: 0,
-          period: `Last ${reportDays} days`
-        }
-      };
-
-      setDashboardData(processedData);
+      setDashboardData(data);
     } catch (err: unknown) {
       console.error('Failed to fetch dashboard data:', err);
       const errorMsg = err && typeof err === 'object' && 'error' in err
@@ -103,26 +56,13 @@ export default function ReportsManagement() {
   const fetchSalesReport = async () => {
     try {
       setError(null);
-      const rawSalesData = await apiClient.getSalesReport(salesPeriod, reportDays);
-
-      // Process sales data similar to dashboard data
-      const processedSalesData = Array.isArray(rawSalesData)
-        ? rawSalesData.map((item: any) => ({
-            date: item[0] || null,
-            week: item[0] || null,
-            month: item[0] || 1,
-            year: item[1] || 2024,
-            revenue: Number(item[2]) || 0,
-            serviceRevenue: Number(item[3]) || 0,
-            partsRevenue: Number(item[4]) || 0,
-            orderCount: Number(item[5]) || 0
-          }))
-        : [];
+      // Backend now returns properly typed SalesReportDTOs
+      const salesData: SalesReport[] = await apiClient.getSalesReport(salesPeriod, reportDays);
 
       if (dashboardData) {
         setDashboardData({
           ...dashboardData,
-          monthlySales: processedSalesData
+          monthlySales: salesData
         });
       }
     } catch (err: unknown) {

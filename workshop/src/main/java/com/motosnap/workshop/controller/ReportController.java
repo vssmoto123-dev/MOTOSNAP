@@ -1,6 +1,10 @@
 package com.motosnap.workshop.controller;
 
 import com.motosnap.workshop.service.ReportService;
+import com.motosnap.workshop.dto.reports.SalesReportDTO;
+import com.motosnap.workshop.dto.reports.PartsUsageReportDTO;
+import com.motosnap.workshop.dto.reports.MechanicPerformanceDTO;
+import com.motosnap.workshop.dto.reports.DashboardDataDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +24,7 @@ public class ReportController {
     private ReportService reportService;
 
     /**
-     * Get sales report by period (daily, weekly, monthly)
+     * Get sales report by period (daily, weekly, monthly) - returns typed DTOs
      * GET /api/reports/sales?period=daily&days=30
      */
     @GetMapping("/sales")
@@ -31,7 +35,7 @@ public class ReportController {
         try {
             System.out.println("DEBUG: Getting " + period + " sales report for last " + days + " days by admin: " + authentication.getName());
 
-            List<Object[]> salesData = reportService.getSalesReport(period, days);
+            List<SalesReportDTO> salesData = reportService.getSalesReport(period, days);
 
             return ResponseEntity.ok(salesData);
         } catch (Exception e) {
@@ -43,7 +47,7 @@ public class ReportController {
     }
 
     /**
-     * Get most used parts report
+     * Get most used parts report - returns typed DTOs
      * GET /api/reports/parts-usage?days=30
      */
     @GetMapping("/parts-usage")
@@ -53,7 +57,7 @@ public class ReportController {
         try {
             System.out.println("DEBUG: Getting parts usage report for last " + days + " days by admin: " + authentication.getName());
 
-            List<Object[]> partsData = reportService.getPartsUsageReport(days);
+            List<PartsUsageReportDTO> partsData = reportService.getPartsUsageReport(days);
 
             return ResponseEntity.ok(partsData);
         } catch (Exception e) {
@@ -65,7 +69,7 @@ public class ReportController {
     }
 
     /**
-     * Get mechanic performance report
+     * Get mechanic performance report - returns typed DTOs
      * GET /api/reports/mechanic-performance?days=30
      */
     @GetMapping("/mechanic-performance")
@@ -75,7 +79,7 @@ public class ReportController {
         try {
             System.out.println("DEBUG: Getting mechanic performance report for last " + days + " days by admin: " + authentication.getName());
 
-            List<Object[]> performanceData = reportService.getMechanicPerformanceReport(days);
+            List<MechanicPerformanceDTO> performanceData = reportService.getMechanicPerformanceReport(days);
 
             return ResponseEntity.ok(performanceData);
         } catch (Exception e) {
@@ -87,7 +91,7 @@ public class ReportController {
     }
 
     /**
-     * Get comprehensive dashboard data (all reports in one call)
+     * Get comprehensive dashboard data (all reports in one call) - returns typed DTOs
      * GET /api/reports/dashboard?days=30
      */
     @GetMapping("/dashboard")
@@ -97,7 +101,7 @@ public class ReportController {
         try {
             System.out.println("DEBUG: Getting dashboard data for last " + days + " days by admin: " + authentication.getName());
 
-            Map<String, Object> dashboardData = reportService.getDashboardData(days);
+            DashboardDataDTO dashboardData = reportService.getDashboardData(days);
 
             return ResponseEntity.ok(dashboardData);
         } catch (Exception e) {
