@@ -78,14 +78,14 @@ export default function Header() {
                   : 'text-text-muted cursor-not-allowed'
               }`}
             >
-              Quick Link
+              Products
             </button>
             </nav>
 
           {/* Products Button */}
           <div className="flex items-center space-x-4">
             <Button
-              onClick={() => user && handleNavigation('/dashboard/parts')}
+              onClick={() => user && handleNavigation('/dashboard/cart')}
               disabled={!user}
               className={`${
                 user
@@ -93,7 +93,7 @@ export default function Header() {
                   : 'bg-muted text-text-muted cursor-not-allowed'
               }`}
             >
-              Products
+              Cart
             </Button>
 
             {/* Mobile menu button */}
@@ -123,7 +123,7 @@ export default function Header() {
                   : 'block w-full text-left px-3 py-2 text-text-muted cursor-not-allowed rounded-md font-medium'
               }`}
             >
-              Quick Link
+              Products
             </button>
             </div>
         </div>

@@ -362,13 +362,13 @@ function OrderSuccessContent() {
                         
                         <div className="flex items-center gap-4 text-sm">
                           <span className="text-text-muted">Qty: <span className="font-medium text-text">{item.qty}</span></span>
-                          <span className="text-text-muted">Price: <span className="font-medium text-text">${getPriceValue(item.price).toFixed(2)} each</span></span>
+                          <span className="text-text-muted">Price: <span className="font-medium text-text">MYR {getPriceValue(item.price).toFixed(2)} each</span></span>
                         </div>
                       </div>
 
                       {/* Price */}
                       <div className="text-right">
-                        <p className="text-xl font-bold text-text">${(item.qty * getPriceValue(item.price)).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-text">MYR {(item.qty * getPriceValue(item.price)).toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
@@ -393,7 +393,7 @@ function OrderSuccessContent() {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-text">
                 <span>Subtotal</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>MYR {order.totalAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-text">
                 <span>Shipping</span>
@@ -402,7 +402,7 @@ function OrderSuccessContent() {
               <div className="border-t border-border pt-3">
                 <div className="flex justify-between font-bold text-lg text-text">
                   <span>Total</span>
-                  <span>${order.totalAmount.toFixed(2)}</span>
+                  <span>MYR {order.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -412,7 +412,7 @@ function OrderSuccessContent() {
                 onClick={() => setShowReceiptUpload(true)}
                 className="w-full bg-primary text-white py-3 rounded-lg hover:bg-primary/90 font-semibold transition-colors mb-3"
               >
-                Upload Payment Receipt
+                Payment
               </button>
             )}
 
@@ -487,7 +487,7 @@ function OrderSuccessContent() {
       {showReceiptUpload && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface rounded-2xl border border-border shadow-2xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-6 text-text text-center">Upload Payment Receipt</h3>
+            <h3 className="text-xl font-semibold mb-6 text-text text-center">Payment</h3>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
               {/* QR Code Section */}
@@ -513,7 +513,7 @@ function OrderSuccessContent() {
                     </div>
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
                       <p className="text-sm text-primary">Order Total</p>
-                      <p className="font-bold text-xl text-primary">${order.totalAmount.toFixed(2)}</p>
+                      <p className="font-bold text-xl text-primary">MYR {order.totalAmount.toFixed(2)}</p>
                     </div>
                     <div className="text-xs text-text-muted max-w-xs space-y-1">
                       <p>1. Scan the QR code with your banking app</p>
@@ -544,6 +544,7 @@ function OrderSuccessContent() {
                 {receiptForm.receiptFile && (
                   <p className="text-sm text-text-muted mt-1">Selected: {receiptForm.receiptFile.name}</p>
                 )}
+                <p className="text-xs text-text-muted mt-1">Supported formats: PNG, JPG, or PDF only</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-text">Receipt Amount *</label>
