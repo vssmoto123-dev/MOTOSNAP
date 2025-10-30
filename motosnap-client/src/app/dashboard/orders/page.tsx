@@ -232,8 +232,8 @@ function OrdersPage() {
             <span className="font-medium">Back to Dashboard</span>
           </button>
           <div>
-            <h1 className="text-4xl font-bold text-text mb-3">My Orders</h1>
-            <p className="text-text-muted text-lg">Manage and track your motorcycle parts orders</p>
+            <h1 className="text-2xl font-bold text-text mb-3">My Orders</h1>
+            <p className="text-text-muted text-base">Manage and track your motorcycle parts orders</p>
           </div>
         </div>
 
@@ -255,14 +255,14 @@ function OrdersPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {orders.map((order) => (
               <div key={order.id} className="bg-surface rounded-2xl shadow-lg border border-border overflow-hidden">
-                <div className="p-8">
+                <div className="p-6">
                   {/* Order Header */}
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-text mb-2">Order #{order.id}</h3>
+                      <h3 className="text-xl font-bold text-text mb-2">Order #{order.id}</h3>
                       <div className="flex items-center space-x-4 text-text-muted">
                         <span>Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { 
                           year: 'numeric', 
@@ -278,13 +278,13 @@ function OrdersPage() {
                         {getStatusIcon(order.status)}
                         {order.status.replace('_', ' ')}
                       </div>
-                      <p className="text-3xl font-bold text-text">${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-xl font-bold text-text">MYR {order.totalAmount.toFixed(2)}</p>
                     </div>
                   </div>
 
                   {/* Order Items */}
                   <div className="border-t border-border pt-6 mb-6">
-                    <h4 className="font-semibold text-text text-lg mb-4">Order Items</h4>
+                    <h4 className="font-semibold text-text base mb-4">Order Items</h4>
                     <div className="space-y-4">
                       {order.orderItems.slice(0, 3).map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
@@ -301,11 +301,11 @@ function OrdersPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-text text-lg">
-                              ${(item.qty * getPriceValue(item.price)).toFixed(2)}
+                            <div className="font-bold text-text base">
+                              MYR {(item.qty * getPriceValue(item.price)).toFixed(2)}
                             </div>
                             <div className="text-text-muted text-sm">
-                              ${getPriceValue(item.price).toFixed(2)} each
+                              MYR {getPriceValue(item.price).toFixed(2)} each
                             </div>
                           </div>
                         </div>

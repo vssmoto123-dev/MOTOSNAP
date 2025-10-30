@@ -407,8 +407,8 @@ function ProductDetailContent() {
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-text mb-2">{product.partName}</h1>
-              <p className="text-text-muted">Part #: {product.partCode}</p>
+              <h1 className="text-2xl font-bold text-text mb-2">{product.partName}</h1>
+              <p className="text-text-muted text-base">Part #: {product.partCode}</p>
             </div>
             <div className={`mt-4 md:mt-0 px-3 py-1 rounded-full text-sm font-medium ${stockStatus?.className}`}>
               {stockStatus?.text}
@@ -418,10 +418,10 @@ function ProductDetailContent() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Product Image */}
           <div className="space-y-4">
-            <div className="bg-surface rounded-2xl border border-border p-8">
+            <div className="bg-surface rounded-2xl border border-border p-6">
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -442,9 +442,9 @@ function ProductDetailContent() {
           {/* Product Details */}
           <div className="space-y-6">
             {/* Price */}
-            <div className="bg-surface rounded-2xl border border-border p-6">
+            <div className="bg-surface rounded-2xl border border-border p-4">
               <div className="flex items-baseline justify-between mb-4">
-                <div className="text-4xl font-bold text-text">
+                <div className="text-3xl font-bold text-text">
                   MYR {typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
                 </div>
                 {product.brand && (
@@ -463,8 +463,8 @@ function ProductDetailContent() {
 
             {/* Variations */}
             {hasVariations && variations.length > 0 && (
-              <div className="bg-surface rounded-2xl border border-border p-6">
-                <h3 className="text-lg font-semibold text-text mb-4">Product Options</h3>
+              <div className="bg-surface rounded-2xl border border-border p-4">
+                <h3 className="text-base font-semibold text-text mb-4">Product Options</h3>
                 <div className="space-y-4">
                   {variations.map((variation) => (
                     <div key={variation.id} className="space-y-2">
@@ -521,7 +521,7 @@ function ProductDetailContent() {
             )}
 
             {/* Quantity Selector */}
-            <div className="bg-surface rounded-2xl border border-border p-6">
+            <div className="bg-surface rounded-2xl border border-border p-4">
               <label className="block text-sm font-medium text-text mb-3">
                 Quantity
                 {hasVariations && (
@@ -586,15 +586,15 @@ function ProductDetailContent() {
 
             {/* Description */}
             {product.description && (
-              <div className="bg-surface rounded-2xl border border-border p-6">
-                <h3 className="text-lg font-semibold text-text mb-3">Description</h3>
+              <div className="bg-surface rounded-2xl border border-border p-4">
+                <h3 className="text-base font-semibold text-text mb-3">Description</h3>
                 <p className="text-text-muted leading-relaxed">{product.description}</p>
               </div>
             )}
 
             {/* Product Information */}
-            <div className="bg-surface rounded-2xl border border-border p-6">
-              <h3 className="text-lg font-semibold text-text mb-4">Product Information</h3>
+            <div className="bg-surface rounded-2xl border border-border p-4">
+              <h3 className="text-base font-semibold text-text mb-4">Product Information</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-text-muted">Part Code:</span>

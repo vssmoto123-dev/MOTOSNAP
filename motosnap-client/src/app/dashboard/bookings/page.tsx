@@ -256,11 +256,11 @@ function BookingsPage() {
       <div className="container mx-auto px-4 py-8">
 
       {/* Main Panel */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Bookings</h1>
-        <p className="text-gray-600 mt-2">Track your service appointments and their progress</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
+        <p className="text-gray-600 mt-2 text-base">Track your service appointments and their progress</p>
       </div>
         {/* Navigation Tabs */}
         <div className="mb-6">
@@ -347,12 +347,12 @@ function BookingsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredBookings.map((booking) => (
-            <div key={booking.id} className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-              <div className="flex justify-between items-start mb-4">
+            <div key={booking.id} className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+              <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">{booking.serviceName}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{booking.serviceName}</h3>
                   <p className="text-sm text-gray-600">Booking #{booking.id}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(booking.status)}`}>
@@ -360,7 +360,7 @@ function BookingsPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Service Details</h4>
                   <div className="space-y-1 text-sm">
@@ -462,7 +462,7 @@ function BookingsPage() {
                       <p className="text-sm text-gray-600">Invoice #{booking.invoice.invoiceNumber}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-lg text-gray-900">MYR {booking.invoice.totalAmount.toFixed(2)}</p>
+                      <p className="font-semibold text-base text-gray-900">MYR {booking.invoice.totalAmount.toFixed(2)}</p>
                       <p className="text-xs text-gray-500">Total amount</p>
                     </div>
                   </div>

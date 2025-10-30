@@ -265,14 +265,14 @@ export default function AdminOrderDetailsPage() {
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{item.part.partName}</h3>
                     <p className="text-gray-600 text-sm">Part #: {item.part.partCode}</p>
-                    <p className="text-gray-600 text-sm">Unit Price: ${getPriceValue(item.price).toFixed(2)}</p>
+                    <p className="text-gray-600 text-sm">Unit Price: MYR {getPriceValue(item.price).toFixed(2)}</p>
                   </div>
                   <div className="text-center mx-4">
                     <p className="text-gray-900 font-medium">Qty: {item.qty}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold text-gray-900">
-                      ${(item.qty * getPriceValue(item.price)).toFixed(2)}
+                      MYR {(item.qty * getPriceValue(item.price)).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export default function AdminOrderDetailsPage() {
             <div className="mt-6 pt-4 border-t">
               <div className="flex justify-between items-center text-lg font-bold text-black">
                 <span>Total Amount:</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>MYR {order.totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>

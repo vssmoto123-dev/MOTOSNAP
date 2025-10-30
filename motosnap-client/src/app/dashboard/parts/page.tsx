@@ -279,15 +279,15 @@ function PartsPage() {
           </button>
           
           <div className="section-header">
-            <h1 className="text-4xl font-bold text-text mb-2">Parts Catalog</h1>
-            <p className="text-text-muted text-lg">Premium motorcycle parts and components for peak performance</p>
+            <h1 className="text-2xl font-bold text-text mb-2">Parts Catalog</h1>
+            <p className="text-text-muted text-base">Premium motorcycle parts and components for peak performance</p>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters */}
-        <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg mb-8">
+        <div className="bg-surface p-4 rounded-2xl border border-border shadow-lg mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search Input */}
             <div className="md:col-span-2">
@@ -356,7 +356,7 @@ function PartsPage() {
         </div>
 
         {/* Parts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredParts.map((part) => {
             const badge = getProductBadge(part);
             return (
@@ -390,7 +390,7 @@ function PartsPage() {
                 </div>
                 
                 {/* Product Info */}
-                <div className="p-6">
+                <div className="p-4">
                   {/* Brand */}
                   {part.brand && (
                     <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
@@ -399,7 +399,7 @@ function PartsPage() {
                   )}
                   
                   {/* Product Name */}
-                  <h3 className="text-lg font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className="text-base font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {part.partName}
                   </h3>
 
@@ -421,7 +421,7 @@ function PartsPage() {
                   
                   {/* Price and Stock */}
                   <div className="flex justify-between items-center mb-4">
-                    <div className="text-2xl font-bold text-text">
+                    <div className="text-lg font-bold text-text">
                       MYR {typeof part.unitPrice === 'number' ? part.unitPrice.toFixed(2) : '0.00'}
                     </div>
                     <div className={`text-sm font-medium ${

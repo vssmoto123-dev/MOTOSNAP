@@ -4,7 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Alert } from '@/components/ui/Alert';
 import { apiClient, getImageBaseUrl } from '@/lib/api';
+import { LoginRequest } from '@/types/auth';
 
 interface InventoryItem {
   id: number;
@@ -20,10 +23,20 @@ interface InventoryItem {
 }
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, login } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Login form state
+  const [loginFormData, setLoginFormData] = useState<LoginRequest>({
+    email: '',
+    password: '',
+  });
+  const [loginErrors, setLoginErrors] = useState<Record<string, string>>({});
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginApiError, setLoginApiError] = useState('');
 
   useEffect(() => {
     // Redirect based on user role if already authenticated
@@ -51,6 +64,67 @@ export default function HomePage() {
 
     fetchProducts();
   }, []);
+
+  // Login form handlers
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing
+    if (loginErrors[name]) {
+      setLoginErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    setLoginApiError('');
+  };
+
+  const validateLoginForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!loginFormData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginFormData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!loginFormData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setLoginErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateLoginForm()) return;
+
+    setLoginLoading(true);
+    setLoginApiError('');
+
+    try {
+      await login(loginFormData);
+      setShowLoginModal(false);
+      // Reset form
+      setLoginFormData({ email: '', password: '' });
+      setLoginErrors({});
+      setLoginApiError('');
+      // Redirect is handled by useEffect based on user role
+    } catch (error: unknown) {
+      const errorMessage = (error && typeof error === 'object' && 'error' in error)
+        ? (error as { error: string }).error
+        : 'Login failed. Please check your credentials.';
+      setLoginApiError(errorMessage);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleProductClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+    }
+  };
 
   if (loading) {
     return (
@@ -173,13 +247,9 @@ export default function HomePage() {
               <div
                 key={product.id}
                 className={`bg-surface rounded-2xl border border-border shadow-lg overflow-hidden transition-all duration-300 group ${
-                  user ? 'hover:shadow-xl cursor-pointer' : 'cursor-not-allowed opacity-75'
+                  user ? 'hover:shadow-xl cursor-pointer' : 'cursor-pointer hover:shadow-xl opacity-90'
                 }`}
-                onClick={() => {
-                  if (user) {
-                    router.push('/dashboard/parts');
-                  }
-                }}
+                onClick={handleProductClick}
               >
                 {/* Product Image */}
                 <div className="relative h-48 bg-muted/30">
@@ -235,38 +305,6 @@ export default function HomePage() {
                   <div className="text-2xl font-bold text-text mb-4">
                     MYR {typeof product.unitPrice === 'number' ? product.unitPrice.toFixed(2) : '0.00'}
                   </div>
-
-                  {/* Login Prompt for non-authenticated users */}
-                  {!user && (
-                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="text-center text-white p-4">
-                        <div className="text-lg font-semibold mb-2">Login to View Details</div>
-                        <div className="text-sm mb-4">Sign in to browse our complete product catalog</div>
-                        <div className="flex gap-2 justify-center">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push('/login');
-                            }}
-                            size="sm"
-                            className="bg-primary text-white hover:bg-primary/90"
-                          >
-                            Login
-                          </Button>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push('/register');
-                            }}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            Register
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -303,6 +341,104 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-2xl border border-border shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-text">Sign In</h2>
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="text-text-muted hover:text-text transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-text-muted mt-2">Sign in to view product details</p>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
+              {loginApiError && (
+                <Alert variant="error" title="Login Failed">
+                  {loginApiError}
+                </Alert>
+              )}
+
+              <Input
+                label="Email Address"
+                name="email"
+                type="email"
+                value={loginFormData.email}
+                onChange={handleLoginChange}
+                error={loginErrors.email}
+                placeholder="your@email.com"
+                required
+                autoComplete="email"
+              />
+
+              <div className="space-y-2">
+                <Input
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={loginFormData.password}
+                  onChange={handleLoginChange}
+                  error={loginErrors.password}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  showPasswordToggle={true}
+                />
+              </div>
+
+  
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="submit"
+                  loading={loginLoading}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    router.push('/register');
+                  }}
+                  size="lg"
+                >
+                  Register
+                </Button>
+              </div>
+            </form>
+
+            {/* Modal Footer */}
+            <div className="px-6 pb-6 text-center">
+              <p className="text-sm text-text-muted">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    router.push('/register');
+                  }}
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  Create one here
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-secondary border-t border-border">
