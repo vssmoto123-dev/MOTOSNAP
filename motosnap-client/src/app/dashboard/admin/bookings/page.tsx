@@ -190,7 +190,7 @@ export default function AdminBookingsPage() {
 
   const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString);
-    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    return date.toLocaleDateString('en-GB') + ' at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   };
 
   const formatLastModified = (dateTimeString: string) => {

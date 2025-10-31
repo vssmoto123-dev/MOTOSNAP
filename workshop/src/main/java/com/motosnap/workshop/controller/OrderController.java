@@ -215,9 +215,20 @@ public class OrderController {
 
             if (resource.exists() && resource.isReadable()) {
                 System.out.println("DEBUG: Receipt file found and readable");
+                // Determine content type based on file extension
+                String contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                String fileNameLower = receiptFileName.toLowerCase();
+                if (fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".jpeg")) {
+                    contentType = MediaType.IMAGE_JPEG_VALUE;
+                } else if (fileNameLower.endsWith(".png")) {
+                    contentType = MediaType.IMAGE_PNG_VALUE;
+                } else if (fileNameLower.endsWith(".pdf")) {
+                    contentType = MediaType.APPLICATION_PDF_VALUE;
+                }
+
                 return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                        .header("Content-Disposition", "inline; filename=\"" + receiptFileName + "\"")
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header("Content-Disposition", "attachment; filename=\"" + receiptFileName + "\"")
                         .body(resource);
             } else {
                 System.out.println("DEBUG: Receipt file not found or not readable at: " + filePath);

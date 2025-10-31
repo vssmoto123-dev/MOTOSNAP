@@ -154,6 +154,33 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDownloadReceipt = async (orderId: number) => {
+    try {
+      const response = await fetch(apiClient.getReceiptUrl(orderId), {
+        method: 'GET',
+        headers: apiClient.getReceiptAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download receipt');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `receipt-order-${orderId}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to download receipt:', err);
+      alert('Failed to download receipt');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -233,7 +260,7 @@ export default function AdminOrdersPage() {
                   <div className="text-right">
                     <p className="text-lg font-bold text-gray-900">MYR {order.totalAmount.toFixed(2)}</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                      {new Date(order.createdAt).toLocaleDateString('en-GB')} at {new Date(order.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
@@ -270,7 +297,7 @@ export default function AdminOrdersPage() {
                         Receipt Available
                       </button>
                     )}
-                    <span>Updated {new Date(order.updatedAt).toLocaleDateString()}</span>
+                    <span>Updated {new Date(order.updatedAt).toLocaleDateString('en-GB')}</span>
                   </div>
                   
                   <div className="flex space-x-2">
@@ -371,14 +398,12 @@ export default function AdminOrdersPage() {
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
-              <a
-                href={apiClient.getReceiptUrl(showReceiptModal)}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => handleDownloadReceipt(showReceiptModal)}
                 className="px-4 py-2 text-blue-700 bg-blue-100 rounded hover:bg-blue-200"
               >
-                Open in New Tab
-              </a>
+                Download
+              </button>
               <button
                 onClick={handleReceiptModalClose}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"

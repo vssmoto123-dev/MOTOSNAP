@@ -111,4 +111,26 @@ public class ReportController {
                     .body(Map.of("error", "Failed to retrieve dashboard data: " + e.getMessage()));
         }
     }
+
+    /**
+     * Validate booking timestamps to identify data quality issues
+     * GET /api/reports/validate-booking-timestamps?days=30
+     */
+    @GetMapping("/validate-booking-timestamps")
+    public ResponseEntity<?> validateBookingTimestamps(
+            @RequestParam(defaultValue = "30") int days,
+            Authentication authentication) {
+        try {
+            System.out.println("DEBUG: Validating booking timestamps for last " + days + " days by admin: " + authentication.getName());
+
+            Map<String, Object> validationReport = reportService.validateBookingTimestamps(days);
+
+            return ResponseEntity.ok(validationReport);
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to validate booking timestamps - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to validate booking timestamps: " + e.getMessage()));
+        }
+    }
 }

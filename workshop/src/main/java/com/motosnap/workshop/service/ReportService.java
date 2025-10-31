@@ -195,13 +195,110 @@ public class ReportService {
      * Calculate average completion hours from a list of bookings (database-agnostic)
      */
     private double calculateAverageCompletionHours(List<Booking> bookings) {
+        System.out.println("DEBUG: calculateAverageCompletionHours called with " + bookings.size() + " bookings");
+
         return bookings.stream()
-                .filter(b -> b.getCompletedAt() != null && b.getScheduledDateTime() != null)
+                .filter(b -> b.getCompletedAt() != null)
                 .mapToDouble(b -> {
-                    Duration duration = Duration.between(b.getScheduledDateTime(), b.getCompletedAt());
-                    return duration.toMinutes() / 60.0; // Convert to hours
+                    // Debug logging for each booking
+                    System.out.println("DEBUG: Processing booking ID: " + b.getId());
+                    System.out.println("  Scheduled: " + b.getScheduledDateTime());
+                    System.out.println("  Started: " + b.getStartedAt());
+                    System.out.println("  Completed: " + b.getCompletedAt());
+                    System.out.println("  Mechanic: " + (b.getAssignedMechanic() != null ? b.getAssignedMechanic().getName() : "Unknown"));
+
+                    Duration duration;
+                    if (b.getStartedAt() != null) {
+                        // Prefer actual work duration (started -> completed)
+                        duration = Duration.between(b.getStartedAt(), b.getCompletedAt());
+                        System.out.println("  Using: started -> completed");
+                    } else {
+                        // Fallback to scheduled time if startedAt is null
+                        duration = Duration.between(b.getScheduledDateTime(), b.getCompletedAt());
+                        System.out.println("  Using: scheduled -> completed (fallback, startedAt is null)");
+                    }
+
+                    double hours = duration.toMinutes() / 60.0;
+                    System.out.println("  Duration: " + hours + " hours");
+
+                    if (hours < 0) {
+                        System.out.println("  WARNING: Negative duration detected!");
+                    }
+
+                    return hours;
                 })
                 .average()
                 .orElse(0.0);
+    }
+
+    /**
+     * Validate booking timestamps to identify data quality issues
+     */
+    public Map<String, Object> validateBookingTimestamps(int days) {
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        List<Booking> completedBookings = reportRepository.getCompletedBookingsForTimeCalc(since);
+
+        Map<String, Object> report = new HashMap<>();
+        report.put("totalCompletedBookings", completedBookings.size());
+
+        // Find bookings with negative durations
+        List<Map<String, Object>> problematicBookings = new ArrayList<>();
+        int negativeDurationCount = 0;
+        int nullStartedAtCount = 0;
+        int nullCompletedAtCount = 0;
+
+        for (Booking booking : completedBookings) {
+            Map<String, Object> bookingInfo = new HashMap<>();
+            bookingInfo.put("id", booking.getId());
+            bookingInfo.put("mechanicName", booking.getAssignedMechanic() != null ? booking.getAssignedMechanic().getName() : "Unknown");
+            bookingInfo.put("scheduledDateTime", booking.getScheduledDateTime());
+            bookingInfo.put("startedAt", booking.getStartedAt());
+            bookingInfo.put("completedAt", booking.getCompletedAt());
+            bookingInfo.put("status", booking.getStatus());
+
+            // Calculate durations
+            if (booking.getCompletedAt() != null && booking.getScheduledDateTime() != null) {
+                Duration scheduledToCompleted = Duration.between(booking.getScheduledDateTime(), booking.getCompletedAt());
+                double hours1 = scheduledToCompleted.toMinutes() / 60.0;
+                bookingInfo.put("scheduledToCompletedHours", hours1);
+
+                if (hours1 < 0) {
+                    negativeDurationCount++;
+                    bookingInfo.put("hasNegativeDuration", true);
+                    problematicBookings.add(bookingInfo);
+                }
+            }
+
+            if (booking.getStartedAt() != null && booking.getCompletedAt() != null) {
+                Duration startedToCompleted = Duration.between(booking.getStartedAt(), booking.getCompletedAt());
+                double hours2 = startedToCompleted.toMinutes() / 60.0;
+                bookingInfo.put("startedToCompletedHours", hours2);
+            } else {
+                if (booking.getStartedAt() == null) {
+                    nullStartedAtCount++;
+                    bookingInfo.put("hasNullStartedAt", true);
+                }
+            }
+
+            if (booking.getCompletedAt() == null) {
+                nullCompletedAtCount++;
+                bookingInfo.put("hasNullCompletedAt", true);
+            }
+        }
+
+        report.put("negativeDurationCount", negativeDurationCount);
+        report.put("nullStartedAtCount", nullStartedAtCount);
+        report.put("nullCompletedAtCount", nullCompletedAtCount);
+        report.put("problematicBookings", problematicBookings);
+
+        // Summary statistics
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("percentageNegativeDurations", completedBookings.size() > 0 ?
+            (double) negativeDurationCount / completedBookings.size() * 100 : 0);
+        summary.put("percentageNullStartedAt", completedBookings.size() > 0 ?
+            (double) nullStartedAtCount / completedBookings.size() * 100 : 0);
+        report.put("summary", summary);
+
+        return report;
     }
 }

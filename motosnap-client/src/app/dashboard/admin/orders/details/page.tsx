@@ -161,6 +161,58 @@ export default function AdminOrderDetailsPage() {
     }
   };
 
+  const handleDownloadReceipt = async () => {
+    if (!order) return;
+
+    try {
+      const response = await fetch(apiClient.getReceiptUrl(order.id), {
+        method: 'GET',
+        headers: apiClient.getReceiptAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download receipt');
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `receipt-order-${order.id}`;
+
+      // Extract filename from Content-Disposition header if available
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      // If still no extension, try to detect from blob type
+      if (!filename.includes('.')) {
+        const contentType = blob.type;
+        if (contentType.includes('jpeg') || contentType.includes('jpg')) {
+          filename += '.jpg';
+        } else if (contentType.includes('png')) {
+          filename += '.png';
+        } else if (contentType.includes('pdf')) {
+          filename += '.pdf';
+        }
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to download receipt:', err);
+      alert('Failed to download receipt');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -425,14 +477,12 @@ export default function AdminOrderDetailsPage() {
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
-              <a
-                href={apiClient.getReceiptUrl(order.id)}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleDownloadReceipt}
                 className="px-4 py-2 text-blue-700 bg-blue-100 rounded hover:bg-blue-200"
               >
-                Open in New Tab
-              </a>
+                Download
+              </button>
               <button
                 onClick={handleReceiptModalClose}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"

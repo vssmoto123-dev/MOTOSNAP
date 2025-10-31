@@ -141,14 +141,6 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 showPasswordToggle={true}
               />
-              <div className="flex justify-end">
-                <Link 
-                  href="/forgot-password" 
-                  className="text-sm text-primary hover:text-red-400 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
             </div>
 
             <div className="flex items-center">
